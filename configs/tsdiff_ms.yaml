@@ -1,0 +1,20 @@
+# tsdiff_ms.yaml — TSDiff-MS (multi-step DDIM guidance)
+# Inherits all data/training defaults from base.yaml.
+
+model:
+  name: tsdiff_ms
+  diffusion_config: diffusion_small_config
+  normalization: none
+  use_features: false
+  use_lags: false
+  init_skip: false
+  guidance: ddim
+  guidance_scale: 1.0
+  num_inference_steps: 50   # DDIM step count
+
+training:
+  epochs: 1000
+  batch_size: 64
+  num_batches_per_epoch: 128
+  eval_every: 50
+  use_validation_set: true
