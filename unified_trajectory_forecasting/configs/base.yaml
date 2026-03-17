@@ -1,0 +1,37 @@
+# base.yaml
+# =========
+# Canonical shared parameters for the unified NFTSF comparison pipeline.
+#
+# IMPORTANT: The keys under `data:` (seed, n_past, n_future, train_fraction,
+# val_fraction) ensure that every model run uses the same data split and
+# prediction horizon.  Per-model config files may add keys under `model:` and
+# override `training.*`, but MUST NOT override any `data.*` key.
+
+data:
+  seed: 42                # Seeded trajectory split + segment shuffle
+  n_past: 100             # Context (lookback) window length in time steps
+  n_future: 100           # Forecast horizon in time steps
+  val_fraction: 0.10      # Fraction of train segments held out for validation
+  train_fraction: 0.80    # Fraction of all trajectories used for training
+  stride: 1               # Sliding-window stride for NFTSF segment extraction
+  normalize: true         # Apply Z-score normalization (train-set statistics)
+
+training:
+  seed: 42                # Global RNG seed (Python / NumPy / PyTorch / CUDA)
+  device: auto            # "auto" | "cuda" | "cpu"
+  epochs: 1000
+  batch_size: 4096
+  learning_rate: 1.0e-3
+  weight_decay: 1.0e-5
+  grad_clip: 1.0
+  early_stopping_patience: 50
+  use_scheduler: true
+  scheduler_patience: 15
+  scheduler_factor: 0.5
+  save_interval: 100      # Save checkpoint every N epochs (0 = final only)
+
+evaluation:
+  n_samples: 500          # Number of forecast samples drawn per test trajectory
+
+output:
+  base_dir: outputs/

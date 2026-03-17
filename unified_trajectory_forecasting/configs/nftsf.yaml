@@ -1,0 +1,9 @@
+# nftsf.yaml — NFTSF Conditional Normalizing Flow
+# Inherits all data/training defaults from base.yaml.
+
+model:
+  name: nftsf
+  flow_blocks: 6          # Number of (RQS + LU Permute) blocks K
+  hidden_units: 64        # Width of spline conditioner networks
+  hidden_layers: [1, 2]   # Depth list per block (one RQS per entry)
+  tail_bound: 30          # Spline active region [-B, B]
