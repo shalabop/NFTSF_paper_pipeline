@@ -12,7 +12,9 @@ directory and generates two types of plots:
    - Title, axis labels, and colors auto-generated from metadata.
 
 2. Aggregate error comparison plots
-   - 2×2 grid: CRPS(t), MAE(t), CI90 coverage(t), CI50 coverage(t).
+   - 3×2 grid: CRPS(t), MAE(t), CI90/CI80/CI60/CI20 coverage(t).
+     CI80/CI60/CI20 match the NFTSF_ssh QUANTILE_INTERVALS for
+     apples-to-apples comparison.
    - Bar chart of mean CRPS and mean MAE per model.
 
 Usage
@@ -279,13 +281,28 @@ def plot_aggregate_metrics(
     dpi: int = 150,
 ) -> None:
     """
-    2×2 grid of CRPS(t), MAE(t), CI90 coverage(t), CI50 coverage(t) —
-    one line per model.
+    3×2 grid of per-step metrics — one line per model.
+
+    Panels: CRPS(t), MAE(t), CI90/CI80/CI60/CI20 coverage(t).
+    CI80/CI60/CI20 match NFTSF_ssh QUANTILE_INTERVALS for apples-to-apples
+    comparison.  Results files that pre-date these metrics (no ci80_t key)
+    are handled gracefully (panel left blank).
     """
-    fig, axes = plt.subplots(2, 2, figsize=(12, 6))
+    # Panel layout: 3 rows × 2 cols
+    panel_specs = [
+        ("crps_t", "CRPS(t)",         "CRPS",     None),
+        ("mae_t",  "MAE(t)",          "MAE",      None),
+        ("ci90_t", "CI90 Coverage(t)","Coverage", 0.90),
+        ("ci80_t", "CI80 Coverage(t)","Coverage", 0.80),
+        ("ci60_t", "CI60 Coverage(t)","Coverage", 0.60),
+        ("ci20_t", "CI20 Coverage(t)","Coverage", 0.20),
+    ]
+
+    fig, axes = plt.subplots(3, 2, figsize=(12, 9))
     axes = axes.flatten()
 
     legend_handles: list = []
+    added_ideal = False
 
     for idx, (name, data) in enumerate(sorted(results.items())):
         n_future = data["crps_t"].shape[0]
@@ -293,27 +310,31 @@ def plot_aggregate_metrics(
         color    = _model_color(name)
         ls       = _model_style(idx)
 
-        axes[0].plot(time, data["crps_t"], color=color, linestyle=ls, linewidth=1.2)
-        axes[1].plot(time, data["mae_t"],  color=color, linestyle=ls, linewidth=1.2)
-        axes[2].plot(time, data["ci90_t"], color=color, linestyle=ls, linewidth=1.2)
-        axes[3].plot(time, data["ci50_t"], color=color, linestyle=ls, linewidth=1.2)
+        for ax, (key, title, ylabel, ideal) in zip(axes, panel_specs):
+            if key not in data.files:
+                continue
+            ax.plot(time, data[key], color=color, linestyle=ls, linewidth=1.2)
+            if ideal is not None and not added_ideal:
+                ax.axhline(ideal, linestyle="--", color="black",
+                           linewidth=0.8, alpha=0.6)
 
+        added_ideal = True   # only add ideal lines on first model pass
         legend_handles.append(
             Line2D([0], [0], color=color, linestyle=ls, linewidth=1.2, label=name)
         )
 
-    # Ideal coverage reference lines.
-    axes[2].axhline(0.90, linestyle="--", color="black", linewidth=0.8, alpha=0.6)
-    axes[3].axhline(0.50, linestyle="--", color="black", linewidth=0.8, alpha=0.6)
+    # Ideal reference lines for coverage panels (in case first model pass
+    # didn't have those keys).
+    for ax, (key, title, ylabel, ideal) in zip(axes, panel_specs):
+        if ideal is not None:
+            ax.axhline(ideal, linestyle="--", color="black",
+                       linewidth=0.8, alpha=0.6, zorder=0)
+
     legend_handles.append(
         Line2D([0], [0], color="black", linestyle="--", linewidth=0.8, label="Ideal")
     )
 
-    for ax, title, ylabel in zip(
-        axes,
-        ["CRPS(t)", "MAE(t)", "CI90 Coverage(t)", "CI50 Coverage(t)"],
-        ["CRPS", "MAE", "Coverage", "Coverage"],
-    ):
+    for ax, (key, title, ylabel, _) in zip(axes, panel_specs):
         ax.set_title(title, fontsize=11)
         ax.set_xlabel("Forecast step", fontsize=9)
         ax.set_ylabel(ylabel, fontsize=9)
@@ -324,7 +345,7 @@ def plot_aggregate_metrics(
     fig.legend(
         handles=legend_handles,
         loc="upper center",
-        bbox_to_anchor=(0.5, 1.02),
+        bbox_to_anchor=(0.5, 1.01),
         ncol=min(len(legend_handles), 6),
         fontsize=8,
         frameon=False,
