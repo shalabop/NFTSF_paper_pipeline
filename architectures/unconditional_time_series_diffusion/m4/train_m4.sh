@@ -33,4 +33,4 @@ ls $CUDA_PATH/include/nvrtc.h || echo "nvrtc.h not found"
 ls $CUDA_PATH/lib64/libnvrtc.so* || echo "libnvrtc.so not found in lib64"
 ls $CUDA_PATH/targets/x86_64-linux/lib/libnvrtc.so* || echo "libnvrtc.so not found in targets/x86_64-linux/lib"
 
-python bin/train_model.py -c configs/train_tsdiff/train_m4.yaml
+conda run -n unified_tsf python bin/train_model.py -c configs/train_tsdiff/train_m4.yaml

@@ -16,13 +16,13 @@ For any trained model checkpoint, this script:
 Usage
 -----
 # Evaluate a unified-format training run:
-python eval/evaluate.py \\
+conda run -n unified_tsf python eval/evaluate.py \\
     --checkpoint outputs/nftsf/alanine_phi/run_001/ \\
     --data       outputs/canonical/alanine_phi.npz \\
     --n_samples  500
 
 # Evaluate a pre-trained NFTSF_ssh checkpoint (no retraining needed):
-python eval/evaluate.py \\
+conda run -n unified_tsf python eval/evaluate.py \\
     --nftsf_native_dir /path/to/nftsf_ssh_output/ \\
     --data             outputs/canonical/alanine_phi.npz \\
     --n_samples        500

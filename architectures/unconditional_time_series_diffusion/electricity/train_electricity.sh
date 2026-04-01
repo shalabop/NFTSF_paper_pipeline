@@ -28,5 +28,5 @@ ls $CUDA_PATH/targets/x86_64-linux/lib/libnvrtc.so*
 
 rm -rf ~/.cache/keops*
 
-python bin/train_model.py -c configs/train_tsdiff/train_electricity.yaml
+conda run -n unified_tsf python bin/train_model.py -c configs/train_tsdiff/train_electricity.yaml
 

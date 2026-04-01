@@ -5,7 +5,7 @@ Unified training entry point for the NFTSF comparison pipeline.
 
 Usage
 -----
-python train/train.py \\
+conda run -n unified_tsf python train/train.py \\
     --model  nftsf \\
     --config configs/nftsf.yaml \\
     --data   outputs/canonical/alanine_phi.npz \\

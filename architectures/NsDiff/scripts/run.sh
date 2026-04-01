@@ -12,7 +12,7 @@ do
     do
         for pred_len in "${pred_lens[@]}"
         do
-            CUDA_DEVICE_ORDER=PCI_BUS_ID python3 ./src/experiments/$model.py \
+            CUDA_DEVICE_ORDER=PCI_BUS_ID conda run -n unified_tsf python ./src/experiments/$model.py \
             --dataset_type="$dataset" \
             --device="$device" \
             --batch_size=32 \

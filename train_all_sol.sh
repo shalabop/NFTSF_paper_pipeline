@@ -82,7 +82,7 @@ if [[ ! -f "$DATA_NPZ" ]]; then
     LANDSCAPE="${LANDSCAPE:-$(basename "$DATA_NPZ" .npz)}"
 
     # MD config: lookback=50, horizon=50
-    PYTHONPATH="${PROJECT_DIR}" python "${PROJECT_DIR}/data/canonical.py" \
+    PYTHONPATH="${PROJECT_DIR}" conda run -n unified_tsf python "${PROJECT_DIR}/data/canonical.py" \
         --source    nftsf \
         --train     "$TRAIN_NPY" \
         --test      "$TEST_NPY" \
@@ -140,7 +140,7 @@ echo ""
 echo " When all jobs finish, generate comparison plots:"
 echo "   cd $PROJECT_DIR"
 echo "   source activate $CONDA_ENV"
-echo "   python viz/comparison.py \\"
+echo "   conda run -n unified_tsf python viz/comparison.py \\"
 echo "       --results_dir outputs/ \\"
 echo "       --landscape   alanine_phi \\"
 echo "       --trajectory_id 42 \\"

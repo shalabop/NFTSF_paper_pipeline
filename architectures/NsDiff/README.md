@@ -37,7 +37,7 @@ bash ./scripts/pretrain_F/ETTh1.sh
 # run 
 export PYTHONPATH=./
 CUDA_DEVICE_ORDER=PCI_BUS_ID \
-python3 ./src/experiments/NsDiff.py \
+conda run -n unified_tsf python ./src/experiments/NsDiff.py \
    --dataset_type="ETTh1" \
    --device="cuda:0" \
    --batch_size=32 \
@@ -56,7 +56,7 @@ python3 ./src/experiments/NsDiff.py \
 # run without pretraining
 export PYTHONPATH=./
 CUDA_DEVICE_ORDER=PCI_BUS_ID \
-python3 ./src/experiments/NsDiff.py \
+conda run -n unified_tsf python ./src/experiments/NsDiff.py \
    --dataset_type="ETTh1" \
    --device="cuda:0" \
    --batch_size=32 \

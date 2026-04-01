@@ -19,7 +19,7 @@ directory and generates two types of plots:
 
 Usage
 -----
-python viz/comparison.py \\
+conda run -n unified_tsf python viz/comparison.py \\
     --results_dir outputs/ \\
     --landscape   alanine_phi \\
     --trajectory_id 42

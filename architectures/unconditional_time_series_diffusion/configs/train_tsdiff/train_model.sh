@@ -18,7 +18,7 @@
  18 export LD_LIBRARY_PATH=$CUDA_HOME/lib64:$LD_LIBRARY_PATH
  19 export CUDA_VISIBLE_DEVICES=$SLURM_GPUS_ON_NODE
  20 rm -rf ~/.cache/keops2.1.1
- 21 python bin/train_model.py -c configs/train_tsdiff/train_uber_tlc.yaml
+ 21 conda run -n unified_tsf python bin/train_model.py -c configs/train_tsdiff/train_uber_tlc.yaml
 ~                                                                                      
 ~                                                                                      
 ~                                                                                      

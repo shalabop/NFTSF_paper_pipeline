@@ -65,7 +65,7 @@ for F in "$TRAIN_NPY" "$TEST_NPY"; do
 done
 
 # Run conversion
-python data/canonical.py \
+conda run -n unified_tsf python data/canonical.py \
     --source    nftsf \
     --train     "$TRAIN_NPY" \
     --test      "$TEST_NPY" \
@@ -82,7 +82,7 @@ echo "------------------------------------------------------------"
 
 # Print norm stats + shape summary so the user can compare against
 # the norm_stats_*.npz saved by NFTSF_ssh/train_model.py.
-python - <<'PYEOF'
+conda run -n unified_tsf python - <<'PYEOF'
 import sys, numpy as np
 from pathlib import Path
 

@@ -16,15 +16,15 @@ The electricity dataset can be found at ./data/ts2vec
 ### Retrieval
 We use the TCN as our encoder, the code can be found at ./TCN-master. 
 ```shell
-python retrieval.py --type encode
+conda run -n unified_tsf python retrieval.py --type encode
 ```
 To save the references, you can run
 ```shell
-python retrieval.py --type retrieval
+conda run -n unified_tsf python retrieval.py --type retrieval
 ```
 ### Training and forecasting for the electricity dataset
 ```shell
-python exe_forecasting.py --datatype electricity
+conda run -n unified_tsf python exe_forecasting.py --datatype electricity
 ```
 
 ## Acknowledgements

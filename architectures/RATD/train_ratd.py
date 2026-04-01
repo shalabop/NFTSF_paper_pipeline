@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 RATD Training Script
-Usage: python train_ratd.py --config ratd_config.yaml
+Usage: conda run -n unified_tsf python train_ratd.py --config ratd_config.yaml
 """
 
 import torch

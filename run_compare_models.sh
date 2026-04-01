@@ -66,8 +66,8 @@ echo "Conda env: $CONDA_DEFAULT_ENV"
 
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
-echo "Python: $(which python)"
-python -c "import torch; print(f'CUDA available: {torch.cuda.is_available()}'); print(f'GPU: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else \"None\"}')"
+echo "Python: $(conda run -n unified_tsf python -c 'import sys; print(sys.executable)')"
+conda run -n unified_tsf python -c "import torch; print(f'CUDA available: {torch.cuda.is_available()}'); print(f'GPU: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else \"None\"}')"
 echo ""
 
 # ============================================================
@@ -83,7 +83,7 @@ echo ""
 echo "Starting model comparison..."
 echo ""
 
-python compare_models.py \
+conda run -n unified_tsf python compare_models.py \
     --nftsf_dirs \
         "single_well:${SINGLE_WELL_DATA_DIR}:${SINGLE_WELL_TRAIN_DIR}:multi_sim:${SINGLE_WELL_N_PAST}:${SINGLE_WELL_N_FUTURE}" \
         "double_well:${DOUBLE_WELL_DATA_DIR}:${DOUBLE_WELL_TRAIN_DIR}:multi_sim:${DOUBLE_WELL_N_PAST}:${DOUBLE_WELL_N_FUTURE}" \
