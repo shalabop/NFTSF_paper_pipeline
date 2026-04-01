@@ -20,7 +20,6 @@ Architecture summary (from NFTSF_ssh/architecture.py)
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 from typing import Optional
 
@@ -28,15 +27,7 @@ import numpy as np
 import torch
 
 from models.base import BaseModel
-
-# ---------------------------------------------------------------------------
-# Add NFTSF_ssh to sys.path so we can import architecture.py directly.
-# ---------------------------------------------------------------------------
-_NFTSF_ROOT = (Path(__file__).resolve().parents[1].parent / "NFTSF_ssh").as_posix()
-if _NFTSF_ROOT not in sys.path:
-    sys.path.insert(0, _NFTSF_ROOT)
-
-from architecture import create_nfm  # noqa: E402  (comes from NFTSF_ssh)
+from models.architecture import create_nfm
 
 
 class NFTSFModel(BaseModel):

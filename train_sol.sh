@@ -65,6 +65,10 @@ PROJECT_DIR="${PROJECT_DIR:-/home/user/NFTSF_paper_pipeline}"
 # Canonical .npz dataset.  Built by convert_nftsf_to_canonical.sh if absent.
 DATA_NPZ="${DATA_NPZ:-${PROJECT_DIR}/outputs/canonical/alanine_phi.npz}"
 
+# Landscape name is derived from the .npz filename (e.g. double_well.npz → double_well).
+# train.py uses this same derivation, so checkpoint paths will match.
+LANDSCAPE="${LANDSCAPE:-$(basename "$DATA_NPZ" .npz)}"
+
 # Source .npy files (only needed if the canonical .npz must be built here).
 TRAIN_NPY="${TRAIN_NPY:-/home/user/NFTSF_ssh/alanine_phi_train.npy}"
 TEST_NPY="${TEST_NPY:-/home/user/NFTSF_ssh/alanine_phi_test.npy}"
@@ -137,7 +141,7 @@ else
         --source    nftsf \
         --train     "$TRAIN_NPY" \
         --test      "$TEST_NPY" \
-        --landscape alanine_phi \
+        --landscape "$LANDSCAPE" \
         --n_past    50 \
         --n_future  50 \
         --seed      42 \
@@ -181,8 +185,8 @@ echo ""
 # =============================================================================
 # STEP 2 — Evaluation
 # =============================================================================
-# train.py writes checkpoints to: $OUTPUT_DIR/{model}/alanine_phi/{run_id}/
-CHECKPOINT_DIR="${OUTPUT_DIR}/${MODEL}/alanine_phi/${RUN_ID}"
+# train.py writes checkpoints to: $OUTPUT_DIR/{model}/{landscape}/{run_id}/
+CHECKPOINT_DIR="${OUTPUT_DIR}/${MODEL}/${LANDSCAPE}/${RUN_ID}"
 
 if [[ -d "$CHECKPOINT_DIR" ]]; then
     echo "[step 2] Evaluating $MODEL (n_samples=$N_EVAL_SAMPLES) …"
