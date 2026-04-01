@@ -126,7 +126,7 @@ def forecast(
     ci50_upper = np.percentile(forecast_samples, 75, axis=2)
 
     # Plot 8 example forecasts
-    fig, axes = plt.subplots(nrows=2, ncols=4, figsize=(15, 12))
+    '''fig, axes = plt.subplots(nrows=2, ncols=4, figsize=(15, 12))
     axes = axes.flatten()
     for i in range(8):
         median_forecast = np.median(forecast_samples[i], axis=1)
@@ -137,9 +137,9 @@ def forecast(
         axes[i].set_xlabel("Time")
         axes[i].set_ylabel("Position")
         axes[i].axhline(-1, linestyle="--", color='red')
-        axes[i].axhline(1,  linestyle="--", color='red')
+        axes[i].axhline(1,  linestyle="--", color='red')'''
 
-    fig.suptitle(f'TSDiff-Cond {config["dataset"]}', fontsize=16)
+    #fig.suptitle(f'TSDiff-Cond {config["dataset"]}', fontsize=16)
     path = Path("plots/cond_tsfdiff")
     path.mkdir(parents=True, exist_ok=True)
     filename = datetime.datetime.now().strftime("cond_tsfdiff_forecasts_%Y-%m-%d_%H:%M:%S")
