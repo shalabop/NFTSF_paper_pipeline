@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR" && git rev-parse --show-toplevel)"
+REPO_ROOT="${REPO_ROOT:-$SCRIPT_DIR}"
 source "$REPO_ROOT/runner.sh"
 # =============================================================================
 # convert_nftsf_to_canonical.sh
@@ -28,8 +28,8 @@ set -euo pipefail
 
 # ── User-configurable paths ──────────────────────────────────────────────────
 # Paths to the NFTSF_ssh multi_sim .npy files.
-TRAIN_NPY="${TRAIN_NPY:-/home/user/NFTSF_ssh/alanine_phi_train.npy}"
-TEST_NPY="${TEST_NPY:-/home/user/NFTSF_ssh/alanine_phi_test.npy}"
+TRAIN_NPY="${TRAIN_NPY:-$(dirname "$REPO_ROOT")/NFTSF_ssh/alanine_phi_train.npy}"
+TEST_NPY="${TEST_NPY:-$(dirname "$REPO_ROOT")/NFTSF_ssh/alanine_phi_test.npy}"
 
 # Output canonical .npz
 OUT_NPZ="${OUT_NPZ:-outputs/canonical/alanine_phi.npz}"

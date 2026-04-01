@@ -1,6 +1,6 @@
 #!/bin/bash
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR" && git rev-parse --show-toplevel)"
+REPO_ROOT="${REPO_ROOT:-$SCRIPT_DIR}"
 source "$REPO_ROOT/runner.sh"
 # Ported from NFTSF_ssh/run_compare_models.sh into NFTSF_paper_pipeline.
 # compare_models.py must be run from the NFTSF_paper_pipeline directory.
@@ -64,7 +64,7 @@ echo "Job ID: $SLURM_JOB_ID"
 echo "============================================"
 
 module load mamba/latest
-source activate nf_tsf
+source activate unified_tsf
 echo "Conda env: $CONDA_DEFAULT_ENV"
 
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
