@@ -173,7 +173,7 @@ def load_model(config: dict) -> TSDiff:
     logger.info("RUNNING TEST3")
     logger.info(f'Loading from {config["ckpt"]} ...')
 
-    checkpoint = torch.load(config["ckpt"], map_location="cpu")
+    checkpoint = torch.load(config["ckpt"], map_location="cpu",weights_only=False)
     state_dict = checkpoint["state_dict"] if "state_dict" in checkpoint else checkpoint
     
     model.load_state_dict(state_dict, strict=True)

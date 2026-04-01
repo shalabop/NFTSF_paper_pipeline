@@ -5,7 +5,7 @@ prediction_length: 100
 diffusion_config: diffusion_small_config
 use_features: False
 use_lags: False
-normalization: mean 
+normalization: none 
 lr: 1.e-3
 init_skip: False
 gradient_clip_val: 0.5
@@ -14,7 +14,7 @@ setup: forecasting
 use_validation_set: True
 batch_size: 64
 num_batches_per_epoch: 128
-max_epochs: 1000
+max_epochs: 3 #1000
 dataset: double_well
 num_samples: 100
 sampler: ddpm

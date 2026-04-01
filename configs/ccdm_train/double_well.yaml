@@ -1,16 +1,16 @@
 train:
-  epochs: 5 #500
+  epochs: 1000
   batch_size: 64
   lr: 0.001
-  n_samples: 99 #100            
-  valid_epoch_interval: 5
+  n_samples: 100            
+  valid_epoch_interval: 50
   save_epochs: true        
   save_epoch_interval: 100  
   training_curv: "checkpoints/ccdm/double_well/loss.npz"
   model_path: "checkpoints/ccdm/double_well/model_best.pt" #only for -stage two
   stride: 25
-  val_size: 2000
-  test_size: 30 #100 #3000
+  val_size: 9000
+  test_size: 3000
   normalization: "none"
 
 
