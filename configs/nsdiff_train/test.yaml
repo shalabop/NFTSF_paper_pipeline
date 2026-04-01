@@ -1,0 +1,40 @@
+context_length: 100
+prediction_length: 100
+stride: 25        
+test_size: 30 #3000
+val_size: 2000
+
+train_curv: "checkpoints/nsdiff/test"
+
+epochs: 3 #300
+batch_size: 64 #64
+lr: 0.001 #0.0001
+patience: 20
+valid_epoch_interval: 2
+num_of_samples: 100
+
+normalization: "none"
+
+diffusion_steps: 20 #20 #100 #20 #
+beta_schedule: "quad" #"linear"
+beta_start: 0.0001
+beta_end: 0.02 #0.5
+
+d_model: 64 #512     
+n_heads: 8 #4      
+e_layers: 4 #2     
+d_layers: 4 #1
+d_ff: 64 #128    
+moving_avg: 2
+factor: 3
+distil: true
+dropout: 0.05
+activation: "gelu"
+
+rolling_length: 5 #50 #100 #observed past for var estimator
+
+k_z: 0.01
+k_cond: 1 ##highe conditionaing??
+d_z: 6 #8
+CART_input_x_embed_dim: 32
+p_hidden_layers: 2
