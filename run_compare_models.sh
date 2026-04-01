@@ -1,4 +1,5 @@
 #!/bin/bash
+PYTHON_RUNNER=(conda run -n unified_tsf python)
 # Ported from NFTSF_ssh/run_compare_models.sh into NFTSF_paper_pipeline.
 # compare_models.py must be run from the NFTSF_paper_pipeline directory.
 #SBATCH --job-name=nftsf_compare
@@ -66,8 +67,8 @@ echo "Conda env: $CONDA_DEFAULT_ENV"
 
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
-echo "Python: $(conda run -n unified_tsf python -c 'import sys; print(sys.executable)')"
-conda run -n unified_tsf python -c "import torch; print(f'CUDA available: {torch.cuda.is_available()}'); print(f'GPU: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else \"None\"}')"
+echo "Python: $("${PYTHON_RUNNER[@]}" -c 'import sys; print(sys.executable)')"
+"${PYTHON_RUNNER[@]}" -c "import torch; print(f'CUDA available: {torch.cuda.is_available()}'); print(f'GPU: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else \"None\"}')"
 echo ""
 
 # ============================================================
@@ -83,7 +84,7 @@ echo ""
 echo "Starting model comparison..."
 echo ""
 
-conda run -n unified_tsf python compare_models.py \
+"${PYTHON_RUNNER[@]}" compare_models.py \
     --nftsf_dirs \
         "single_well:${SINGLE_WELL_DATA_DIR}:${SINGLE_WELL_TRAIN_DIR}:multi_sim:${SINGLE_WELL_N_PAST}:${SINGLE_WELL_N_FUTURE}" \
         "double_well:${DOUBLE_WELL_DATA_DIR}:${DOUBLE_WELL_TRAIN_DIR}:multi_sim:${DOUBLE_WELL_N_PAST}:${DOUBLE_WELL_N_FUTURE}" \

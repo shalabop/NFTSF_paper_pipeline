@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+PYTHON_RUNNER=(conda run -n unified_tsf python)
 #SBATCH --job-name=uncondTSFdiff
 #SBATCH --time=3-00:00:00
 #SBATCH --nodes=1
@@ -28,5 +29,5 @@ ls $CUDA_PATH/targets/x86_64-linux/lib/libnvrtc.so*
 
 rm -rf ~/.cache/keops*
 
-conda run -n unified_tsf python bin/train_model.py -c configs/train_tsdiff/train_electricity.yaml
+"${PYTHON_RUNNER[@]}" bin/train_model.py -c configs/train_tsdiff/train_electricity.yaml
 

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+PYTHON_RUNNER=(conda run -n unified_tsf python)
 #SBATCH --job-name=ratd_dw_full
 #SBATCH --time=3-00:00:00
 #SBATCH --nodes=1
@@ -48,10 +49,10 @@ ls $CUDA_PATH/targets/x86_64-linux/lib/libnvrtc.so* || echo "libnvrtc.so not fou
 #python retrieval_builder.py --config tcn_config/double_well.yaml --type retrieval
 
 # Step 4: Train RATD
-conda run -n unified_tsf python train_ratd.py --config ratd_double_well.yaml
+"${PYTHON_RUNNER[@]}" train_ratd.py --config ratd_double_well.yaml
 
 # Step 5: Forecast
-conda run -n unified_tsf python forecast_ratd.py --config ratd_double_well.yaml
+"${PYTHON_RUNNER[@]}" forecast_ratd.py --config ratd_double_well.yaml
 
-conda run -n unified_tsf python plot_heatmap.py --results results/ratd/double_well.npz    --name   ratd  --dataset double_well    --out   ratd_double_well.pdf     --indices 1 2 3 4 5 6 7 8 9 11 12 13 14 15 16 17 18 19 20 21 \
+"${PYTHON_RUNNER[@]}" plot_heatmap.py --results results/ratd/double_well.npz    --name   ratd  --dataset double_well    --out   ratd_double_well.pdf     --indices 1 2 3 4 5 6 7 8 9 11 12 13 14 15 16 17 18 19 20 21 \
     --denorm training_data/double_well_std.npz

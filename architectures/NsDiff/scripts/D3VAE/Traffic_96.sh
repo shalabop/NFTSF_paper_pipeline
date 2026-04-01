@@ -1,6 +1,7 @@
+PYTHON_RUNNER=(conda run -n unified_tsf python)
 export PYTHONPATH=./
 CUDA_DEVICE_ORDER=PCI_BUS_ID \
-conda run -n unified_tsf python ./src/experiments/D3VAE.py \
+"${PYTHON_RUNNER[@]}" ./src/experiments/D3VAE.py \
    --dataset_type="Traffic" \
    --device="cuda:0" \
    --batch_size=8 \

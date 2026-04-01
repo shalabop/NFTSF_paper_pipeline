@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+PYTHON_RUNNER=(conda run -n unified_tsf python)
 # =============================================================================
 # train_sol.sh — SLURM sbatch script for Sol (ASU HPC)
 # =============================================================================
@@ -97,13 +98,13 @@ mkdir -p "${PROJECT_DIR}/logs"
 module load mamba/latest
 source activate "$CONDA_ENV"
 echo "[env] Conda env  : $CONDA_DEFAULT_ENV"
-echo "[env] Python     : $(conda run -n unified_tsf python -c 'import sys; print(sys.executable)') — $(conda run -n unified_tsf python --version 2>&1)"
+echo "[env] Python     : $("${PYTHON_RUNNER[@]}" -c 'import sys; print(sys.executable)') — $("${PYTHON_RUNNER[@]}" --version 2>&1)"
 
 # Help PyTorch manage GPU memory more efficiently.
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
 # Print GPU info (non-fatal if no GPU available, e.g. local test).
-conda run -n unified_tsf python -c "
+"${PYTHON_RUNNER[@]}" -c "
 import torch
 print(f'[env] PyTorch    : {torch.__version__}')
 print(f'[env] CUDA avail : {torch.cuda.is_available()}')
@@ -130,7 +131,7 @@ else
     done
 
     # MD config: lookback=50, horizon=50
-    conda run -n unified_tsf python "${PROJECT_DIR}/data/canonical.py" \
+    "${PYTHON_RUNNER[@]}" "${PROJECT_DIR}/data/canonical.py" \
         --source    nftsf \
         --train     "$TRAIN_NPY" \
         --test      "$TEST_NPY" \
@@ -158,7 +159,7 @@ fi
 cd "$PROJECT_DIR"
 
 TRAIN_CMD=(
-    conda run -n unified_tsf python train/train.py
+    "${PYTHON_RUNNER[@]}" train/train.py
     --model     "$MODEL"
     --config    "$CONFIG"
     --data      "$DATA_NPZ"
@@ -183,7 +184,7 @@ CHECKPOINT_DIR="${OUTPUT_DIR}/${MODEL}/alanine_phi/${RUN_ID}"
 
 if [[ -d "$CHECKPOINT_DIR" ]]; then
     echo "[step 2] Evaluating $MODEL (n_samples=$N_EVAL_SAMPLES) …"
-    conda run -n unified_tsf python eval/evaluate.py \
+    "${PYTHON_RUNNER[@]}" eval/evaluate.py \
         --checkpoint  "$CHECKPOINT_DIR" \
         --data        "$DATA_NPZ" \
         --n_samples   "$N_EVAL_SAMPLES"

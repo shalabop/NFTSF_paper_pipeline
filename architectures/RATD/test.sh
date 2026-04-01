@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+PYTHON_RUNNER=(conda run -n unified_tsf python)
 #SBATCH --job-name=TEST
 #SBATCH --time=3-00:00:00
 #SBATCH --nodes=1
@@ -38,10 +39,10 @@ ls $CUDA_PATH/lib64/libnvrtc.so* || echo "libnvrtc.so not found in lib64"
 ls $CUDA_PATH/targets/x86_64-linux/lib/libnvrtc.so* || echo "libnvrtc.so not found in targets/x86_64-linux/lib"
 
 
-conda run -n unified_tsf python train_ratd.py --config test.yaml
+"${PYTHON_RUNNER[@]}" train_ratd.py --config test.yaml
 
 # Step 5: Forecast
-conda run -n unified_tsf python forecast_ratd.py --config test.yaml
+"${PYTHON_RUNNER[@]}" forecast_ratd.py --config test.yaml
 
-conda run -n unified_tsf python plot_heatmap.py --results results/ratd/test.npz     --name   ratd  --dataset double_well    --out   test.pdf   \
+"${PYTHON_RUNNER[@]}" plot_heatmap.py --results results/ratd/test.npz     --name   ratd  --dataset double_well    --out   test.pdf   \
   --indices 1 2 3 4 5 6 7 8 9 --denorm training_data/double_well_std.npz
