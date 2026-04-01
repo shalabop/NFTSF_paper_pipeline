@@ -13,7 +13,7 @@ source "$REPO_ROOT/runner.sh"
 #SBATCH --output=m4.%j.out
 #SBATCH --error=m4.%j.err
 
-source /home/meahmed/uncondTSFdiff/Python-3.10.13/venv/bin/activate
+source "${TSDIFF_VENV:-$HOME/uncondTSFdiff/Python-3.10.13/venv}/bin/activate"
 
 module purge
 module load cuda-12.8.1-gcc-12.1.0

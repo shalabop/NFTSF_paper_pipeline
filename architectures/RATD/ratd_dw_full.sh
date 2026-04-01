@@ -14,7 +14,7 @@ source "$REPO_ROOT/runner.sh"
 #SBATCH --error=logs/ratd_dw_full.%j.err
 
 
-source /home/meahmed/venv310/bin/activate
+source "${RATD_VENV:-$HOME/venv310}/bin/activate"
 
 module purge
 module load cuda-12.8.1-gcc-12.1.0
