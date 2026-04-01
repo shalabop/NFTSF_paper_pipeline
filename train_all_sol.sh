@@ -27,7 +27,7 @@ RUN_ID="${RUN_ID:-run_$(date +%Y%m%d_%H%M%S)}"
 
 # Conda environment name for NFTSF_paper_pipeline.
 # !! CHANGE THIS to your actual environment name !!
-CONDA_ENV="${CONDA_ENV:-unified_tsf}"
+CONDA_ENV="${CONDA_ENV:-nf_tsf}"
 
 # Absolute path to the NFTSF_paper_pipeline repo root.
 PROJECT_DIR="${PROJECT_DIR:-/home/user/NFTSF_paper_pipeline}"
