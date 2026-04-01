@@ -1,6 +1,6 @@
 path:
-  dataset_path: "training_data/double_well_std.npz"
-  encoder_path: "tcn_weights/tcn_encoder_dw.pth"
+  dataset_path: "DATA/double_well_std.npz"
+  encoder_path: "checkpoints/tcn/double_well.pth"
   futures_path: "references/double_well/futures.npy"
   ref_path: "references/double_well/indices.pt"
 
@@ -38,18 +38,18 @@ train:
   device: "cuda:0"
   batch_size: 64
   learning_rate: 1.0e-4
-  epochs: 200 #500
+  epochs: 4 #200 #500
   milestones: [60, 85]
   gamma: 0.1
   grad_clip: 1.0
   num_workers: 2
   print_every: 10
-  val_start: 200 #time step where val starts 
-  val_every: 50 ##run evaluation every 50 
-  path: "checkpoints/double_well"
+  val_start: 200 #200 #time step where val starts 
+  val_every: 2 #50 ##run evaluation every 50 
+  path: "checkpoints/ratd/double_well"
   stride: 25
 
 forecast:
-  test_size: 100 #3000
+  test_size: 4 #100 #3000
   out_path: "results/ratd/double_well.npz"
   n_samples: 100

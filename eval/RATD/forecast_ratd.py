@@ -11,12 +11,14 @@ from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
-ROOT     = os.path.dirname(os.path.abspath(__file__))
-RATD_DIR = os.path.join(ROOT, "architectures", "RATD")
-sys.path.insert(0, RATD_DIR)
-sys.path.insert(0, ROOT)
+ROOT = os.path.dirname(os.path.abspath(__file__))                     # train/CSDI
+PROJECT_ROOT = os.path.abspath(os.path.join(ROOT, "..", ".."))        # project root
 
-from custom_model import RATD_Forecasting
+sys.path.insert(0, os.path.join(PROJECT_ROOT, "architectures", "RATD"))   # for diff_models
+sys.path.insert(0, os.path.join(PROJECT_ROOT, "architectures"))           # for CSDI package
+sys.path.insert(0, PROJECT_ROOT)  
+
+from RATD.custom_model import RATD_Forecasting
 
 
 class RATDTestDataset(Dataset):

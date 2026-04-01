@@ -2,15 +2,15 @@ data:
   data_path: "DATA/double_well_std.npz"
   L: 100
   H: 100
-  train_stride: 25 #stride for trainign the encoder
-  val_stride: 25       
+  train_stride: 50 #stride for trainign the encoder
+  val_stride: 50       
   retrieval_stride: 25 #==train_stride #stride for creating references must be equal to train_stride
                         #because the encoder would output embeddings for windows it has never seen
 
 model:
   input_size: 1
   output_size: 100 #20 must match L
-  num_channels: [32, 64, 32]      # much smaller
+  num_channels: [32, 32, 32]      # much smaller
   kernel_size: 3
   dropout: 0.2
   use_reference: True
@@ -20,7 +20,7 @@ train:
   device: "cuda:0"
   batch_size: 256 #128                   
   learning_rate: 0.001
-  epochs: 200
+  epochs: 2 #200
   grad_clip: 1.0
   num_workers: 1                   
   print_every: 10
