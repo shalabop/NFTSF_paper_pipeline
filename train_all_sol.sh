@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR" && git rev-parse --show-toplevel)"
+REPO_ROOT="${REPO_ROOT:-$SCRIPT_DIR}"
 source "$REPO_ROOT/runner.sh"
 # =============================================================================
 # train_all_sol.sh — Submit one SLURM job per model for a full comparison run
@@ -33,14 +33,14 @@ RUN_ID="${RUN_ID:-run_$(date +%Y%m%d_%H%M%S)}"
 CONDA_ENV="${CONDA_ENV:-unified_tsf}"
 
 # Absolute path to the NFTSF_paper_pipeline repo root.
-PROJECT_DIR="${PROJECT_DIR:-/home/user/NFTSF_paper_pipeline}"
+PROJECT_DIR="${PROJECT_DIR:-$REPO_ROOT}"
 
 # Canonical .npz dataset.
 DATA_NPZ="${DATA_NPZ:-${PROJECT_DIR}/outputs/canonical/alanine_phi.npz}"
 
 # Source .npy files (only needed if the canonical .npz is absent).
-TRAIN_NPY="${TRAIN_NPY:-/home/user/NFTSF_ssh/alanine_phi_train.npy}"
-TEST_NPY="${TEST_NPY:-/home/user/NFTSF_ssh/alanine_phi_test.npy}"
+TRAIN_NPY="${TRAIN_NPY:-$(dirname "$REPO_ROOT")/NFTSF_ssh/alanine_phi_train.npy}"
+TEST_NPY="${TEST_NPY:-$(dirname "$REPO_ROOT")/NFTSF_ssh/alanine_phi_test.npy}"
 
 # Models to train (space-separated).  Default: all supported models.
 MODELS="${MODELS:-nftsf tsdiff_q tsdiff_ms tsdiff_cond csdi ratd nsdiff arima}"

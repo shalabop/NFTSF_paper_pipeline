@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR" && git rev-parse --show-toplevel)"
+REPO_ROOT="${REPO_ROOT:-$SCRIPT_DIR}"
 source "$REPO_ROOT/runner.sh"
 #SBATCH --job-name=TEST
 #SBATCH --time=3-00:00:00
@@ -14,7 +14,7 @@ source "$REPO_ROOT/runner.sh"
 #SBATCH --error=logs/TEST.%j.err
 
 
-source /home/meahmed/venv310/bin/activate
+source "${RATD_VENV:-$HOME/venv310}/bin/activate"
 
 module purge
 module load cuda-12.8.1-gcc-12.1.0

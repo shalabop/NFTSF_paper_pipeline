@@ -1,6 +1,6 @@
 #!/bin/bash
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR" && git rev-parse --show-toplevel)"
+REPO_ROOT="${REPO_ROOT:-$SCRIPT_DIR}"
 source "$REPO_ROOT/runner.sh"
 export PYTHONPATH=./
 model=$1
