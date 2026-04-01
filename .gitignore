@@ -35,3 +35,15 @@ results/
 venv310/
 DATA/
 checkpoints/
+
+# Architecture binary/data artifacts (not source code)
+architectures/CSDI/save/
+architectures/CSDI/visualize_examples.ipynb
+architectures/NsDiff/fig/
+architectures/NsDiff/notebooks/
+architectures/RATD/TCN_master/TCN/lambada_language/data/
+architectures/RATD/TCN_master/TCN/mnist_pixel/data/
+architectures/RATD/forecast_data.npz
+architectures/RATD/main.ipynb
+architectures/RATD/*.pdf
+architectures/RATD/references/
