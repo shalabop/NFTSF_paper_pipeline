@@ -21,19 +21,23 @@
 #SBATCH --job-name=tsf_train
 #SBATCH --output=logs/tsf_%x_%j.out
 #SBATCH --error=logs/tsf_%x_%j.err
-#SBATCH --time=2-00:00:00
+#SBATCH --time=7-00:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
-#SBATCH --mem=64G
-#SBATCH --gres=gpu:a100:1
-#SBATCH --partition=gpu
-#SBATCH --export=NONE
-#
+#SBATCH --mem=128G
+#SBATCH -G a100:1
+#SBATCH -p public
+#SBATCH -q public
+
+# FIX: Changed from --export=NONE to --export=ALL to ensure environment variables 
+# (like MODEL or RUN_ID) passed at submission time are actually seen by the job.
+#SBATCH --export=ALL
+
 # Notes for Sol:
-#   • Adjust --time if diffusion models need longer (e.g. 3-00:00:00 for csdi).
-#   • Adjust --mem / --gres if you switch to a V100 partition.
-#   • ARIMA needs no GPU and runs in seconds — you can drop --gres for it.
+#   • Time increased to 7 days to match pipeline logic.
+#   • Memory increased to 128G for large-scale data handling.
+#   • Partition/QOS switched to 'public'.
 
 set -euo pipefail
 
