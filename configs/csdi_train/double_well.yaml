@@ -6,8 +6,8 @@ train:
   prediction_length: 100
   context_length: 100
   num_of_samples: 100
-  val_size: 9000
-  test_size: 3000
+  val_size: 9001
+  test_size: 3001
   valid_epoch_interval: 50
   stride: 25
   training_curv: "checkpoints/csdi/double_well"

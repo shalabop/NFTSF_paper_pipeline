@@ -1,24 +1,10 @@
-"""
-dataset_md.py  (models/CSDI/dataset_md.py)
-
-Dataset for CSDI — no retrieval references.
-
-Normalization options (set in yaml under model: normalization):
-    "zscore" — (x - mean) / std      recommended for non-zero mean (single well)
-    "std"    — x / std               original behavior, fine for zero-mean data
-    "local"  — x / mean(|x_ctx|)     TSDiff-style per-sample normalization
-                                      scaler computed from context window only
-                                      stored in batch as "local_scaler" key
-    "none"   — no normalization
-"""
-
 import numpy as np
 from torch.utils.data import DataLoader, Dataset
 
 
 class MDTrajectoryDataset(Dataset):
     def __init__(self, positions, context_length, prediction_length,
-                 mean, std, normalization):
+                 normalization):
         
         """
         positions     : (N, seq_len) — raw un-normalized windows
@@ -41,10 +27,10 @@ class MDTrajectoryDataset(Dataset):
         N                      = len(positions)
 
         pos = positions.astype(np.float32)
-        if normalization == "zscore":
+        '''if normalization == "zscore":
             pos = (pos - mean) / std
         elif normalization == "std":
-            pos = pos / std
+            pos = pos / std'''
 
         self.positions = pos
 
@@ -60,14 +46,15 @@ class MDTrajectoryDataset(Dataset):
     def __getitem__(self, index):
         seq = self.positions[index, :self.seq_len][:, None]  # (L, 1)
 
-        if self.normalization == "local":
+        '''if self.normalization == "local":
             ctx    = seq[:self.context_length, 0]          
             scaler = float(np.abs(ctx).mean())
             scaler = max(scaler, 1e-8)                     
             seq    = (seq / scaler).astype(np.float32)
             local_scaler = np.array([scaler], dtype=np.float32)
         else:
-            local_scaler = np.array([1.0], dtype=np.float32)  
+            local_scaler = np.array([1.0], dtype=np.float32)  '''
+        local_scaler = np.array([1.0], dtype=np.float32)
         return {
             "observed_data" : seq,
             "observed_mask" : self.observed_mask[index],
@@ -89,53 +76,47 @@ def _make_train_windows(positions, context_length, prediction_length, stride):
 
 def get_dataloader_md(npz_path, context_length, prediction_length,
                       batch_size, val_size, test_size,
-                      stride, normalization):
-    """
-    Temporal split:
-                 0        200  300  400  500
-                 |---------|----|----|----|----|
-    train:       [==========]        steps 0-299
-    val:                   [ctx|pred] steps 200-399
-    test:                       [ctx|pred] steps 300-499
+                      stride, normalization,flag="train"):
+    data = np.load(npz_path)
+    positions = data["positions"]
 
-    normalization : "zscore" | "std" | "local" | "none"
-    Returns: train_loader, val_loader, test_loader, mean, std
-    """
-    data             = np.load(npz_path)
-    positions        = data["positions"]
-    train_test_split = int(data["train_test_split"])
+    print(f"Number of trajectories: {positions.shape[0]}")
+    print(f"Number of time steps: {positions.shape[1]}")
 
-    train_end = train_test_split - prediction_length
-    val_start = train_end - context_length
 
-    mean = float(positions[:, :train_end].mean())
+    '''mean = float(positions[:, :train_end].mean())
     std  = float(positions[:, :train_end].std())
 
     print(f"normalization : {normalization}")
     print(f"mean          : {mean:.4f}  std: {std:.4f}")
     if normalization == "local":
-        print("  (local: per-sample scaler = mean(|context|), ""stored in batch as 'local_scaler')")
+        print("  (local: per-sample scaler = mean(|context|), ""stored in batch as 'local_scaler')")'''
 
-    train_dataset = MDTrajectoryDataset(
-        _make_train_windows(positions[:, :train_end],context_length, prediction_length, stride),
-        context_length, prediction_length,
-        mean=mean, std=std, normalization=normalization,
-    )
-    val_dataset = MDTrajectoryDataset(positions[:val_size, val_start:train_test_split],context_length, prediction_length,
-        mean=mean, std=std, normalization=normalization,
-    )
-    test_dataset = MDTrajectoryDataset(
-        positions[:test_size,train_end:train_test_split + prediction_length],
-        context_length, prediction_length,
-        mean=mean, std=std, normalization=normalization,
-    )
-
-    print(f"train samples : {len(train_dataset)}")
-    print(f"val   samples : {len(val_dataset)}")
-    print(f"test  samples : {len(test_dataset)}")
-
-    train_loader = DataLoader(train_dataset, batch_size=batch_size,shuffle=True,  num_workers=1)
-    val_loader   = DataLoader(val_dataset,   batch_size=batch_size,shuffle=False, num_workers=1)
-    test_loader  = DataLoader(test_dataset,  batch_size=batch_size,shuffle=False, num_workers=1)
-
-    return train_loader, val_loader, test_loader, mean, std
+    if flag == "train":
+        val_start = -((prediction_length + context_length) - positions.shape[1])
+        
+        print(positions[:, :val_start].shape[0])
+        print(positions[:, :val_start].shape[1])
+        train_dataset = MDTrajectoryDataset(
+            _make_train_windows(positions[:, :val_start],context_length, prediction_length, stride),
+            context_length, prediction_length, normalization=normalization,
+        )
+        
+        print(positions[:val_size, val_start:].shape[0])
+        print(positions[:val_size, val_start:].shape[1])
+        val_dataset = MDTrajectoryDataset(positions[:val_size, val_start:],context_length, prediction_length, normalization=normalization,
+        )
+        
+        train_loader = DataLoader(train_dataset, batch_size=batch_size,shuffle=True,  num_workers=1)
+        
+        val_loader = DataLoader(val_dataset,batch_size=batch_size,shuffle=False, num_workers=1)
+    
+        return train_loader, val_loader
+    
+    elif flag == "test":
+        test_dataset = MDTrajectoryDataset(
+            positions[:test_size,:-(prediction_length+context_length)],
+            context_length, prediction_length, normalization=normalization,
+        )
+        test_loader = DataLoader(test_dataset, batch_size=batch_size,shuffle=False, num_workers=1)
+        return test_loader

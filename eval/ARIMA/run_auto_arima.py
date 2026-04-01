@@ -173,6 +173,10 @@ def fit_and_forecast(
 
     if not prediction_length:
         prediction_length=len(positions[train_test_split:])#the entire test set 
+        
+    print(prediction_length)
+    print(num_of_samples)
+    print(train_test_split)
 
     full_trajectories = positions
     samples      = np.zeros((N, prediction_length, num_of_samples))
@@ -308,13 +312,17 @@ def main():
     logger.info(f"Reading input: {input_path}")
     input_data = read_data(input_path, args.split, args.prediction_length)
 
-    positions         = input_data["positions"]
-    time              = input_data["time"]
-    train_test_split  = input_data["train_test_split"]
+    positions = input_data["positions"]
+    time = input_data["time"]
+    train_test_split = input_data["train_test_split"]
+    #print(train_test_split)
+    #print(time)
 
-    prediction_length = input_data["prediction_length"]
+    #prediction_length = input_data["prediction_length"]
     use_validation_set = False
     num_of_samples = args.num_samples
+    print(num_of_samples)
+#    exit()
 
     if args.config is not None:
         logger.info(f"Reading forecasting config from: {args.config}")
@@ -322,7 +330,8 @@ def main():
             forecast_config = yaml.safe_load(f)
             prediction_length = forecast_config.get("prediction_length")
             use_validation_set= forecast_config.get("use_validation_set")
-            num_of_samples= forecast_config.get("num_samples")
+            #num_of_samples= forecast_config.get("num_samples")
+            #train_test_split = forecast_config.get("train_test_split")
 
     N, T = positions.shape
 

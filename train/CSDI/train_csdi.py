@@ -49,7 +49,8 @@ def main():
     with open(os.path.join(args.out, "config.json"), "w") as f:
         json.dump(config, f, indent=4)
 
-    train_loader, val_loader, test_loader, mean, std = get_dataloader_md(
+    train_loader, val_loader = get_dataloader_md(
+        flag="train",
         npz_path = args.input,
         context_length = context_length,
         prediction_length = prediction_length,
@@ -59,10 +60,10 @@ def main():
         stride = stride,
         normalization = normalization
     )
-    print(f"std={std:.4f}  train={len(train_loader)}  "
-          f"val={len(val_loader)}  test={len(test_loader)}")
+    '''print(f"std={std:.4f}  train={len(train_loader)}  "
+          f"val={len(val_loader)}  test={len(test_loader)}")'''
 
-    np.save(os.path.join(args.out, "std.npy"), np.array([std]))
+    #np.save(os.path.join(args.out, "std.npy"), np.array([std]))
     np.save(os.path.join(args.out, "context_length.npy"), np.array([context_length]))
     np.save(os.path.join(args.out, "prediction_length.npy"), np.array([prediction_length]))
 
