@@ -39,18 +39,18 @@ ls $CUDA_PATH/targets/x86_64-linux/lib/libnvrtc.so* || echo "libnvrtc.so not fou
 
 
 # Step 1: Train TCN
-python train_tcn.py --config tcn_config/single_well.yaml
+conda run -n unified_tsf python train_tcn.py --config tcn_config/single_well.yaml
 
 # Step 2: Build reference database
-python retrieval_builder.py --config tcn_config/single_well.yaml --type encode
+conda run -n unified_tsf python retrieval_builder.py --config tcn_config/single_well.yaml --type encode
 
 # Step 3: Build retrieval indices
-python retrieval_builder.py --config tcn_config/single_well.yaml --type retrieval
+conda run -n unified_tsf python retrieval_builder.py --config tcn_config/single_well.yaml --type retrieval
 
 # Step 4: Train RATD
-python train_ratd.py --config ratd_single_well.yaml
+conda run -n unified_tsf python train_ratd.py --config ratd_single_well.yaml
 
 # Step 5: Forecast
-python forecast_ratd.py --config ratd_single_well.yaml
+conda run -n unified_tsf python forecast_ratd.py --config ratd_single_well.yaml
 
-python plot_heatmap.py --results results/ratd/single_well.npz     --name   ratd  --dataset single_well    --out   ratd_single_well.pdf     --indices 1 2 3 4 5 6 7 8 9 11 12 13 14 15 16 17 18 19 20 21
+conda run -n unified_tsf python plot_heatmap.py --results results/ratd/single_well.npz     --name   ratd  --dataset single_well    --out   ratd_single_well.pdf     --indices 1 2 3 4 5 6 7 8 9 11 12 13 14 15 16 17 18 19 20 21

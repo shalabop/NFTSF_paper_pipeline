@@ -28,7 +28,7 @@ This script:
 
 Usage
 -----
-python compare_models.py \\
+conda run -n unified_tsf python compare_models.py \\
     --nftsf_data \\
         single_well:sw_test.npy:sw_model.pth:sw_config.json:sw_norm.npz:multi_sim:100:100 \\
         double_well:dw_test.npy:dw_model.pth:::multi_sim:100:100 \\

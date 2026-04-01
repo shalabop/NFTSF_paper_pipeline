@@ -1,6 +1,6 @@
 export PYTHONPATH=./
 CUDA_DEVICE_ORDER=PCI_BUS_ID \
-python3 ./src/experiments/CSDI.py \
+conda run -n unified_tsf python ./src/experiments/CSDI.py \
    --dataset_type="ExchangeRate" \
    --device="cuda:0" \
    --batch_size=32 \

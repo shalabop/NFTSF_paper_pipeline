@@ -38,10 +38,10 @@ ls $CUDA_PATH/lib64/libnvrtc.so* || echo "libnvrtc.so not found in lib64"
 ls $CUDA_PATH/targets/x86_64-linux/lib/libnvrtc.so* || echo "libnvrtc.so not found in targets/x86_64-linux/lib"
 
 
-python train_ratd.py --config test.yaml
+conda run -n unified_tsf python train_ratd.py --config test.yaml
 
 # Step 5: Forecast
-python forecast_ratd.py --config test.yaml
+conda run -n unified_tsf python forecast_ratd.py --config test.yaml
 
-python plot_heatmap.py --results results/ratd/test.npz     --name   ratd  --dataset double_well    --out   test.pdf   \
+conda run -n unified_tsf python plot_heatmap.py --results results/ratd/test.npz     --name   ratd  --dataset double_well    --out   test.pdf   \
   --indices 1 2 3 4 5 6 7 8 9 --denorm training_data/double_well_std.npz

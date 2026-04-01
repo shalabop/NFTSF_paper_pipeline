@@ -21,7 +21,7 @@ norm_std          float       Z-score σ (train set only)
 CLI usage
 ---------
 # From existing NFTSF_ssh .npy files:
-python data/canonical.py \\
+conda run -n unified_tsf python data/canonical.py \\
     --source nftsf \\
     --train /home/user/NFTSF_ssh/alanine_phi_train.npy \\
     --test  /home/user/NFTSF_ssh/alanine_phi_test.npy \\
@@ -29,7 +29,7 @@ python data/canonical.py \\
     --out outputs/canonical/alanine_phi.npz
 
 # From a raw (N, T) .npz produced by a generator:
-python data/canonical.py \\
+conda run -n unified_tsf python data/canonical.py \\
     --source npz \\
     --input /path/to/double_well.npz \\
     --landscape double_well \\

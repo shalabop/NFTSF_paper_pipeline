@@ -93,13 +93,13 @@ mkdir -p "${PROJECT_DIR}/logs"
 module load mamba/latest
 source activate "$CONDA_ENV"
 echo "[env] Conda env  : $CONDA_DEFAULT_ENV"
-echo "[env] Python     : $(which python) — $(python --version 2>&1)"
+echo "[env] Python     : $(conda run -n unified_tsf python -c 'import sys; print(sys.executable)') — $(conda run -n unified_tsf python --version 2>&1)"
 
 # Help PyTorch manage GPU memory more efficiently.
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
 # Print GPU info (non-fatal if no GPU available, e.g. local test).
-python -c "
+conda run -n unified_tsf python -c "
 import torch
 print(f'[env] PyTorch    : {torch.__version__}')
 print(f'[env] CUDA avail : {torch.cuda.is_available()}')
@@ -126,7 +126,7 @@ else
     done
 
     # MD config: lookback=50, horizon=50
-    python "${PROJECT_DIR}/data/canonical.py" \
+    conda run -n unified_tsf python "${PROJECT_DIR}/data/canonical.py" \
         --source    nftsf \
         --train     "$TRAIN_NPY" \
         --test      "$TEST_NPY" \
@@ -154,7 +154,7 @@ fi
 cd "$PROJECT_DIR"
 
 TRAIN_CMD=(
-    python train/train.py
+    conda run -n unified_tsf python train/train.py
     --model     "$MODEL"
     --config    "$CONFIG"
     --data      "$DATA_NPZ"
@@ -179,7 +179,7 @@ CHECKPOINT_DIR="${OUTPUT_DIR}/${MODEL}/alanine_phi/${RUN_ID}"
 
 if [[ -d "$CHECKPOINT_DIR" ]]; then
     echo "[step 2] Evaluating $MODEL (n_samples=$N_EVAL_SAMPLES) …"
-    python eval/evaluate.py \
+    conda run -n unified_tsf python eval/evaluate.py \
         --checkpoint  "$CHECKPOINT_DIR" \
         --data        "$DATA_NPZ" \
         --n_samples   "$N_EVAL_SAMPLES"

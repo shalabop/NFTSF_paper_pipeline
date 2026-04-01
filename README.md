@@ -84,7 +84,7 @@ Both source repos must live as siblings of this directory:
 ```bash
 cd /home/user/unified_trajectory_forecasting
 
-python data/canonical.py \
+conda run -n unified_tsf python data/canonical.py \
   --source    nftsf \
   --train     /home/user/NFTSF_ssh/alanine_phi_train.npy \
   --test      /home/user/NFTSF_ssh/alanine_phi_test.npy \
@@ -95,7 +95,7 @@ python data/canonical.py \
 ### From a raw (N, T) .npz (e.g. Mahmoud's generator output)
 
 ```bash
-python data/canonical.py \
+conda run -n unified_tsf python data/canonical.py \
   --source    npz \
   --input     /home/user/tsf_models-adam/data/double_well.npz \
   --landscape double_well \
@@ -111,27 +111,27 @@ normalisation statistics so every downstream model uses identical data.
 
 ```bash
 # NFTSF Normalizing Flow
-python train/train.py \
+conda run -n unified_tsf python train/train.py \
   --model  nftsf \
   --config configs/nftsf.yaml \
   --data   outputs/canonical/alanine_phi.npz \
   --run_id run_001
 
 # TSDiff-Q
-python train/train.py \
+conda run -n unified_tsf python train/train.py \
   --model  tsdiff_q \
   --config configs/tsdiff_q.yaml \
   --data   outputs/canonical/alanine_phi.npz \
   --run_id run_001
 
 # CSDI
-python train/train.py \
+conda run -n unified_tsf python train/train.py \
   --model  csdi \
   --config configs/csdi.yaml \
   --data   outputs/canonical/alanine_phi.npz
 
 # ARIMA (no gradient training; runs instantly)
-python train/train.py \
+conda run -n unified_tsf python train/train.py \
   --model  arima \
   --config configs/arima.yaml \
   --data   outputs/canonical/alanine_phi.npz
@@ -145,7 +145,7 @@ Checkpoints and configs are saved to:
 ## Step 2 — Evaluate a trained model
 
 ```bash
-python eval/evaluate.py \
+conda run -n unified_tsf python eval/evaluate.py \
   --checkpoint outputs/nftsf/alanine_phi/run_001/ \
   --data        outputs/canonical/alanine_phi.npz \
   --n_samples   500
@@ -160,7 +160,7 @@ Repeat for every model you want to compare.
 ## Step 3 — Generate comparison plots
 
 ```bash
-python viz/comparison.py \
+conda run -n unified_tsf python viz/comparison.py \
   --results_dir outputs/ \
   --landscape   alanine_phi \
   --trajectory_id 42 \

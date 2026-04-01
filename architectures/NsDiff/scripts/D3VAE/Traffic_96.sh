@@ -1,6 +1,6 @@
 export PYTHONPATH=./
 CUDA_DEVICE_ORDER=PCI_BUS_ID \
-python3 ./src/experiments/D3VAE.py \
+conda run -n unified_tsf python ./src/experiments/D3VAE.py \
    --dataset_type="Traffic" \
    --device="cuda:0" \
    --batch_size=8 \

@@ -49,34 +49,34 @@ Train models using the `train_model.py` and `train_cond_model.py` scripts for `T
 Example commands for regular (i.e., no missing values) forecasting:
 ```sh
 # Train TSDiff on the Uber dataset for regular forecasting
-python bin/train_model.py -c configs/train_tsdiff/train_uber_tlc.yaml
+conda run -n unified_tsf python bin/train_model.py -c configs/train_tsdiff/train_uber_tlc.yaml
 
 # Train TSDiff on the M4 dataset for regular forecasting
-python bin/train_model.py -c configs/train_tsdiff/train_m4.yaml
+conda run -n unified_tsf python bin/train_model.py -c configs/train_tsdiff/train_m4.yaml
 
 # Train TSDiff-Cond on the Uber dataset for regular forecasting
-python bin/train_cond_model.py -c configs/train_tsdiff-cond/uber_tlc_hourly.yaml
+conda run -n unified_tsf python bin/train_cond_model.py -c configs/train_tsdiff-cond/uber_tlc_hourly.yaml
 
 # Train TSDiff-Cond on the M4 dataset for regular forecasting
-python bin/train_cond_model.py -c configs/train_tsdiff-cond/m4_hourly.yaml
+conda run -n unified_tsf python bin/train_cond_model.py -c configs/train_tsdiff-cond/m4_hourly.yaml
 ```
 
 Example commands for forecasting with missing values:
 ```sh
 # Train TSDiff on the Uber dataset for the missing values experiment
-python bin/train_model.py -c configs/train_tsdiff/train_missing_uber_tlc.yaml
+conda run -n unified_tsf python bin/train_model.py -c configs/train_tsdiff/train_missing_uber_tlc.yaml
 
 # Train TSDiff on the KDDCup dataset for the missing values experiment
-python bin/train_model.py -c configs/train_tsdiff/train_missing_kdd_cup.yaml
+conda run -n unified_tsf python bin/train_model.py -c configs/train_tsdiff/train_missing_kdd_cup.yaml
 
 # Train TSDiff-Cond on the Uber dataset for the RM missing values experiment
-python bin/train_cond_model.py -c configs/train_tsdiff-cond/missing_RM_uber_tlc_hourly.yaml
+conda run -n unified_tsf python bin/train_cond_model.py -c configs/train_tsdiff-cond/missing_RM_uber_tlc_hourly.yaml
 
 # Train TSDiff-Cond on the KDDCup dataset for the BM-B missing values experiment
-python bin/train_cond_model.py -c configs/train_tsdiff-cond/missing_BM-B_kdd_cup_2018_without_missing.yaml
+conda run -n unified_tsf python bin/train_cond_model.py -c configs/train_tsdiff-cond/missing_BM-B_kdd_cup_2018_without_missing.yaml
 
 # Train TSDiff-Cond on the KDDCup dataset for the BM-E missing values experiment
-python bin/train_cond_model.py -c configs/train_tsdiff-cond/missing_BM-E_kdd_cup_2018_without_missing.yaml
+conda run -n unified_tsf python bin/train_cond_model.py -c configs/train_tsdiff-cond/missing_BM-E_kdd_cup_2018_without_missing.yaml
 ```
 Note that for TSDiff we train only one model and all the missing value scenarios are evaluated using the same unconditional model. However, for TSDiff-Cond, one model is trained per missingness scenario.
 
@@ -89,10 +89,10 @@ Use the `guidance_experiment.py` script and `configs/guidance.yaml` config to ru
 Example commands:
 ```sh
 # Run observation self-guidance on the Solar dataset
-python bin/guidance_experiment.py -c configs/guidance/guidance_solar.yaml --ckpt /path/to/ckpt
+conda run -n unified_tsf python bin/guidance_experiment.py -c configs/guidance/guidance_solar.yaml --ckpt /path/to/ckpt
 
 # Run observation self-guidance on the KDDCup dataset
-python bin/guidance_experiment.py -c configs/guidance/guidance_kdd_cup.yaml --ckpt /path/to/ckpt
+conda run -n unified_tsf python bin/guidance_experiment.py -c configs/guidance/guidance_kdd_cup.yaml --ckpt /path/to/ckpt
 ```
 
 #### Refine Predictions of Base Forecasters
@@ -101,10 +101,10 @@ Use `refinement_experiment.py` script and `configs/refinement.yaml` config to ru
 Example commands:
 ```sh
 # Refine predictions from the Linear model on the Solar dataset
-python bin/refinement_experiment.py -c configs/refinement/solar_nips-linear.yaml --ckpt /path/to/ckpt
+conda run -n unified_tsf python bin/refinement_experiment.py -c configs/refinement/solar_nips-linear.yaml --ckpt /path/to/ckpt
 
 # Refine predictions from the DeepAR model on the M4 dataset
-python bin/refinement_experiment.py -c configs/refinement/m4_hourly-deepar.yaml --ckpt /path/to/ckpt
+conda run -n unified_tsf python bin/refinement_experiment.py -c configs/refinement/m4_hourly-deepar.yaml --ckpt /path/to/ckpt
 ```
 #### Train Downstream Models using Synthetic Data
 Use `tstr_experiment.py` script and `configs/tstr.yaml` config to run the _train on synthetic-test on real_ experiments. Specific configurations used in the paper can be found in `configs/tstr/`.
@@ -112,10 +112,10 @@ Use `tstr_experiment.py` script and `configs/tstr.yaml` config to run the _train
 Example commands:
 ```sh
 # TSTR on the Solar Dataset
-python bin/tstr_experiment.py -c configs/tstr/solar_nips.yaml --ckpt /path/to/ckpt
+conda run -n unified_tsf python bin/tstr_experiment.py -c configs/tstr/solar_nips.yaml --ckpt /path/to/ckpt
 
 # TSTR on the KDDCup Dataset
-python bin/tstr_experiment.py -c configs/tstr/kdd_cup_2018_without_missing.yaml --ckpt /path/to/ckpt
+conda run -n unified_tsf python bin/tstr_experiment.py -c configs/tstr/kdd_cup_2018_without_missing.yaml --ckpt /path/to/ckpt
 ```
 
 ## BibTeX

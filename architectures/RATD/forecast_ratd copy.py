@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 RATD Forecasting Script
-Usage: python forecast_ratd.py --config ratd_config.yaml
+Usage: conda run -n unified_tsf python forecast_ratd.py --config ratd_config.yaml
 """
 
 import torch

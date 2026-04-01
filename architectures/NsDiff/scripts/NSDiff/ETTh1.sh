@@ -1,6 +1,6 @@
 export PYTHONPATH=./
 CUDA_DEVICE_ORDER=PCI_BUS_ID \
-python3 ./src/experiments/NsDiff.py \
+conda run -n unified_tsf python ./src/experiments/NsDiff.py \
    --dataset_type="ETTh1" \
    --device="cuda:0" \
    --batch_size=32 \
