@@ -2,10 +2,9 @@
 models/ratd.py
 ==============
 Wrapper around RATD (Reference-Aided Temporal Diffusion) from
-tsf_models-adam/models/RATD/.
+architectures/RATD/.
 
-Imports RATD_Forecasting from the upstream repo via sys.path insertion.
-No source files are modified.
+Imports RATD_Forecasting via sys.path insertion.  No source files are modified.
 """
 
 from __future__ import annotations
@@ -19,9 +18,8 @@ import torch
 from models.base import BaseModel
 
 _RATD_ROOT = (
-    Path(__file__).resolve().parents[1].parent
-    / "tsf_models-adam"
-    / "models"
+    Path(__file__).resolve().parents[1]
+    / "architectures"
     / "RATD"
 ).as_posix()
 if _RATD_ROOT not in sys.path:

@@ -1,10 +1,9 @@
 """
 models/nsdiff.py
 ================
-Wrapper around NsDiff (Neural SDE Diffusion) from tsf_models-adam/models/NsDiff/.
+Wrapper around NsDiff from architectures/NsDiff/.
 
-Imports the NsDiff model from the upstream repo via sys.path insertion.
-No source files are modified.
+Imports the NsDiff model via sys.path insertion.  No source files are modified.
 """
 
 from __future__ import annotations
@@ -19,17 +18,15 @@ from models.base import BaseModel
 
 _NSDIFF_ROOTS = [
     (
-        Path(__file__).resolve().parents[1].parent
-        / "tsf_models-adam"
-        / "models"
+        Path(__file__).resolve().parents[1]
+        / "architectures"
         / "NsDiff"
-        / "src"
     ).as_posix(),
     (
-        Path(__file__).resolve().parents[1].parent
-        / "tsf_models-adam"
-        / "models"
+        Path(__file__).resolve().parents[1]
+        / "architectures"
         / "NsDiff"
+        / "src"
     ).as_posix(),
 ]
 for _root in _NSDIFF_ROOTS:
@@ -54,11 +51,9 @@ class NsDiffModel(BaseModel):
             device_str = "cuda" if torch.cuda.is_available() else "cpu"
         self.device = torch.device(device_str)
 
-        # NsDiff exposes a single model class; import lazily.
-        try:
-            from models.nsdiff_model import NsDiff  # expected location
-        except ImportError:
-            from nsdiff_model import NsDiff  # fallback
+        # NsDiff is at architectures/NsDiff/src/models/NsDiff.py
+        # architectures/NsDiff/ is on sys.path, so use the package path.
+        from NsDiff.src.models.NsDiff import NsDiff
 
         self.model = NsDiff(
             context_length=self.n_past,

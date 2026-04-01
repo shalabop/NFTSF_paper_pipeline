@@ -1,0 +1,18 @@
+ckpt: lightning_logs/version_0/best_checkpoint.ckpt
+context_length: 16
+dataset: linear_ar1
+device: cuda:0
+diffusion_config: diffusion_small_config
+freq: H
+init_skip: False
+num_samples: 7
+prediction_length: 50
+sampler: ddpm
+sampler_params:
+  guidance: quantile
+  scale: 4
+setup: forecasting
+use_features: False
+use_lags: False #true
+normalization: true
+use_validation_set: False

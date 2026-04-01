@@ -2,10 +2,9 @@
 models/csdi.py
 ==============
 Wrapper around CSDI (Conditional Score-Based Diffusion for Imputation /
-Forecasting) from tsf_models-adam/models/CSDI/.
+Forecasting) from architectures/CSDI/.
 
-Imports CSDI_Forecasting from the upstream repo via sys.path insertion.
-No source files are modified.
+Imports CSDI_Forecasting via sys.path insertion.  No source files are modified.
 """
 
 from __future__ import annotations
@@ -19,9 +18,8 @@ import torch
 from models.base import BaseModel
 
 _CSDI_ROOT = (
-    Path(__file__).resolve().parents[1].parent
-    / "tsf_models-adam"
-    / "models"
+    Path(__file__).resolve().parents[1]
+    / "architectures"
     / "CSDI"
 ).as_posix()
 if _CSDI_ROOT not in sys.path:
