@@ -1,7 +1,7 @@
-
 #!/usr/bin/env bash
 #SBATCH --job-name=DWTSFdiff
 #SBATCH --mail-user=meahmed@asu.edu
+#SBATCH --mail-type=ALL
 #SBATCH --time=3-00:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
@@ -9,9 +9,12 @@
 #SBATCH --qos=public
 #SBATCH --gres=gpu:2
 #SBATCH --mem=32G
-#SBATCH --output=DW_TSFdiff.%j.out
-#SBATCH --error=DW_TSFdiff.%j.err
+#SBATCH --output=logs/tsdiff/double_well.%j.out
+#SBATCH --error=logs/tsdiff/double_well.%j.err
 
+mkdir -p checkpoints/tsdiff/double_well
+mkdir -p results/tsdiff/double_well
+mkdir -p logs/tsdiff/double_well
 
 source venv310/bin/activate
 which python

@@ -1,7 +1,7 @@
-
 #!/usr/bin/env bash
 #SBATCH --job-name=DWTSFdiffcond
 #SBATCH --mail-user=meahmed@asu.edu
+#SBATCH --mail-type=ALL
 #SBATCH --time=3-00:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
@@ -9,12 +9,16 @@
 #SBATCH --qos=public
 #SBATCH --gres=gpu:2
 #SBATCH --mem=32G
-#SBATCH --output=DW_TSFdiff_cond.%j.out
-#SBATCH --error=DW_TSFdiff_cond.%j.err
+#SBATCH --output=logs/tsdiff_cond/DW_TSFdiff_cond.%j.out
+#SBATCH --error=logs/tsdiff_cond/DW_TSFdiff_cond.%j.err
 
 
 source venv310/bin/activate
 which python
+
+mkdir -p checkpoints/tsdiff_cond/double_well
+mkdir -p results/tsdiff_cond/double_well
+mkdir -p logs/tsdiff_cond/double_well
 
 PROJECT_ROOT=$(pwd) 
 export PYTHONPATH=$PROJECT_ROOT:$PYTHONPATH
@@ -31,7 +35,6 @@ export LD_LIBRARY_PATH="$CUDA_PATH/lib64:$CUDA_PATH/targets/x86_64-linux/lib:$LD
 export LIBRARY_PATH="$CUDA_PATH/targets/x86_64-linux/lib:$LIBRARY_PATH"
 export CPATH="$CUDA_PATH/targets/x86_64-linux/include:$CPATH"
 
-#export KEOPS_CACHE_DIR=$SLURM_TMPDIR/keops_cache
 export KEOPS_CACHE_DIR=$HOME/.cache/keops
 mkdir -p $KEOPS_CACHE_DIR
 
