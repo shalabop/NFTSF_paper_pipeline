@@ -15,11 +15,14 @@ import yaml
 from pathlib import Path
 import matplotlib.pyplot as plt
 
-ROOT = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.join(ROOT, "architectures", "RATD"))
-sys.path.insert(0, ROOT)
+ROOT = os.path.dirname(os.path.abspath(__file__))                     # train/CSDI
+PROJECT_ROOT = os.path.abspath(os.path.join(ROOT, "..", ".."))        # project root
 
-# Import your existing modules
+sys.path.insert(0, os.path.join(PROJECT_ROOT, "architectures", "RATD"))   # for diff_models
+sys.path.insert(0, os.path.join(PROJECT_ROOT, "architectures"))           # for CSDI package
+sys.path.insert(0, PROJECT_ROOT)  
+
+# import existing modules
 from TCN_master.TCN.ts_cnn.tstcn import TimeSeriesTCN
 
 

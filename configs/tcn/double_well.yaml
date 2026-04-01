@@ -1,5 +1,5 @@
 data:
-  data_path: "training_data/double_well_std.npz"
+  data_path: "DATA/double_well_std.npz"
   L: 100
   H: 100
   train_stride: 25 #stride for trainign the encoder
@@ -27,9 +27,9 @@ train:
   val_start: 200 ##index of time step where val start
 
 path:
-  dataset_path: "training_data/double_well_std.npz"
-  encoder_path: "tcn_weights/tcn_encoder_dw.pth"
+  dataset_path: "DATA/double_well_std.npz"
+  encoder_path: "checkpoints/tcn/double_well.pth"
   vec_path: "references/double_well/embeddings.pt"
   futures_path: "references/double_well/futures.npy"
   ref_path: "references/double_well/indices.pt"
-  training_curv: "tcn_weights/dw_loss.npz"
+  training_curv: "checkpoints/tcn/double_well_loss.npz"
