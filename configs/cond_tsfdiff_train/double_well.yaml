@@ -17,10 +17,6 @@ num_batches_per_epoch: 128
 max_epochs: 1000
 dataset: double_well
 num_samples: 100
-sampler: ddpm
-sampler_params:
-  guidance: quantile #only for validations
-  scale: 4 
 eval_every: 50
 do_final_eval: true
 noise_observed: true

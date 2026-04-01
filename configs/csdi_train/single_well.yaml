@@ -1,27 +1,27 @@
 train:
-  epochs: 600
+  epochs: 1000
   batch_size: 64
   lr: 0.001
   itr_per_epoch: 128
-  prediction_length : 100
+  prediction_length: 100
   context_length: 100
   num_of_samples: 100
-  validation_size: 2000
-  testing_size: 3000
+  val_size: 9000
+  test_size: 3000
   valid_epoch_interval: 50
-  stride: 50
-  training_curv: "checkpoints/csdi/double_well/loss.npz"
-
-
+  stride: 25
+  training_curv: "checkpoints/csdi/single_well"
+  normalization: "none"
+  
 diffusion:
-  layers: 6 #4
-  channels: 128 #64
+  layers: 4
+  channels: 64
   nheads: 8
   diffusion_embedding_dim: 128
   beta_start: 0.0001
-  beta_end: 0.02
-  num_steps: 400
-  schedule: "linear" #"quad"
+  beta_end: 0.5
+  num_steps: 50 #
+  schedule: "linear"
   is_linear: True
 
 model:

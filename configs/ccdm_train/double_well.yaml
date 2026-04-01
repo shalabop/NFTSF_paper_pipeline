@@ -19,7 +19,7 @@ data:
   data_name: "double_well"
   context_length: 100         
   prediction_length: 100      
-  use_window_norm: true      
+  use_window_norm: false      
 
 model:
   n_emb: 2                   # CiDM encoder/decoder stack depth
@@ -30,7 +30,7 @@ model:
   n_depth: 2                 # number of DiT blocks
   n_heads: 8                 # attention heads
   attn_dropout: 0.1
-  mlp_ratio: 1               # FFN expansion factor in DiT
+  mlp_ratio: 4               # FFN expansion factor in DiT
   non_attn: false            # if true, replace attention with linear (ablation only)
 
 diffusion:
@@ -43,6 +43,6 @@ diffusion:
 
 contrastive:
   use_contrast: "contrast"   # "contrast" | "non-contrast"
-  contrast_weight: 0.0001      # λ  (paper Table 6: 0.001 for small datasets)
+  contrast_weight: 0.001      # λ  (paper Table 6: 0.001 for small datasets)
   n_negatives: 64            # N negatives per mode (variation + scaling)
   temperature: 0.1           # τ  (paper Table 9: 0.1 is best on most datasets)
