@@ -30,3 +30,8 @@ logs/
 results/
 *.out
 *.err
+
+# Project-specific runtime artifacts
+venv310/
+DATA/
+checkpoints/

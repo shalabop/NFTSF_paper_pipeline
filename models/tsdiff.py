@@ -1,15 +1,15 @@
 """
 models/tsdiff.py
 ================
-Wrapper around the TSDiff family of diffusion models from tsf_models-adam.
+Wrapper around the TSDiff family of diffusion models from
+architectures/unconditional_time_series_diffusion/.
 
 Covers three variants selected by ``config["model"]["name"]``:
   tsdiff_q    — unconditional TSDiff with DDPM quantile guidance
   tsdiff_ms   — unconditional TSDiff with DDIM multi-step guidance
   tsdiff_cond — conditional TSDiff (forecast via masking)
 
-The wrapper imports from the tsf_models-adam repository via sys.path
-insertion.  No files in that repo are modified.
+Imports via sys.path insertion.  No architecture files are modified.
 """
 
 from __future__ import annotations
@@ -24,12 +24,11 @@ import torch
 from models.base import BaseModel
 
 # ---------------------------------------------------------------------------
-# Locate tsf_models-adam and add required sub-paths.
+# Add architectures/unconditional_time_series_diffusion/src to sys.path.
 # ---------------------------------------------------------------------------
 _TSFDIFF_ROOT = (
-    Path(__file__).resolve().parents[1].parent
-    / "tsf_models-adam"
-    / "models"
+    Path(__file__).resolve().parents[1]
+    / "architectures"
     / "unconditional_time_series_diffusion"
     / "src"
 ).as_posix()

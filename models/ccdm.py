@@ -1,21 +1,10 @@
 """
 models/ccdm.py
 ==============
-Wrapper around CCDM (Contrastive Conditional Diffusion Model) from
-tsf_models-adam/models/CCDM/.
+Wrapper around CCDM (Contrastive Conditional Diffusion Model).
 
-Imports the CCDM Denoiser and DDPM classes from the upstream repo via
-sys.path insertion.  No source files are modified.
-
-⚠️  KNOWN ISSUE — model files not yet committed
--------------------------------------------------
-tsf_models-adam/models/CCDM/ is currently empty.  The required Python
-files (network.py, diffusion.py) have not yet been committed to that
-directory.  Until they land, instantiating CcdmModel will raise an
-ImportError with a descriptive message.
-
-All other pipeline infrastructure (config, registry entry, wrapper) is
-complete and will work without further changes once the files are committed.
+Imports the CCDM Denoiser and DDPM classes from architectures/CCDM/
+via sys.path insertion.  No source files are modified.
 """
 
 from __future__ import annotations
@@ -29,9 +18,8 @@ import torch
 from models.base import BaseModel
 
 _CCDM_ROOT = (
-    Path(__file__).resolve().parents[1].parent
-    / "tsf_models-adam"
-    / "models"
+    Path(__file__).resolve().parents[1]
+    / "architectures"
     / "CCDM"
 ).as_posix()
 if _CCDM_ROOT not in sys.path:
@@ -64,8 +52,7 @@ class CcdmModel(BaseModel):
             raise ImportError(
                 "CCDM model files (network.py, diffusion.py) not found in "
                 f"{_CCDM_ROOT}.  "
-                "The tsf_models-adam/models/CCDM/ directory is currently empty — "
-                "these files must be committed before CcdmModel can be used."
+                "Ensure architectures/CCDM/ exists and is on sys.path."
             ) from exc
 
         configs = self._build_configs(mc)
