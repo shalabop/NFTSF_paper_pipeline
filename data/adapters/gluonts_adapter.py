@@ -101,7 +101,9 @@ def get_gluonts_train_val_datasets(
 
     # OffsetSplitter.split returns (train, test-gen); we take train portion.
     train_ds, val_gen = splitter.split(train_ds_full)
-    val_ds = ListDataset(list(val_gen.generate_instances(n_future)), freq=_FREQ)
+    val_ds = ListDataset(
+        [inp for inp, _ in val_gen.generate_instances(n_future)], freq=_FREQ
+    )
 
     return train_ds, val_ds
 
