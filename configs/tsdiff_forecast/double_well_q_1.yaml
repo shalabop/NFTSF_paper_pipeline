@@ -1,4 +1,4 @@
-ckpt: checkpoints/uncond_tsfdiff/double_well/lightning_logs/version_0/best_checkpoint.ckpt
+ckpt: checkpoints/tsdiff/double_well/lightning_logs/version_0/checkpoints/last.ckpt
 model: unconditional
 freq: H
 context_length: 100
@@ -8,7 +8,7 @@ use_features: False
 use_lags: False
 init_skip: False
 batch_size: 64
-normalization: mean
+normalization: none
 device: cuda:0
 setup: forecasting
 dataset: double_well

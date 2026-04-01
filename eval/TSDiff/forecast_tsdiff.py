@@ -275,7 +275,7 @@ def forecast(
     ci50_lower = np.percentile(forecast_samples, 25, axis=2)
     ci50_upper = np.percentile(forecast_samples, 75, axis=2)
 
-    fig,axes=plt.subplots(nrows=2,ncols=4,figsize=(15,12))
+    '''fig,axes=plt.subplots(nrows=2,ncols=4,figsize=(15,12))
     axes = axes.flatten() 
     for i in range(8):
         #mean_forecast = forecast_samples[i].mean
@@ -292,7 +292,7 @@ def forecast(
         axes[i].axhline(-1,linestyle="--",color='red')
         axes[i].axhline(1,linestyle="--",color='red')
 
-    fig.suptitle(f'TSFDIFF {config["dataset"]}', fontsize=16)
+    fig.suptitle(f'TSFDIFF {config["dataset"]}', fontsize=16)'''
     path = Path("plots/uncond_tsfdiff")
     path.mkdir(parents=True, exist_ok=True)
     filename = datetime.datetime.now().strftime("uncond_tsfdiff_forecasts_%Y-%m-%d %H:%M:%S")
