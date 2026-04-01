@@ -1,6 +1,7 @@
+PYTHON_RUNNER=(conda run -n unified_tsf python)
 export PYTHONPATH=./
 CUDA_DEVICE_ORDER=PCI_BUS_ID \
-conda run -n unified_tsf python ./src/experiments/CSDI.py \
+"${PYTHON_RUNNER[@]}" ./src/experiments/CSDI.py \
    config_wandb --project=3108Diffusion \
    --dataset_type="Traffic" \
    --device="cuda:1" \
