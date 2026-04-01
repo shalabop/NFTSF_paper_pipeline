@@ -78,13 +78,14 @@ if [[ ! -f "$DATA_NPZ" ]]; then
     module load mamba/latest 2>/dev/null || true
     source activate "$CONDA_ENV" 2>/dev/null || true
 
+    # MD config: lookback=50, horizon=50
     python "${PROJECT_DIR}/data/canonical.py" \
         --source    nftsf \
         --train     "$TRAIN_NPY" \
         --test      "$TEST_NPY" \
         --landscape alanine_phi \
-        --n_past    100 \
-        --n_future  100 \
+        --n_past    50 \
+        --n_future  50 \
         --seed      42 \
         --out       "$DATA_NPZ"
     echo "[pre-flight] Canonical dataset ready: $DATA_NPZ"

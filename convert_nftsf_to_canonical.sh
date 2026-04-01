@@ -35,8 +35,9 @@ OUT_NPZ="${OUT_NPZ:-outputs/canonical/alanine_phi.npz}"
 LANDSCAPE="alanine_phi"
 
 # Prediction horizon metadata (stored in .npz; must match base.yaml)
-N_PAST=100
-N_FUTURE=100
+# MD config: lookback=50, horizon=50
+N_PAST=50
+N_FUTURE=50
 
 # Seed (must match base.yaml: data.seed)
 SEED=42

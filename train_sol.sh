@@ -125,13 +125,14 @@ else
         fi
     done
 
+    # MD config: lookback=50, horizon=50
     python "${PROJECT_DIR}/data/canonical.py" \
         --source    nftsf \
         --train     "$TRAIN_NPY" \
         --test      "$TEST_NPY" \
         --landscape alanine_phi \
-        --n_past    100 \
-        --n_future  100 \
+        --n_past    50 \
+        --n_future  50 \
         --seed      42 \
         --out       "$DATA_NPZ"
     echo "[step 0] Canonical dataset written: $DATA_NPZ"

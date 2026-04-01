@@ -54,7 +54,11 @@ def get_model(name: str) -> Type[BaseModel]:
         from models.arima import ARIMAModel
         return ARIMAModel
 
+    if name == "ccdm":
+        from models.ccdm import CcdmModel
+        return CcdmModel
+
     raise ValueError(
         f"Unknown model '{name}'.  Available models: "
-        "nftsf, tsdiff_q, tsdiff_ms, tsdiff_cond, csdi, ratd, nsdiff, arima."
+        "nftsf, tsdiff_q, tsdiff_ms, tsdiff_cond, csdi, ratd, nsdiff, arima, ccdm."
     )
