@@ -8,17 +8,20 @@ import torch
 from tqdm import tqdm
 from types import SimpleNamespace
 
-ROOT = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.join(ROOT, "architectures", "NsDiff"))
-sys.path.insert(0, ROOT)
+ROOT = os.path.dirname(os.path.abspath(__file__))                     
+PROJECT_ROOT = os.path.abspath(os.path.join(ROOT, "..", ".."))        
 
-from models.NsDiff.src.models.NsDiff import NsDiff
-import models.NsDiff.src.layer.mu_backbone as ns_Transformer
-import models.NsDiff.src.layer.g_backbone as G
-from models.NsDiff.src.layer.nsdiff_utils import (
+sys.path.insert(0, os.path.join(PROJECT_ROOT, "architectures", "NsDiff"))  
+sys.path.insert(0, os.path.join(PROJECT_ROOT, "architectures"))           
+sys.path.insert(0, PROJECT_ROOT)      
+
+from NsDiff.src.models.NsDiff import NsDiff
+import NsDiff.src.layer.mu_backbone as ns_Transformer
+import NsDiff.src.layer.g_backbone as G
+from NsDiff.src.layer.nsdiff_utils import (
     q_sample, cal_sigma_tilde, cal_forward_noise)   
-from models.NsDiff.src.utils.sigma import wv_sigma_trailing
-from models.NsDiff.dataset_md import get_dataloader_md
+from NsDiff.src.utils.sigma import wv_sigma_trailing
+from NsDiff.dataset_md import get_dataloader_md
 
 EPS = 1e-8
 

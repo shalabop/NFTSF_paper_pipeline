@@ -11,7 +11,7 @@ batch_size: 32 #64
 lr: 0.001 #0.0001
 patience: 20
 valid_epoch_interval: 2
-num_of_samples: 100
+num_of_samples: 77 #100
 
 normalization: "none"
 
