@@ -1,13 +1,13 @@
 context_length: 100
 prediction_length: 100
 stride: 25        
-test_size: 30 #3000
-val_size: 2000
+test_size: 3000
+val_size: 9000
 
 train_curv: "checkpoints/nsdiff/double_well/"
 
-epochs: 3 #300
-batch_size: 32 #64
+epochs: 1000
+batch_size: 64
 lr: 0.001 #0.0001
 patience: 20
 valid_epoch_interval: 2
@@ -15,10 +15,10 @@ num_of_samples: 77 #100
 
 normalization: "none"
 
-diffusion_steps: 20 #20 #100 #20 #
-beta_schedule: "quad" #"linear"
+diffusion_steps: 100
+beta_schedule: "linear"
 beta_start: 0.0001
-beta_end: 0.02 #0.5
+beta_end: 0.5
 
 d_model: 64 #512     
 n_heads: 8 #4      
