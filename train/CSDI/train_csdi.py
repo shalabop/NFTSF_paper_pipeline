@@ -7,27 +7,25 @@ import yaml
 import torch
 import numpy as np
 
-ROOT = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.join(ROOT, "architectures", "CSDI"))
-sys.path.insert(0, ROOT)
+ROOT = os.path.dirname(os.path.abspath(__file__))                     # train/CSDI
+PROJECT_ROOT = os.path.abspath(os.path.join(ROOT, "..", ".."))        # project root
 
-from models.CSDI.main_model import CSDI_Forecasting
-from models.CSDI.dataset_md import get_dataloader_md
+sys.path.insert(0, os.path.join(PROJECT_ROOT, "architectures", "CSDI"))   # for diff_models
+sys.path.insert(0, os.path.join(PROJECT_ROOT, "architectures"))           # for CSDI package
+sys.path.insert(0, PROJECT_ROOT)                                          # for top-level modules if any
 
-import importlib.util
-spec = importlib.util.spec_from_file_location(
-    "csdi_utils", os.path.join(ROOT, "architectures", "CSDI", "utils.py")
-)
-csdi_utils = importlib.util.module_from_spec(spec)  
-spec.loader.exec_module(csdi_utils)
-train = csdi_utils.train
+from CSDI.main_model import CSDI_Forecasting
+from CSDI.dataset_md import get_dataloader_md
+from CSDI.utils import train
+
+train = train
 
 def main():
     parser = argparse.ArgumentParser(description="Train CSDI on MD trajectories")
-    parser.add_argument("--config",     "-c", required=True)
-    parser.add_argument("--input",      "-i", required=True)
-    parser.add_argument("--out",        "-o", required=True)
-    parser.add_argument("--device",     "-d", default="cuda:0")
+    parser.add_argument("--config", "-c", required=True)
+    parser.add_argument("--input", "-i", required=True)
+    parser.add_argument("--out", "-o", required=True)
+    parser.add_argument("--device", "-d", default="cuda:0")
     args = parser.parse_args()
 
     with open(args.config, "r") as f:
