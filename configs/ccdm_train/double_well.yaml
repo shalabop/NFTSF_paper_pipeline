@@ -1,5 +1,5 @@
 train:
-  epochs: 50 #500
+  epochs: 5 #500
   batch_size: 64
   lr: 0.001
   n_samples: 99 #100            
@@ -15,7 +15,7 @@ train:
 
 
 data:
-  data_path: "data/double_well_std.npz"
+  data_path: "DATA/double_well_std.npz"
   data_name: "double_well"
   context_length: 100         
   prediction_length: 100      

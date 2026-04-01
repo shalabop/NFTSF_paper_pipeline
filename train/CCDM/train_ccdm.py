@@ -8,13 +8,15 @@ import random
 import numpy as np
 import torch
 
-ROOT     = os.path.dirname(os.path.abspath(__file__))
-CCDM_DIR = os.path.join(ROOT, "architectures", "CCDM")
-sys.path.insert(0, CCDM_DIR)
-sys.path.insert(0, ROOT)
+ROOT = os.path.dirname(os.path.abspath(__file__))                     # train/CSDI
+PROJECT_ROOT = os.path.abspath(os.path.join(ROOT, "..", ".."))        # project root
 
-from dataset_md   import get_dataloader_md   
-from custom_model import DiffMTS           
+sys.path.insert(0, os.path.join(PROJECT_ROOT, "architectures", "CCDM"))   # for diff_models
+sys.path.insert(0, os.path.join(PROJECT_ROOT, "architectures"))           # for CSDI package
+sys.path.insert(0, PROJECT_ROOT)  
+
+from CCDM.dataset_md   import get_dataloader_md   
+from CCDM.custom_model import DiffMTS           
 
 def build_configs(cfg, num_feat, device):
 

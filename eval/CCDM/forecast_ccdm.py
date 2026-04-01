@@ -7,14 +7,16 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
-ROOT     = os.path.dirname(os.path.abspath(__file__))
-CCDM_DIR = os.path.join(ROOT, "architectures", "CCDM")
-sys.path.insert(0, CCDM_DIR)
-sys.path.insert(0, ROOT)
+ROOT = os.path.dirname(os.path.abspath(__file__))                     # train/CSDI
+PROJECT_ROOT = os.path.abspath(os.path.join(ROOT, "..", ".."))        # project root
 
-from network     import Denoiser          # noqa
-from diffusion   import DDPM              # noqa
-from dataset_md  import get_dataloader_md # noqa
+sys.path.insert(0, os.path.join(PROJECT_ROOT, "architectures", "CCDM"))   # for diff_models
+sys.path.insert(0, os.path.join(PROJECT_ROOT, "architectures"))           # for CSDI package
+sys.path.insert(0, PROJECT_ROOT)  
+
+from CCDM.network     import Denoiser          # noqa
+from CCDM.diffusion   import DDPM              # noqa
+from CCDM.dataset_md  import get_dataloader_md # noqa
 
 def forecast_ccdm(denoiser, diffusion, test_loader, n_samples,
                   device, pred_len, num_feat, use_norm):
