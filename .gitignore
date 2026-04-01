@@ -30,3 +30,8 @@ logs/
 results/
 *.out
 *.err
+
+##virtual environment
+ 
+##venv for csdi, nsdiff, ccdm, tsdiff, ratd, arima
+venv310/
