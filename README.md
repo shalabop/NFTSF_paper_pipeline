@@ -75,6 +75,20 @@ Both source repos must live as siblings of this directory:
 /home/user/unified_trajectory_forecasting/   ← this repo
 ```
 
+### Python runner configuration (HPC-safe)
+
+Shell launchers in this repo source `runner.sh`, which centralizes Python
+execution via:
+
+- `ENV_NAME` (default: `unified_tsf`)
+- `conda run -n "$ENV_NAME" python`
+
+To switch environments without editing scripts:
+
+```bash
+ENV_NAME=my_env bash train_sol.sh
+```
+
 ---
 
 ## Step 0 — Build a canonical dataset

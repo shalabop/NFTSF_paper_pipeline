@@ -1,4 +1,6 @@
-PYTHON_RUNNER=(conda run -n unified_tsf python)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR" && git rev-parse --show-toplevel)"
+source "$REPO_ROOT/runner.sh"
   1 #!/usr/bin/env bash
   2 #SBATCH --job-name=uncondTSFdiff
   3 #SBATCH --time=3-00:00:00          # 3 days max

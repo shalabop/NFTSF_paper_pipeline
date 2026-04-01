@@ -1,5 +1,7 @@
 #!/bin/bash
-PYTHON_RUNNER=(conda run -n unified_tsf python)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR" && git rev-parse --show-toplevel)"
+source "$REPO_ROOT/runner.sh"
 # Ported from NFTSF_ssh/run_compare_models.sh into NFTSF_paper_pipeline.
 # compare_models.py must be run from the NFTSF_paper_pipeline directory.
 #SBATCH --job-name=nftsf_compare
