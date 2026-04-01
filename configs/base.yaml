@@ -9,8 +9,9 @@
 
 data:
   seed: 42                # Seeded trajectory split + segment shuffle
-  n_past: 100             # Context (lookback) window length in time steps
-  n_future: 100           # Forecast horizon in time steps
+  # MD config: lookback=50, horizon=50
+  n_past: 50              # Context (lookback) window length in time steps
+  n_future: 50            # Forecast horizon in time steps
   val_fraction: 0.10      # Fraction of train segments held out for validation
   train_fraction: 0.80    # Fraction of all trajectories used for training
   stride: 1               # Sliding-window stride for NFTSF segment extraction
