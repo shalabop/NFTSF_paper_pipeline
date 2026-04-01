@@ -7,13 +7,16 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
-ROOT     = os.path.dirname(os.path.abspath(__file__))
-CSDI_DIR = os.path.join(ROOT, "architectures", "CSDI")
-sys.path.insert(0, CSDI_DIR)
-sys.path.insert(0, ROOT)
+ROOT = os.path.dirname(os.path.abspath(__file__))                     # train/CSDI
+PROJECT_ROOT = os.path.abspath(os.path.join(ROOT, "..", ".."))        # project root
 
-from models.CSDI.main_model import CSDI_Forecasting
-from models.CSDI.dataset_md import get_dataloader_md
+sys.path.insert(0, os.path.join(PROJECT_ROOT, "architectures", "CSDI"))   # for diff_models
+sys.path.insert(0, os.path.join(PROJECT_ROOT, "architectures"))           # for CSDI package
+sys.path.insert(0, PROJECT_ROOT)                                          # for top-level modules if any
+
+from CSDI.main_model import CSDI_Forecasting
+from CSDI.dataset_md import get_dataloader_md
+from CSDI.utils import train
 
 
 def denormalize(x, mean, std, normalization):
