@@ -1,5 +1,7 @@
 #!/bin/bash
-PYTHON_RUNNER=(conda run -n unified_tsf python)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR" && git rev-parse --show-toplevel)"
+source "$REPO_ROOT/runner.sh"
 export PYTHONPATH=./
 model=$1
 datasets=($2)  

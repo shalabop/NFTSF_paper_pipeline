@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-PYTHON_RUNNER=(conda run -n unified_tsf python)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR" && git rev-parse --show-toplevel)"
+source "$REPO_ROOT/runner.sh"
 #SBATCH --job-name=ratd_sw_full
 #SBATCH --time=3-00:00:00
 #SBATCH --nodes=1
