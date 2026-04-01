@@ -80,6 +80,10 @@ def main(config, log_dir, dataset_path,running_tests):
     train_ds = FileDataset(dataset_path / "train", freq=metadata.freq)
     test_ds = FileDataset(dataset_path / "test", freq=metadata.freq)
     dataset = TrainDatasets(metadata=metadata, train=train_ds, test=test_ds)
+    print(f"dataset.metadata.freq: {dataset.metadata.freq}")
+    print(f"dataset.metadata.prediction_length: {dataset.metadata.prediction_length}")
+    print(f'train_set length: {len(dataset.train)}')
+    print(f'test_set length: {len(dataset.test)}')
 
     #ensure they're equal
     print(dataset.metadata.prediction_length)
