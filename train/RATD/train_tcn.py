@@ -34,12 +34,15 @@ def train_tcn(config):
     if torch.cuda.is_available():
         print(f"GPU: {torch.cuda.get_device_name(0)}")
         print(f"GPU memory: {torch.cuda.get_device_properties(0).total_memory / 1e9:.1f} GB")
-        print(f"\nLoading data from {config['data']['data_path']}")
+        print(f"\nLoading data from {config['data']['train_data']}")
     
-    data = np.load(config['data']['data_path'])
-    positions = data['positions']  # (N_traj, T)
-    train_test_split = int(data['train_test_split'])
-    val_start = int(config["train"]["val_start"]) #max(0, train_end - lockback_L - pred_steps)
+    train_data = np.load(config['data']['train_data'])
+    test_data = np.load(config['data']['test_data'])
+    positions_train = train_data['positions']  # (N_traj, T)
+    positions_test = test_data['positions']  # (N_traj, T)
+    #train_test_split = int(train_data['train_test_split'])
+    train_test_split=int(config['data']['train_test_split'])
+    val_start = int(config["train"]["val_start"]) 
     
     lockback_L = config['data']['L']
     pred_steps = config['data']['H']
@@ -54,9 +57,9 @@ def train_tcn(config):
     
     #positions_norm = ((positions - mean) / std).astype(np.float32)
     
-    train_end       = train_test_split - pred_steps   # 400 - 100 = 300
-    train_positions = positions[:, :train_end]         # (N, 300)
-    val_positions   = positions[:, val_start:train_test_split]
+    train_positions = positions_train[:, :val_start]         # (N, 300)
+    val_positions   = positions_train[:, val_start:]
+    #test_positions  = positions_test[:, -pred_steps-lockback_L:]
     
     print(f"Train shape: {train_positions.shape}")
     print(f"Val shape: {val_positions.shape}")

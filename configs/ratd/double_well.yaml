@@ -1,5 +1,6 @@
 path:
-  dataset_path: "DATA/double_well_std.npz"
+  test_data: "DATA/double_well_test.npz"
+  train_data: "DATA/double_well_.npz"
   encoder_path: "checkpoints/tcn/double_well.pth"
   futures_path: "references/double_well/futures.npy"
   ref_path: "references/double_well/indices.pt"
@@ -7,7 +8,7 @@ path:
 retrieval:
   L: 100
   H: 100
-  stride: 25 #for training RATD  must be tcn confg data.train_stride
+  stride: 5 #for training RATD  must be tcn confg data.train_stride
   k: 3
   device: "cuda:0"
 
@@ -24,8 +25,8 @@ diffusion:
   beta_start: 0.0001
   beta_end: 0.02
   schedule: "quad"
-  ref_size: 100 #300 #100 k*H         # == context == L
-  h_size: 100            # == prediction == H
+  ref_size: 100 
+  h_size: 100        
   channels: 64
   diffusion_embedding_dim: 128
   nheads: 8
@@ -44,10 +45,10 @@ train:
   grad_clip: 1.0
   num_workers: 2
   print_every: 10
-  val_start: 200 #200 #time step where val starts 
+  val_start: 800 #200 #includes the context 
   val_every: 2 #50 ##run evaluation every 50 
   path: "checkpoints/ratd/double_well"
-  stride: 25
+  stride: 5
 
 forecast:
   test_size: 4 #100 #3000

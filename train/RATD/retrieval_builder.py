@@ -33,10 +33,10 @@ def all_encode(model, config):
     stride = config["data"]["retrieval_stride"]
     device = config["train"]["device"]
 
-    data = np.load(config["path"]["dataset_path"])
-    positions = data["positions"]                    # (N_traj, T)
-    train_test_split = int(data["train_test_split"])
-    train_end = train_test_split - H                 # 400-100=300
+    data_train = np.load(config["data"]["train_data"])
+    positions = data_train["positions"]                    
+    train_test_split = int(config["data"]["train_test_split"]) ##800
+    train_end = val_start = int(config["train"]["val_start"]) ##800         
 
     train_positions = positions[:, :train_end]             # (N, 300)
     N_traj, T = train_positions.shape
@@ -106,17 +106,18 @@ def all_retrieval(model, k, config):
     stride = config["data"]["retrieval_stride"]
     device = config["train"]["device"]
 
-    data = np.load(config["path"]["dataset_path"])
-    positions = data["positions"]
-    train_test_split = int(data["train_test_split"])
-    train_end = train_test_split - H                 # same as all_encode
-    val_start=config["train"]["val_start"]
+    data_train = np.load(config["data"]["train_data"])
+    data_test = np.load(config["data"]["test_data"])
+    positions_train = data_train["positions"]         
+    positions_test = data_test["positions"]           
+    train_test_split = int(config["data"]["train_test_split"]) ##800
+    train_end = val_start = int(config["train"]["val_start"]) ##800   
 
-    train_data = positions[:, :train_end]
+    train_data = positions_train[:, :train_end]
     N_traj, T  = train_data.shape
     
-    val_data = positions[:, val_start:train_test_split]
-    test_data = positions[:, train_end:] 
+    val_data = positions_train[:, val_start:]
+    test_data = positions_test[:, train_test_split:] 
 
     print(f"train_test_split : {train_test_split}")
     print(f"train_end : {train_end}")
