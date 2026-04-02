@@ -17,7 +17,7 @@ mkdir -p results/nsdiff/double_well
 mkdir -p logs/nsdiff/double_well
 
 
-source /venv310/bin/activate
+source venv310/bin/activate
 module purge
 module load cuda-12.8.1-gcc-12.1.0
 

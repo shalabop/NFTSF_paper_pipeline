@@ -39,16 +39,16 @@ train:
   device: "cuda:0"
   batch_size: 64
   learning_rate: 1.0e-4
-  epochs: 1000
+  epochs: 3 #1000
   milestones: [60, 85]
   gamma: 0.1
   grad_clip: 1.0
   num_workers: 2
   print_every: 10
   val_start: 800 #200 #includes the context 
-  val_every: 50 ##run evaluation every 50 
+  val_every: 2 #50 ##run evaluation every 50 
   path: "checkpoints/ratd/double_well"
-  stride: 5 ##must match retreival_stride in tcn config
+  stride: 400 ##must match retreival_stride in tcn config
 
 forecast:
   test_size: 3000
