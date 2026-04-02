@@ -1,14 +1,14 @@
 train:
-  epochs: 1000
+  epochs: 50 #1000
   batch_size: 64
   lr: 0.001
   itr_per_epoch: 128
   prediction_length: 100
   context_length: 100
-  num_of_samples: 100
+  num_of_samples: 10 #100
   val_size: 9001
-  test_size: 3001
-  valid_epoch_interval: 50
+  test_size: 10 #3001
+  valid_epoch_interval: 10
   stride: 25
   training_curv: "checkpoints/csdi/double_well"
   normalization: "none"

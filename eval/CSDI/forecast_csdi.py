@@ -29,7 +29,7 @@ def denormalize(x, mean, std, normalization):
 
 
 def evaluate_csdi(model, test_loader, n_samples, device,
-                  prediction_length, normalization, mean, std):
+                  prediction_length, normalization=None, mea=0, std=0):
     """
     Returns samples and gt in original (denormalized) units.
 
@@ -60,9 +60,9 @@ def evaluate_csdi(model, test_loader, n_samples, device,
 
             samples = samples[:, :, 0, -prediction_length:]  
             samples = samples.permute(0, 2, 1)               
-            gt      = observed_data[:, 0, -prediction_length:].clone()  
+            gt = observed_data[:, 0, -prediction_length:].clone()  
 
-            if normalization == "local":
+            '''if normalization == "local":
                 scaler = batch["local_scaler"].to(device)    
                 samples = samples * scaler.unsqueeze(-1)     
                 gt      = gt * scaler                        
@@ -70,14 +70,16 @@ def evaluate_csdi(model, test_loader, n_samples, device,
                 all_gt.append(gt.cpu().numpy())
             else:
                 all_samples.append(samples.cpu().numpy())
-                all_gt.append(gt.cpu().numpy())
+                all_gt.append(gt.cpu().numpy())'''
+            all_samples.append(samples.cpu().numpy())
+            all_gt.append(gt.cpu().numpy())
 
     samples_out = np.concatenate(all_samples, axis=0)  
     gt_out      = np.concatenate(all_gt,      axis=0)  
 
-    if normalization != "local":
+    '''if normalization != "local":
         samples_out = denormalize(samples_out, mean, std, normalization)
-        gt_out      = denormalize(gt_out,      mean, std, normalization)
+        gt_out      = denormalize(gt_out,      mean, std, normalization)'''
 
     return samples_out, gt_out
 
@@ -111,7 +113,8 @@ def main():
 
     ckpt_dir = os.path.dirname(args.ckpt)
 
-    _, _, test_loader, mean, std = get_dataloader_md(
+    test_loader = get_dataloader_md(
+        flag="test",
         npz_path          = args.input,
         context_length    = context_length,
         prediction_length = prediction_length,
@@ -144,14 +147,13 @@ def main():
     samples, gt = evaluate_csdi(
         model, test_loader, num_of_samples,
         args.device, prediction_length,
-        normalization, mean, std,
     )
 
-    data             = np.load(args.input)
-    positions        = data["positions"]
-    time             = data["time"]
+    data = np.load(args.input)
+    positions = data["positions"]
+    time = data["time"]
     train_test_split = int(data["train_test_split"])
-    N                = len(samples)
+    N = len(samples)
 
     ci90_lower = np.percentile(samples,  5, axis=2)
     ci90_upper = np.percentile(samples, 95, axis=2)
@@ -161,6 +163,9 @@ def main():
     out_dir = os.path.dirname(args.out)
     if out_dir:
         os.makedirs(out_dir, exist_ok=True)
+        
+    #assert samples.shape == (N, prediction_length, 100)
+    print(samples.shape)
 
     np.savez(
         args.out,

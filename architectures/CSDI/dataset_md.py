@@ -114,8 +114,9 @@ def get_dataloader_md(npz_path, context_length, prediction_length,
         return train_loader, val_loader
     
     elif flag == "test":
+        print(positions[:test_size,-(prediction_length+context_length):].shape)
         test_dataset = MDTrajectoryDataset(
-            positions[:test_size,:-(prediction_length+context_length)],
+            positions[:test_size,-(prediction_length+context_length):],
             context_length, prediction_length, normalization=normalization,
         )
         test_loader = DataLoader(test_dataset, batch_size=batch_size,shuffle=False, num_workers=1)
