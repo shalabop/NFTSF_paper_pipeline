@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #SBATCH --job-name=DwRATD
-#SBATCH --time=3-00:00:00
-#SB ATCH --email-type=ALL
+#SBATCH --mail-user=meahmed@asu.edu
+#SBATCH --mail-type=ALL
 #SBATCH --mail-user=meahmed@asu.com
 #SBATCH --nodes=1
 #SBATCH --ntasks=1

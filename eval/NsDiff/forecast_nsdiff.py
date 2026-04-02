@@ -168,25 +168,25 @@ def main():
     print(f"n_samples        : {n_samples}")
     print(f"normalization    : {normalization}")
 
-    _, _, test_loader, mean, std = get_dataloader_md(
+    _, _, test_loader = get_dataloader_md(
         npz_path          = args.input,
         context_length    = ctx_len,
         prediction_length = pred_len,
         batch_size        = batch_size,
         test_size         = test_size,
         stride            = stride,
-        normalization     = normalization,
+        #normalization     = normalization,
         val_size          = val_size,
     )
 
-    for fname, varname in [("mean.npy","mean"),("std.npy","std"),("normalization.npy", "normalization")]:
+    '''for fname, varname in [("mean.npy","mean"),("std.npy","std"),("normalization.npy", "normalization")]:
         path = os.path.join(args.ckpt, fname)
         if os.path.exists(path):
             val = np.load(path)[0]
             if varname == "mean": mean = float(val)
             elif varname == "std": std  = float(val)
             else:normalization = str(val)
-            print(f"Loaded {varname}={val} from checkpoint")
+            print(f"Loaded {varname}={val} from checkpoint")'''
 
     model_args = build_args(config, args.device)
 
@@ -239,7 +239,7 @@ def main():
     gt_out = np.concatenate(all_gt, axis=0) 
 
     data= np.load(args.input)
-    positions= data["positions"]
+    positions= data["positions_test"]
     time= data["time"]
     train_test_split = int(data["train_test_split"])
     N = len(samples_out)

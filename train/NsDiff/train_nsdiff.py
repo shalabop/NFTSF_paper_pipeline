@@ -201,13 +201,13 @@ def main():
 
     print(json.dumps(config, indent=4))
 
-    train_loader, val_loader, _, mean, std = get_dataloader_md(
+    train_loader, val_loader, _ = get_dataloader_md(
         npz_path = args.input,
         context_length = ctx_len,
         prediction_length = pred_len,
         batch_size = batch_size,
         stride = stride,
-        normalization = normalization,
+        #normalization = normalization,
         val_size= val_size,
         test_size= test_size,
     )
@@ -217,9 +217,9 @@ def main():
     print(f"batch_x shape : {bx.shape}")   
     print(f"batch_y shape : {by.shape}")   
 
-    np.save(os.path.join(args.out, "mean.npy"), np.array([mean]))
-    np.save(os.path.join(args.out, "std.npy"), np.array([std]))
-    np.save(os.path.join(args.out, "normalization.npy"), np.array([normalization]))
+    #np.save(os.path.join(args.out, "mean.npy"), np.array([mean]))
+    #np.save(os.path.join(args.out, "std.npy"), np.array([std]))
+    #np.save(os.path.join(args.out, "normalization.npy"), np.array([normalization]))
     np.save(os.path.join(args.out, "context_length.npy"), np.array([ctx_len]))
     np.save(os.path.join(args.out, "prediction_length.npy"), np.array([pred_len]))
     np.save(os.path.join(args.out, "rolling_length.npy"), np.array([rolling_length]))
