@@ -27,8 +27,6 @@ sys.path.insert(0, PROJECT_ROOT)
 from RATD.custom_model import RATD_Forecasting
 
 
-# ── Dataset ───────────────────────────────────────────────────────────────────
-
 class RATDDataset(Dataset):
     def __init__(self, positions, time, windows, references, indices, L, H, k):
         self.positions  = positions                              # (N_traj, T)

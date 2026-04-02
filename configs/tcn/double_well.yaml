@@ -5,13 +5,13 @@ data:
   H: 100
   train_stride: 5 
   val_stride: 5       
-  retrieval_stride: 100
-  train_test_split: 800
+  retrieval_stride: 5 #50 #10
+  train_test_split: 800 ##only used in embedding training context
 
 model:
   input_size: 1
   output_size: 100 # must match L
-  num_channels: [32, 64, 32]      # much smaller
+  num_channels: [16, 16, 32]      # much smaller
   kernel_size: 3
   dropout: 0.2
   use_reference: True
@@ -21,7 +21,7 @@ train:
   device: "cuda:0"
   batch_size: 128                   
   learning_rate: 0.001
-  epochs: 30 #200
+  epochs: 1000
   grad_clip: 1.0
   num_workers: 1                   
   print_every: 10

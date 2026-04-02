@@ -1,6 +1,6 @@
 path:
   test_data: "DATA/double_well_test.npz"
-  train_data: "DATA/double_well_.npz"
+  train_data: "DATA/double_well_train.npz"
   encoder_path: "checkpoints/tcn/double_well.pth"
   futures_path: "references/double_well/futures.npy"
   ref_path: "references/double_well/indices.pt"
@@ -39,18 +39,18 @@ train:
   device: "cuda:0"
   batch_size: 64
   learning_rate: 1.0e-4
-  epochs: 4 #200 #500
+  epochs: 1000
   milestones: [60, 85]
   gamma: 0.1
   grad_clip: 1.0
   num_workers: 2
   print_every: 10
   val_start: 800 #200 #includes the context 
-  val_every: 2 #50 ##run evaluation every 50 
+  val_every: 50 ##run evaluation every 50 
   path: "checkpoints/ratd/double_well"
-  stride: 5
+  stride: 5 ##must match retreival_stride in tcn config
 
 forecast:
-  test_size: 4 #100 #3000
+  test_size: 3000
   out_path: "results/ratd/double_well.npz"
   n_samples: 100

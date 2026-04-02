@@ -100,24 +100,26 @@ def _make_windows(positions, context_length, prediction_length, stride, T):
 def get_dataloader_md(npz_path, context_length, prediction_length,
                       batch_size, val_size, test_size,
                       stride, normalization):
-    data = np.load(npz_path)
+    data = np.load(npz_path) ##wil be e.g double_well_train.npz
     positions = data["positions"]
     train_test_split = int(data["train_test_split"])
 
-    train_end = train_test_split - prediction_length   
-    val_start = train_end - context_length             
+    #train_end = train_test_split - prediction_length   
+    #val_start = train_end - context_length             
+    val_start
+    val_start=prediction_length+context_length
 
-    mean = float(positions[:, :train_end].mean())
-    std  = float(positions[:, :train_end].std())
+    #mean = float(positions[:, :train_end].mean())
+    #std  = float(positions[:, :train_end].std())
 
-    print(f"normalization : {normalization}")
-    print(f"mean : {mean:.4f}  std: {std:.4f}")
-    if normalization == "local":
-        print("  (local: per-sample scaler = mean(|context|))")
+    #print(f"normalization : {normalization}")
+    #print(f"mean : {mean:.4f}  std: {std:.4f}")
+    #if normalization == "local":
+    #    print("  (local: per-sample scaler = mean(|context|))")
 
     train_ctx, train_fcst = _make_windows(positions, context_length, prediction_length,stride=stride, T=train_end)
     
-    val_ctx = positions[:val_size,val_start:val_start + context_length]
+    val_ctx = positions[:val_size,val_start:]
     val_fcst = positions[:val_size,val_start + context_length:train_test_split]
 
     test_ctx = positions[:test_size,train_end:train_end + context_length]

@@ -13,6 +13,7 @@ sys.path.insert(0, os.path.join(PROJECT_ROOT, "architectures", "RATD"))   # for 
 sys.path.insert(0, os.path.join(PROJECT_ROOT, "architectures"))           # for CSDI package
 sys.path.insert(0, PROJECT_ROOT)  
 
+import faiss
 
 from TCN_master.TCN.ts_cnn.tstcn import TimeSeriesTCN
 
@@ -92,7 +93,7 @@ def all_encode(model, config):
 
     return hisvec_tensor
 
-
+'''
 def all_retrieval(model, k, config):
     """
     k: number of references to create per embedding
@@ -192,6 +193,108 @@ def all_retrieval(model, k, config):
     print(f"Train indices rows: {train_indices.shape[0]}")
     print(f"Reference futures rows: {futures_array.shape[0]}")
     #assert train_indices.shape[0] == futures_array.shape[0], f"MISMATCH: train indices rows ({train_indices.shape[0]}) != futures rows ({futures_array.shape[0]})"
+    assert train_indices.max() < futures_array.shape[0], "Index out of bounds"
+    print(" Sanity check passed: train indices count matches reference futures.")
+
+    print("\nAll retrieval indices generated.")'''
+    
+def all_retrieval(model, k, config):
+    """
+    k: number of references to create per embedding
+    """
+    print("=" * 60)
+    print(f"Phase 2: Building retrieval indices (k={k})")
+    print("=" * 60)
+
+    L = config["data"]["L"]
+    H = config["data"]["H"]
+    stride = config["data"]["retrieval_stride"]
+    device = config["train"]["device"]
+
+    data_train = np.load(config["data"]["train_data"])
+    data_test = np.load(config["data"]["test_data"])
+    positions_train = data_train["positions"]         
+    positions_test = data_test["positions"]           
+    train_test_split = int(config["data"]["train_test_split"]) ##800
+    train_end = val_start = int(config["train"]["val_start"]) ##800   
+
+    train_data = positions_train[:, :train_end]
+    N_traj, T  = train_data.shape
+    
+    val_data = positions_train[:, val_start:]
+    test_data = positions_test[:, -(L + H):]
+
+    print(f"train_test_split : {train_test_split}")
+    print(f"train_end : {train_end}")
+    print(f"train_data : {train_data.shape}")
+
+    all_repr = torch.load(config["path"]["vec_path"])       # (N_refs, embed_dim)
+    print(f"Reference bank : {all_repr.shape}")
+
+    ref_emb = all_repr.cpu().numpy().astype(np.float32)
+    d = ref_emb.shape[1]
+    index = faiss.IndexFlatL2(d)  
+    index.add(ref_emb)
+    print(f"FAISS index built with {index.ntotal} vectors")
+
+    splits = {
+        'train': train_data,
+        'val': val_data,
+        'test': test_data
+    }
+    
+    train_indices = None
+
+    for split_name, split_data in splits.items():
+        print(f"\nProcessing {split_name} split...")
+        N_traj, T = split_data.shape
+
+        windows = []
+        for traj_idx in range(N_traj):
+            seq = split_data[traj_idx]
+            max_start = len(seq) - L - H
+            if max_start < 0:
+                continue
+            for start in range(0, max_start + 1, stride):
+                windows.append((traj_idx, start))
+
+        print(f"  Number of windows: {len(windows)}")
+
+        batch_size = 1000  # adjust based on available memory
+        all_indices = []
+        model.eval()
+
+        for batch_start in range(0, len(windows), batch_size):
+            batch_end = min(batch_start + batch_size, len(windows))
+            batch_windows = windows[batch_start:batch_end]
+
+            # Compute query embeddings for this batch
+            batch_queries = []
+            for traj_idx, start in batch_windows:
+                ctx = split_data[traj_idx, start:start+L]
+                x_tensor = torch.from_numpy(ctx.copy()).float().unsqueeze(0).unsqueeze(1).to(device)
+                x_vec = model.encode(x_tensor).detach().cpu().numpy().astype(np.float32)
+                batch_queries.append(x_vec)
+            queries = np.concatenate(batch_queries, axis=0)  # (B, D)
+
+            _, top_k_idx = index.search(queries, k)   # (B, k)
+            all_indices.append(torch.from_numpy(top_k_idx).int())
+
+            del batch_queries, queries
+            torch.cuda.empty_cache()
+
+        references_tensor = torch.cat(all_indices, dim=0)  # (N_windows, k)
+        save_path = config["path"]["ref_path"].replace('.pt', f'_{split_name}.pt')
+        torch.save(references_tensor, save_path)
+        print(f"  Saved {split_name} indices to {save_path}")
+
+        if split_name == 'train':
+            train_indices = references_tensor
+
+    futures_array = np.load(config["path"]["futures_path"])   # (N_refs, H)
+    print(f"\n=== Sanity check ===")
+    print(f"Train indices rows: {train_indices.shape[0]}")
+    print(f"Reference futures rows: {futures_array.shape[0]}")
     assert train_indices.max() < futures_array.shape[0], "Index out of bounds"
     print(" Sanity check passed: train indices count matches reference futures.")
 
