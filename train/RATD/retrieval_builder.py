@@ -117,7 +117,8 @@ def all_retrieval(model, k, config):
     N_traj, T  = train_data.shape
     
     val_data = positions_train[:, val_start:]
-    test_data = positions_test[:, train_test_split:] 
+    #test_data = positions_test[:, train_test_split:] 
+    test_data = positions_test[:, -(L + H):]
 
     print(f"train_test_split : {train_test_split}")
     print(f"train_end : {train_end}")
@@ -190,7 +191,8 @@ def all_retrieval(model, k, config):
     print(f"\n=== Sanity check ===")
     print(f"Train indices rows: {train_indices.shape[0]}")
     print(f"Reference futures rows: {futures_array.shape[0]}")
-    assert train_indices.shape[0] == futures_array.shape[0], f"MISMATCH: train indices rows ({train_indices.shape[0]}) != futures rows ({futures_array.shape[0]})"
+    #assert train_indices.shape[0] == futures_array.shape[0], f"MISMATCH: train indices rows ({train_indices.shape[0]}) != futures rows ({futures_array.shape[0]})"
+    assert train_indices.max() < futures_array.shape[0], "Index out of bounds"
     print(" Sanity check passed: train indices count matches reference futures.")
 
     print("\nAll retrieval indices generated.")

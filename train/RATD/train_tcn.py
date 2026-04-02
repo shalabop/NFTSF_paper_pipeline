@@ -37,11 +37,11 @@ def train_tcn(config):
         print(f"\nLoading data from {config['data']['train_data']}")
     
     train_data = np.load(config['data']['train_data'])
-    test_data = np.load(config['data']['test_data'])
+    #test_data = np.load(config['data']['test_data'])
     positions_train = train_data['positions']  # (N_traj, T)
-    positions_test = test_data['positions']  # (N_traj, T)
+    #positions_test = test_data['positions']  # (N_traj, T)
     #train_test_split = int(train_data['train_test_split'])
-    train_test_split=int(config['data']['train_test_split'])
+    #train_test_split=int(config['data']['train_test_split'])
     val_start = int(config["train"]["val_start"]) 
     
     lockback_L = config['data']['L']
