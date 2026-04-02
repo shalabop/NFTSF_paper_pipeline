@@ -35,6 +35,7 @@ results/
  
 ##venv for csdi, nsdiff, ccdm, tsdiff, ratd, arima
 venv310/
+venvRATD/
 template.sh
 DATA/
 checkpoints/
