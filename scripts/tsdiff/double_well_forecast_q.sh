@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=DWarima
+#SBATCH --job-name=forecastq
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
 #SBATCH --time=3-00:00:00
@@ -9,15 +9,15 @@
 #SBATCH --qos=public
 #SBATCH --gres=gpu:2
 #SBATCH --mem=32G
-#SBATCH --output=logs/arima/double_well.%j.out
-#SBATCH --error=logs/arima/double_well.%j.err
+#SBATCH --output=logs/tsdiff/forecastq.%j.out
+#SBATCH --error=logs/tsdiff/forecastq.%j.err
 
+mkdir -p checkpoints/tsdiff/double_well
+mkdir -p results/tsdiff/double_well
+mkdir -p logs/tsdiff/double_well
 
 source venv310/bin/activate
 which python
-
-mkdir -p results/arima/double_well
-mkdir -p logs/arima/double_well
 
 PROJECT_ROOT=$(pwd) 
 export PYTHONPATH=$PROJECT_ROOT:$PYTHONPATH
@@ -34,6 +34,7 @@ export LD_LIBRARY_PATH="$CUDA_PATH/lib64:$CUDA_PATH/targets/x86_64-linux/lib:$LD
 export LIBRARY_PATH="$CUDA_PATH/targets/x86_64-linux/lib:$LIBRARY_PATH"
 export CPATH="$CUDA_PATH/targets/x86_64-linux/include:$CPATH"
 
+#export KEOPS_CACHE_DIR=$SLURM_TMPDIR/keops_cache
 export KEOPS_CACHE_DIR=$HOME/.cache/keops
 mkdir -p $KEOPS_CACHE_DIR
 
@@ -44,9 +45,7 @@ ls $CUDA_PATH/include/nvrtc.h || echo "nvrtc.h not found"
 ls $CUDA_PATH/lib64/libnvrtc.so* || echo "libnvrtc.so not found in lib64"
 ls $CUDA_PATH/targets/x86_64-linux/lib/libnvrtc.so* || echo "libnvrtc.so not found in targets/x86_64-linux/lib"
 
-python eval/ARIMA/run_auto_arima.py \
-    --input DATA/double_well_test.npz \
-    --out results/arima/double_well.npz \
-    --model 3000 \
-    --num-samples 100 \
-    -c configs/arima/double_well.yaml
+python eval/TSDiff/forecast_tsdiff.py   \
+        --config configs/tsdiff_forecast/double_well_q_4.yaml  \
+        --dataset_path gluonts_datasets/double_well \
+        --out results/tsdiff/double_well_q_4

@@ -94,6 +94,7 @@ def _crps_per_step(ground_truth_future: np.ndarray, samples: np.ndarray) -> np.n
 def _mae_per_step(ground_truth_future: np.ndarray, samples: np.ndarray) -> np.ndarray:
     """Median-forecast MAE at each step, averaged over N trajectories."""
     median = np.median(samples, axis=1)                     # (N, n_future)
+
     return np.abs(ground_truth_future - median).mean(axis=0)  # (n_future,)
 
 
