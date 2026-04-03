@@ -19,14 +19,12 @@ from models.base import BaseModel
 _NSDIFF_ROOTS = [
     (
         Path(__file__).resolve().parents[1]
-        / "architectures"
-        / "NsDiff"
+        / "architectures"               # NsDiff resolves as architectures/NsDiff/ package
     ).as_posix(),
     (
         Path(__file__).resolve().parents[1]
         / "architectures"
-        / "NsDiff"
-        / "src"
+        / "NsDiff"                      # for bare "from src.nn/layer/utils..." inside NsDiff.py
     ).as_posix(),
 ]
 for _root in _NSDIFF_ROOTS:

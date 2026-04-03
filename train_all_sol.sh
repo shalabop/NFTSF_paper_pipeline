@@ -57,6 +57,22 @@ declare -A MODEL_TIME=(
     [arima]="0-00:30:00"
 )
 
+# Per-model conda environment.
+# tsf_pytorch : no GluonTS/Lightning  (nftsf, ccdm, arima)
+# tsf_gluonts : GluonTS + Lightning   (all diffusion models)
+# Falls back to $CONDA_ENV if a model is not listed (e.g. during testing).
+declare -A MODEL_ENV=(
+    [nftsf]="tsf_pytorch"
+    [ccdm]="tsf_pytorch"
+    [arima]="tsf_pytorch"
+    [tsdiff_q]="tsf_gluonts"
+    [tsdiff_ms]="tsf_gluonts"
+    [tsdiff_cond]="tsf_gluonts"
+    [csdi]="tsf_gluonts"
+    [ratd]="tsf_gluonts"
+    [nsdiff]="tsf_gluonts"
+)
+
 # Default time if a model is not listed above.
 DEFAULT_TIME="2-00:00:00"
 
@@ -128,7 +144,7 @@ for MODEL in $MODELS; do
         --time        "$TIME" \
         $GRES_FLAG \
         $MEM_FLAG \
-        --export     "ALL,MODEL=${MODEL},RUN_ID=${RUN_ID},CONDA_ENV=${CONDA_ENV},PROJECT_DIR=${PROJECT_DIR},DATA_NPZ=${DATA_NPZ},TRAIN_NPY=${TRAIN_NPY},TEST_NPY=${TEST_NPY}" \
+        --export     "ALL,MODEL=${MODEL},RUN_ID=${RUN_ID},CONDA_ENV=${MODEL_ENV[$MODEL]:-$CONDA_ENV},PROJECT_DIR=${PROJECT_DIR},DATA_NPZ=${DATA_NPZ},TRAIN_NPY=${TRAIN_NPY},TEST_NPY=${TEST_NPY}" \
         "$SCRIPT" \
         | awk '{print $NF}')
 
