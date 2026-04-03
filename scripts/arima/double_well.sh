@@ -9,7 +9,7 @@
 #SBATCH --qos=public
 #SBATCH --gres=gpu:2
 #SBATCH --mem=32G
-#SBATCH --output=logs/arima/double_well.%j.out
+#SBATCH --output=logs/arima/double_well_out.%j.out
 #SBATCH --error=logs/arima/double_well.%j.err
 
 
