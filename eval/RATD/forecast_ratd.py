@@ -67,9 +67,9 @@ def forecast_ratd(config):
         config['train']['device'] if torch.cuda.is_available() else 'cpu')
     print(f"Device: {device}")
 
-    L         = config['retrieval']['L']               # 100
-    H         = config['retrieval']['H']               # 100
-    k         = config['retrieval']['k']               # 3
+    L = config['retrieval']['L']               # 100
+    H = config['retrieval']['H']               # 100
+    k = config['retrieval']['k']               # 3
     n_samples = config['forecast'].get('n_samples', 100)
     test_size = config['forecast'].get('test_size', None)  # None = all 9000
 

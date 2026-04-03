@@ -49,6 +49,7 @@ train:
   val_every: 50 ##run evaluation every 50 
   path: "checkpoints/ratd/double_well"
   stride: 25 ##must match retreival_stride in tcn config
+  train_size: 5000
 
 forecast:
   test_size: 3000

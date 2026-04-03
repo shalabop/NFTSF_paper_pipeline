@@ -303,7 +303,7 @@ def forecast(
 
     return {
         "samples"          : forecast_samples,   # (N, T_pred, S)
-        "ground_truth"     : full_trajectories[:,train_test_split:train_test_split+prediction_length],        # (N, T_pred)
+        "ground_truth"     : full_trajectories[:,train_test_split+prediction_length:],        # (N, T_pred)
         "ci90_lower"       : ci90_lower,          # (N, T_pred)
         "ci90_upper"       : ci90_upper,
         "ci50_lower"       : ci50_lower,
@@ -311,7 +311,7 @@ def forecast(
         "time_test"        : time_test,           # (T_pred,)
         "time_train"       : time_train,          # (T_train,)
         "time"             : time,                # (T_full,)
-        "train_test_split" : train_test_split,
+        "train_test_split" : train_test_split+prediction_length,
         "prediction_length": prediction_length,
         "item_ids"         : item_ids,
         "full_trajectories" : full_trajectories,

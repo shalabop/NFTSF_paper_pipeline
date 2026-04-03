@@ -148,7 +148,7 @@ def forecast(
 
     return {
         "samples"           : forecast_samples,
-        "ground_truth"      : full_trajectories[:, train_test_split:train_test_split + prediction_length],
+        "ground_truth"      : full_trajectories[:, train_test_split+prediction_length:],
         "full_trajectories" : full_trajectories,
         "ci90_lower"        : ci90_lower,
         "ci90_upper"        : ci90_upper,
@@ -157,7 +157,7 @@ def forecast(
         "time_test"         : time_test,
         "time_train"        : time_train,
         "time"              : time,
-        "train_test_split"  : train_test_split,
+        "train_test_split"  : train_test_split+prediction_length,
         "prediction_length" : prediction_length,
         "item_ids"          : np.arange(len(results)),
     }

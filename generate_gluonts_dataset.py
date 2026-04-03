@@ -154,8 +154,9 @@ def read_data(input_path: Path) -> dict:
 
     positions_train = data["positions_train"]   
     positions_test = data["positions_test"]
-    #time      = data["time"]
-    time      = np.arange(positions_train.shape[1])       
+    time      = data["time"]
+    #time      = np.arange(positions_train.shape[1])       
+    train_test_split = data["train_test_split"]
 
     '''if "train_test_split" in data:
         train_test_split = int(data["train_test_split"])
@@ -190,8 +191,8 @@ def read_data(input_path: Path) -> dict:
         "positions_train"        : positions_train,
         "positions_test"         : positions_test,
         "time"                   : time,
-        #"train_test_split" : train_test_split,
-        #"prediction_length": prediction_length,
+        "train_test_split" : train_test_split,
+        "prediction_length": data["prediction_length"],
     }
 
 def main():
@@ -240,8 +241,8 @@ def main():
     positions_train         = cfg["positions_train"]           
     positions_test          = cfg["positions_test"]
     time =cfg["time"]
-    #train_test_split  = cfg["train_test_split"]
-    #prediction_length = cfg["prediction_length"]
+    train_test_split  = cfg["train_test_split"]
+    prediction_length = cfg["prediction_length"]
 
 
     N, T = positions_train.shape
@@ -266,8 +267,8 @@ def main():
     np.savez_compressed(
         out_dir / "time.npz", #save time inside the die as .npz
         time = time,
-        train_test_split = 800,
-        time_test = cfg["time"][800:],
+        train_test_split = train_test_split,
+        time_test = cfg["time"][train_test_split:],
         time_train = cfg["time"][:]
     )
 
