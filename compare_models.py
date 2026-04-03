@@ -90,8 +90,15 @@ from architecture import create_nfm
 # ---------------------------------------------------------------------------
 
 MODEL_REGISTRY: dict[str, dict] = {
-    "nftsf": {"label": "NFTSF", "color": "#1F77B4"},   # blue
-    "arima": {"label": "ARIMA", "color": "#2CA02C"},    # green
+    "nftsf": {"label": "NFTSF", "color": "#1F77B4"},
+    "arima": {"label": "ARIMA", "color": "#2CA02C"},
+    "tsdiff_cond": {"label": "TSDiff-Cond", "color": "#C71FD6"},
+    "tsdiff_ms": {"label": "TSDiff-MS", "color": "#A09E2C"},
+    "tsdiff_q": {"label": "TSDiff-Q", "color": "#B41F1F"},
+    "csdi": {"label": "CSDI", "color": "#0AF1F1"},
+    "ratd": {"label": "RATD", "color": "#FF7F0E"},   #
+    "nsdiff": {"label": "NsDiff", "color": "#9467BD"},
+    "ccdm": {"label": "CCDM", "color": "#8C564B"},
 }
 
 # ---------------------------------------------------------------------------
