@@ -822,8 +822,8 @@ def load_npz_result(npz_path: str) -> dict:
     
     # Extract core arrays
     samples = data["samples"]  # Shape varies by model
-    #ground_truth = data["ground_truth"]  # (N, H)
-    ground_truth = data["full_trajectories"]
+    ground_truth = data["ground_truth"]  # (N, H)
+    #ground_truth = data["full_trajectories"]
     
     # Determine dimensions
     if samples.ndim == 3:
