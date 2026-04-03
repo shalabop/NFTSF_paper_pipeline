@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=DWarima
+#SBATCH --job-name=SWarima
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
 #SBATCH --time=3-00:00:00
@@ -9,15 +9,15 @@
 #SBATCH --qos=public
 #SBATCH --gres=gpu:2
 #SBATCH --mem=32G
-#SBATCH --output=logs/arima/double_well_out.%j.out
-#SBATCH --error=logs/arima/double_well.%j.err
+#SBATCH --output=logs/arima/single_well.%j.out
+#SBATCH --error=logs/arima/single_well.%j.err
 
 
 source venv310/bin/activate
 which python
 
-mkdir -p results/arima/double_well
-mkdir -p logs/arima/double_well
+mkdir -p results/arima/single_well
+mkdir -p logs/arima/single_well
 
 PROJECT_ROOT=$(pwd) 
 export PYTHONPATH=$PROJECT_ROOT:$PYTHONPATH
@@ -45,8 +45,8 @@ ls $CUDA_PATH/lib64/libnvrtc.so* || echo "libnvrtc.so not found in lib64"
 ls $CUDA_PATH/targets/x86_64-linux/lib/libnvrtc.so* || echo "libnvrtc.so not found in targets/x86_64-linux/lib"
 
 python eval/ARIMA/run_auto_arima.py \
-    --input DATA/double_well_test.npz \
-    --out results/arima/double_well.npz \
+    --input DATA/single_well_test.npz \
+    --out results/arima/single_well.npz \
     --model 3000 \
     --num-samples 100 \
-    -c configs/arima/double_well.yaml
+    -c configs/arima/single_well.yaml

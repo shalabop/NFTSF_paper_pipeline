@@ -17,8 +17,6 @@ num_batches_per_epoch: 128
 max_epochs: 1000
 dataset: single_well
 num_samples: 100
-sampler: ddpm
-
 eval_every: 50
 do_final_eval: true
 noise_observed: true
