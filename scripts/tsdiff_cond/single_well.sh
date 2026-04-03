@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=DWTSFdiff
+#SBATCH --job-name=SWTSFdiffcond
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
 #SBATCH --time=3-00:00:00
@@ -9,12 +9,9 @@
 #SBATCH --qos=public
 #SBATCH --gres=gpu:2
 #SBATCH --mem=32G
-#SBATCH --output=logs/tsdiff/double_well/dw.%j.out
-#SBATCH --error=logs/tsdiff/double_well/dw.%j.err
+#SBATCH --output=logs/tsdiff_cond/single_well.%j.out
+#SBATCH --error=logs/tsdiff_cond/single_well.%j.err
 
-mkdir -p checkpoints/tsdiff/double_well
-mkdir -p results/tsdiff/double_well
-mkdir -p logs/tsdiff/double_well
 
 source venv310/bin/activate
 which python
@@ -63,17 +60,12 @@ ls $CUDA_PATH/include/cuda.h || echo "WARNING: cuda.h not found"
 ls $CUDA_PATH/include/nvrtc.h || echo "WARNING: nvrtc.h not found"
 ls $CUDA_PATH/lib64/libnvrtc.so* || ls $CUDA_PATH/targets/x86_64-linux/lib/libnvrtc.so* || echo "WARNING: libnvrtc.so not found"
 
-python train/TSDiff/train_tsdiff.py \
-        --dataset_path gluonts_datasets/double_well \
-        --config configs/tsdiff_train/double_well.yaml \
-        --out_dir checkpoints/tsdiff/double_well
+python train/TSDiff/train_cond_tsdiff.py \
+        --dataset_path gluonts_datasets/single_well \
+        --config configs/tsdiff_cond_train/single_well.yaml \
+        --out_dir checkpoints/tsdiff_cond/single_well
 
-python eval/TSDiff/forecast_tsdiff.py   \
-        --config configs/tsdiff_forecast/double_well_q_4.yaml  \
-        --dataset_path gluonts_datasets/double_well \
-        --out results/tsdiff_q/double_well_q_4.npz
-
-python eval/TSDiff/forecast_tsdiff.py   \
-        --config configs/tsdiff_forecast/double_well_mse_05.yaml  \
-        --dataset_path gluonts_datasets/double_well \
-        --out results/tsdiff_mse/double_well_mse_05.npz
+python eval/TSDiff/forecast_tsdiff_cond.py   \
+        --config configs/tsdiff_forecast/single_well.yaml  \
+        --dataset_path gluonts_datasets/single_well \
+        --out results/tsdiff_cond/single_well.npz
