@@ -1,0 +1,34 @@
+data:
+  data_path: "training_data/single_well.npz"
+  L: 100
+  H: 100
+  train_stride: 25      
+  val_stride: 25      
+  retrieval_stride: 25 #50 #stride for creating references
+
+model:
+  input_size: 1
+  output_size: 100 #20 must match L
+  num_channels: [32, 64, 32]    
+  kernel_size: 3
+  dropout: 0.2
+  use_reference: True
+  k: 3
+
+train:
+  device: "cuda:0"
+  batch_size: 256                   
+  learning_rate: 0.001
+  epochs: 500
+  grad_clip: 1.0
+  num_workers: 1                   
+  print_every: 10
+  val_start: 200 ##index of time step where val start
+
+path:
+  dataset_path: "training_data/single_well.npz"
+  encoder_path: "tcn_weights/tcn_encoder_sw.pth"
+  vec_path: "references/single_well/embeddings.pt"
+  futures_path: "references/single_well/futures.npy"
+  ref_path: "references/single_well/indices.pt"
+  training_curv: "tcn_weights/sw_loss.npz"
