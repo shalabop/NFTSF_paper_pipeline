@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# Distribution / packaging
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+
+# Logs and outputs (generated at runtime)
+logs/
+results/
+*.out
+*.err
+
+##virtual environment
+ 
+##venv for csdi, nsdiff, ccdm, tsdiff, ratd, arima
+venv310/
+venvRATD/
+template.sh
+DATA/
+checkpoints/
+test.ipynb
+#scripts/archive
+archive/
