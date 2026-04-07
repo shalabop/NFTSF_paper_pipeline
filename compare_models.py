@@ -1,53 +1,3 @@
-#!/usr/bin/env python3
-"""
-compare_models.py
-=================
-Multi-model, multi-landscape comparison figures for NFTSF vs ARIMA
-(and any future models).
-
-This script:
-  1. Loads the raw test data .npy file and NFTSF model .pth for each landscape,
-     runs full-testset inference internally to compute accurate metrics.
-  2. Runs ARIMA inline on the same display context windows.
-  3. Produces four types of figures:
-
-     Figure A — Trajectory comparison grid (one per landscape)
-         n_models rows × 3 trajectory columns.
-         Each cell: 90%/50% confidence bands + ground truth.
-
-     Figure B — 2-D histogram comparison grid (one per landscape)
-         Same layout as Figure A using magma density heatmaps.
-
-     Figure C — Error metrics grid (one figure, all landscapes)
-         4 rows (landscapes) × 4 cols (MAE, CRPS, CI50, CI90).
-         Each cell: per-step line plot, one line per model.
-
-     Figure D — Error metric tables (one per metric: MAE, CRPS, CI50, CI90)
-         Rows = models, columns = landscapes.
-         Saved as both PNG (matplotlib table) and CSV.
-
-Usage
------
-python compare_models.py \\
-    --nftsf_data \\
-        single_well:sw_test.npy:sw_model.pth:sw_config.json:sw_norm.npz:multi_sim:100:100 \\
-        double_well:dw_test.npy:dw_model.pth:::multi_sim:100:100 \\
-        alanine_phi:phi_test.npy:phi_model.pth:phi_config.json::tnf:50:50 \\
-        alanine_psi:psi_test.npy:psi_model.pth:::tnf:50:50 \\
-    --output_dir ./comparison_figures/ \\
-    --n_traj_show 3 \\
-    --n_samples 200 \\
-    --seed 42
-
-Spec format (colon-separated, first three fields required):
-  landscape:data_path:model_path[:config_path[:norm_path[:data_format[:n_past[:n_future]]]]]
-  - config_path  : training config JSON (architecture params); empty → use defaults
-  - norm_path    : normalization stats .npz; empty → no normalisation
-  - data_format  : multi_sim | single_sim | tnf  (default: multi_sim)
-  - n_past       : context steps (default: 100)
-  - n_future     : forecast steps (default: 100)
-"""
-
 from __future__ import annotations
 
 import argparse
@@ -81,8 +31,6 @@ except ImportError:
 _NFTSF_SSH = Path(__file__).resolve().parent.parent / "NFTSF_ssh"
 if str(_NFTSF_SSH) not in sys.path:
     sys.path.insert(0, str(_NFTSF_SSH))
-
-from architecture import create_nfm
 
 # ---------------------------------------------------------------------------
 # Model registry — add new models here.
