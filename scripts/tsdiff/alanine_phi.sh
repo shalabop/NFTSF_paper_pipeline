@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=AphiTSFdiff
+#SBATCH --job-name=AphiTSDiff
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
 #SBATCH --time=3-00:00:00
@@ -13,21 +13,21 @@
 #SBATCH --error=logs/tsdiff/alanine_phi.%j.err
 
 mkdir -p checkpoints/tsdiff/alanine_phi
-mkdir -p results/tsdiff/alanine_phi
-#mkdir -p logs/tsdiff/double_well
+mkdir -p results/tsdiff_q/
+mkdir -p results/tsdiff_mse/
+mkdir -p results/tsdiff_q/alanine_phi
+mkdir -p results/tsdiff_mse/alanine_phi
+mkdir -p logs/tsdiff
 
 source venv310/bin/activate
 which python
 
-# Set PYTHONPATH
 PROJECT_ROOT=$(pwd) 
 export PYTHONPATH=$PROJECT_ROOT:$PYTHONPATH
 
-# Load CUDA
 module purge
 module load cuda-12.8.1-gcc-12.1.0
 
-# CUDA paths
 export CUDA_HOME=$(dirname $(dirname $(which nvcc)))
 export CUDA_PATH="$CUDA_HOME"
 export PATH="$CUDA_PATH/bin:$PATH"
@@ -40,11 +40,9 @@ rm -rf ~/.cache/pykeops* 2>/dev/null
 rm -rf /tmp/keops* 2>/dev/null
 rm -rf /tmp/pykeops* 2>/dev/null
 
-# Use node-local temp directory (fastest, auto-cleaned)
 export PYKEOPS_BUILD_DIR="$SLURM_TMPDIR/pykeops_build"
 export KEOPS_CACHE_FOLDER="$SLURM_TMPDIR/keops_cache"
 
-# Fallback to home directory if SLURM_TMPDIR not available
 if [ -z "$SLURM_TMPDIR" ]; then
     export PYKEOPS_BUILD_DIR="$HOME/.cache/pykeops_build"
     export KEOPS_CACHE_FOLDER="$HOME/.cache/keops_cache"
