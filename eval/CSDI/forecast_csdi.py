@@ -18,16 +18,6 @@ from CSDI.main_model import CSDI_Forecasting
 from CSDI.dataset_md import get_dataloader_md
 from CSDI.utils import train
 
-
-def denormalize(x, mean, std, normalization):
-    """Reverse global normalization. Not used for 'local'."""
-    if normalization == "zscore":
-        return x * std + mean
-    elif normalization == "std":
-        return x * std
-    return x  
-
-
 def evaluate_csdi(model, test_loader, n_samples, device,
                   prediction_length, normalization=None, mea=0, std=0):
     """
@@ -48,11 +38,7 @@ def evaluate_csdi(model, test_loader, n_samples, device,
             
             (observed_data, observed_mask, observed_tp,
              gt_mask, _, _, _) = model.process_data(batch)
-            
-            ##debug##################clear
-            #ctx_len = observed_data.shape[-1] - prediction_length
-            #observed_data_zero = observed_data.clone()
-            #observed_data_zero[:, :, :ctx_len] = 0.0  
+
 
             cond_mask = gt_mask
             side_info = model.get_side_info(observed_tp, cond_mask)
@@ -76,10 +62,6 @@ def evaluate_csdi(model, test_loader, n_samples, device,
 
     samples_out = np.concatenate(all_samples, axis=0)  
     gt_out      = np.concatenate(all_gt,      axis=0)  
-
-    '''if normalization != "local":
-        samples_out = denormalize(samples_out, mean, std, normalization)
-        gt_out      = denormalize(gt_out,      mean, std, normalization)'''
 
     return samples_out, gt_out
 

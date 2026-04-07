@@ -12,7 +12,7 @@ normalization: none
 device: cuda:0
 setup: forecasting
 dataset: double_well
-num_samples: 200
+num_samples: 500
 eval_every: 50
 do_final_eval: true
 noise_observed: true

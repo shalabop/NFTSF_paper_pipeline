@@ -12,8 +12,10 @@
 #SBATCH --output=logs/csdi/alanine_phi.%j.out
 #SBATCH --error=logs/csdi/alanine_phi.%j.err
 
+mkdir -p results/csdi
 mkdir -p results/csdi/alanine_phi
 #mkdir -p logs/csdi/alanine_phi
+mkdir -p checkpoints/csdi/
 mkdir -p checkpoints/csdi/alanine_phi
 
 source venv310/bin/activate

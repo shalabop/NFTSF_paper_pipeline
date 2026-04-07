@@ -1,19 +1,21 @@
 #!/usr/bin/env bash
 #SBATCH --job-name=ApsiCSDI
-#SBATCH --time=04:00:00
+#SBATCH --time=2-00:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
-#SBATCH --partition=htc
+#SBATCH --partition=public
 #SBATCH --qos=public
 #SBATCH --gres=gpu:1
 #SBATCH --mem=32G
 #SBATCH --output=logs/csdi/alanine_psi.%j.out
 #SBATCH --error=logs/csdi/alanine_psi.%j.err
 
+mkdir -p results/csdi/
 mkdir -p results/csdi/alanine_psi
 #mkdir -p logs/csdi/alanine_psi
+mkdir -p checkpoints/csdi/
 mkdir -p checkpoints/csdi/alanine_psi
 
 source venv310/bin/activate

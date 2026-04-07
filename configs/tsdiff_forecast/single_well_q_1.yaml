@@ -12,10 +12,9 @@ normalization: none
 device: cuda:0
 setup: forecasting
 dataset: single_well
-num_samples: 100
+num_samples: 500
 sampler: ddpm
 sampler_params:
   guidance: quantile
   scale: 1
-num_samples: 100
 eval_every: 50

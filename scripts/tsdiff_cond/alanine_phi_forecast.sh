@@ -2,13 +2,13 @@
 #SBATCH --job-name=AphiTSFdiffcondforecast
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
-#SBATCH --time=3-00:00:00
+#SBATCH --time=04:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --partition=public
+#SBATCH --partition=htc
 #SBATCH --qos=public
 #SBATCH --gres=gpu:2
-#SBATCH --mem=32G
+#SBATCH --mem=16G
 #SBATCH --output=logs/tsdiff_cond/alanine_phi_forecast.%j.out
 #SBATCH --error=logs/tsdiff_cond/alanine_phi_forecast.%j.err
 
@@ -17,7 +17,7 @@ source venv310/bin/activate
 which python
 
 mkdir -p checkpoints/tsdiff_cond/alanine_phi
-mkdir -p results/tsdiff_cond/alanine_phi
+mkdir -p results/tsdiff_cond/
 #mkdir -p logs/tsdiff_cond/double_well
 
 PROJECT_ROOT=$(pwd) 

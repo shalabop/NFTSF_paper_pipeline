@@ -17,7 +17,7 @@ source venv310/bin/activate
 which python
 
 mkdir -p checkpoints/tsdiff_cond/alanine_psi
-mkdir -p results/tsdiff_cond/alanine_psi
+mkdir -p results/tsdiff_cond
 #mkdir -p logs/tsdiff_cond/double_well
 
 PROJECT_ROOT=$(pwd) 
@@ -57,10 +57,6 @@ ls $CUDA_PATH/include/cuda.h || echo "WARNING: cuda.h not found"
 ls $CUDA_PATH/include/nvrtc.h || echo "WARNING: nvrtc.h not found"
 ls $CUDA_PATH/lib64/libnvrtc.so* || ls $CUDA_PATH/targets/x86_64-linux/lib/libnvrtc.so* || echo "WARNING: libnvrtc.so not found"
 
-python train/TSDiff/train_cond_tsdiff.py \
-        --dataset_path gluonts_datasets/alanine_psi \
-        --config configs/tsdiff_cond_train/alanine_psi.yaml \
-        --out_dir checkpoints/tsdiff_cond/alanine_psi
 
 python eval/TSDiff/forecast_tsdiff_cond.py   \
         --config configs/tsdiff_forecast/alanine_psi_cond.yaml  \
