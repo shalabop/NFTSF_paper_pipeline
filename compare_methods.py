@@ -1050,7 +1050,7 @@ def plot_trajectory_comparison_grid(
 
     fig, axes = plt.subplots(
         n_models, n_traj,
-        figsize=(6 * n_traj, 5 * n_models),
+        figsize=(7 * n_traj, 6 * n_models),
         squeeze=False,
     )
 
@@ -1070,7 +1070,7 @@ def plot_trajectory_comparison_grid(
 
         # Row label on left-most column
         axes[row_idx, 0].set_ylabel(
-            f"{mlabel}\n{_coord_label(landscape)}", fontsize=10
+            f"{mlabel}\n{_coord_label(landscape)}", fontsize=11
         )
 
         for col_idx, traj_label in enumerate(display_labels):
@@ -1093,16 +1093,17 @@ def plot_trajectory_comparison_grid(
             ax.axvline(x=n_past, color="k", linestyle="--", alpha=0.4)
             ax.set_ylim(g_lo, g_hi)
             ax.set_xlim(0, n_past + n_future)
-            ax.set_xlabel(r"Step $N$", fontsize=9)
+            ax.set_xlabel(r"Step $N$", fontsize=10)
+            ax.tick_params(labelsize=9)
 
             if row_idx == 0:
-                ax.set_title(f"Trajectory {traj_label}", fontsize=11)
+                ax.set_title(f"Trajectory {traj_label}", fontsize=12, pad=10)
 
-    axes[0, 0].legend(loc="upper left", fontsize=7, framealpha=0.8)
+    axes[0, 0].legend(loc="upper left", fontsize=8, framealpha=0.8)
 
     fig.suptitle(
         f"{_land_display(landscape)} — Trajectory Comparison",
-        fontsize=13, y=1.01,
+        fontsize=14, y=0.98,
     )
     plt.tight_layout()
 
@@ -1225,7 +1226,7 @@ def plot_error_metrics_grid(
 
     fig, axes = plt.subplots(
         n_land, n_met,
-        figsize=(4 * n_met, 3.5 * n_land),
+        figsize=(5 * n_met, 4 * n_land),
         squeeze=False,
     )
 
@@ -1510,6 +1511,15 @@ def main():
     out = Path(args.output_dir)
     out.mkdir(parents=True, exist_ok=True)
     
+    # Load normalization stats if provided
+    norm_stats = _load_mean_std(args.data_npz)
+    print(f"\n=== Normalization stats ===")
+    if norm_stats:
+        for land, (mean, std) in norm_stats.items():
+            print(f"  {land}: mean={mean:.6f}, std={std:.6f}")
+    else:
+        print("  (none provided, will use raw values)")
+    
     # Parse result specs
     specs = [parse_result_spec(s) for s in args.results]
     
@@ -1533,7 +1543,18 @@ def main():
         print(f"\n  [{land}]")
         for model, npz_path in landscape_models[land].items():
             print(f"    {model}:")
-            all_data[land][model] = load_npz_result(npz_path)
+            data = load_npz_result(npz_path)
+            
+            # Denormalize if stats available for this landscape
+            if land in norm_stats:
+                mean, std = norm_stats[land]
+                print(f"      Denormalizing with mean={mean:.6f}, std={std:.6f}")
+                data["ground_truths"] = _denorm(data["ground_truths"], mean, std)
+                data["samples"] = _denorm(data["samples"], mean, std)
+                print(f"      ground_truths range: [{data['ground_truths'].min():.4f}, {data['ground_truths'].max():.4f}]")
+                print(f"      samples range: [{data['samples'].min():.4f}, {data['samples'].max():.4f}]")
+            
+            all_data[land][model] = data
     
     # Select display trajectories (common across all models)
     N_min = min(
