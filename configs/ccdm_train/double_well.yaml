@@ -1,0 +1,48 @@
+train:
+  epochs: 1000
+  batch_size: 64
+  lr: 0.001
+  n_samples: 100            
+  valid_epoch_interval: 50
+  save_epochs: true        
+  save_epoch_interval: 100  
+  training_curv: "checkpoints/ccdm/double_well/loss.npz"
+  model_path: "checkpoints/ccdm/double_well/model_best.pt" #only for -stage two
+  stride: 25
+  val_size: 9000
+  test_size: 3000
+  normalization: "none"
+
+
+data:
+  data_path: "DATA/double_well_std.npz"
+  data_name: "double_well"
+  context_length: 100         
+  prediction_length: 100      
+  use_window_norm: false      
+
+model:
+  n_emb: 2                   # CiDM encoder/decoder stack depth
+  cont_hidden_dim: 128       # hidden dim for context encoder  (e_hid)
+  pred_hidden_dim: 128       # hidden dim for latent encoder   (e_hid)
+  step_hidden_dim: 128       # hidden dim for step embedding
+  time_hidden_dim: 128       # hidden dim for timestamp embedding (unused for MD)
+  n_depth: 2                 # number of DiT blocks
+  n_heads: 8                 # attention heads
+  attn_dropout: 0.1
+  mlp_ratio: 4               # FFN expansion factor in DiT
+  non_attn: false            # if true, replace attention with linear (ablation only)
+
+diffusion:
+  n_steps: 50              # diffusion steps K  (paper Table 5: 50 for H=96)
+  beta_start: 0.0001
+  beta_end: 0.5         # paper Table 5: 0.5 for H=96
+  beta_schedule: "quad"      # paper uses quadratic schedule
+  parameterization: "noise"  # predict noise ε (not y0)
+  step_dist: "uniform"       # uniform or non-uniform step sampling
+
+contrastive:
+  use_contrast: "contrast"   # "contrast" | "non-contrast"
+  contrast_weight: 0.001      # λ  (paper Table 6: 0.001 for small datasets)
+  n_negatives: 64            # N negatives per mode (variation + scaling)
+  temperature: 0.1           # τ  (paper Table 9: 0.1 is best on most datasets)
