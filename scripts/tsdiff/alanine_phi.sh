@@ -15,8 +15,6 @@
 mkdir -p checkpoints/tsdiff/alanine_phi
 mkdir -p results/tsdiff_q/
 mkdir -p results/tsdiff_mse/
-mkdir -p results/tsdiff_q/alanine_phi
-mkdir -p results/tsdiff_mse/alanine_phi
 mkdir -p logs/tsdiff
 
 source venv310/bin/activate
@@ -70,6 +68,17 @@ python eval/TSDiff/forecast_tsdiff.py   \
         --out results/tsdiff_q/alanine_phi_q_4.npz
 
 python eval/TSDiff/forecast_tsdiff.py   \
+        --config configs/tsdiff_forecast/alanine_phi_q_2.yaml  \
+        --dataset_path gluonts_datasets/alanine_phi \
+        --out results/tsdiff_q/alanine_phi_q_2.npz
+
+
+python eval/TSDiff/forecast_tsdiff.py   \
         --config configs/tsdiff_forecast/alanine_phi_mse_05.yaml  \
         --dataset_path gluonts_datasets/alanine_phi \
         --out results/tsdiff_mse/alanine_phi_mse_05.npz
+
+python eval/TSDiff/forecast_tsdiff.py   \
+        --config configs/tsdiff_forecast/alanine_phi_mse_2.yaml  \
+        --dataset_path gluonts_datasets/alanine_phi \
+        --out results/tsdiff_mse/alanine_phi_mse_2.npz

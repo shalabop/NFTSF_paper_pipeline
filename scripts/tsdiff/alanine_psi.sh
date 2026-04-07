@@ -13,7 +13,8 @@
 #SBATCH --error=logs/tsdiff/alanine_psi.%j.err
 
 mkdir -p checkpoints/tsdiff/alanine_psi
-mkdir -p results/tsdiff/alanine_psi
+mkdir -p results/tsdiff_q/
+mkdir -p results/tsdiff_mse/
 #mkdir -p logs/tsdiff/double_well
 
 source venv310/bin/activate
