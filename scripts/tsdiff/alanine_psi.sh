@@ -72,6 +72,16 @@ python eval/TSDiff/forecast_tsdiff.py   \
         --out results/tsdiff_q/alanine_psi_q_4.npz
 
 python eval/TSDiff/forecast_tsdiff.py   \
+        --config configs/tsdiff_forecast/alanine_psi_q_2.yaml  \
+        --dataset_path gluonts_datasets/alanine_psi \
+        --out results/tsdiff_q/alanine_psi_q_2.npz
+
+python eval/TSDiff/forecast_tsdiff.py   \
         --config configs/tsdiff_forecast/alanine_psi_mse_05.yaml  \
         --dataset_path gluonts_datasets/alanine_psi \
         --out results/tsdiff_mse/alanine_psi_mse_05.npz
+
+python eval/TSDiff/forecast_tsdiff.py   \
+        --config configs/tsdiff_forecast/alanine_psi_mse_2.yaml  \
+        --dataset_path gluonts_datasets/alanine_psi \
+        --out results/tsdiff_mse/alanine_psi_mse_2.npz
