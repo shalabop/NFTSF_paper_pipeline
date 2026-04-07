@@ -27,7 +27,7 @@ env/
 
 # Logs and outputs (generated at runtime)
 logs/
-results/
+#results/
 *.out
 *.err
 
