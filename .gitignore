@@ -37,8 +37,8 @@ results/
 venv310/
 venvRATD/
 template.sh
-DATA/
-checkpoints/
+#DATA/
+#checkpoints/
 test.ipynb
 #scripts/archive
 archive/
