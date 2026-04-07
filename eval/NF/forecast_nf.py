@@ -69,9 +69,10 @@ def load_model(model_path, config, context_length, prediction_length, device):
     hidden_units  = 64
     hidden_layers = "1,2"
 
+    import yaml
     if config is not None and os.path.exists(config):
         with open(config) as f:
-            cfg = json.load(f)
+            cfg = yaml.safe_load(f)  
         flow_blocks   = cfg.get("flow_blocks",   flow_blocks)
         hidden_units  = cfg.get("hidden_units",  hidden_units)
         hidden_layers = cfg.get("hidden_layers", hidden_layers)
@@ -136,15 +137,10 @@ def load_norm_stats(norm_stats_path, positions_train=None):
 
 def run_forecast(model, positions, context_length, prediction_length, n_samples,
                  mean, std, device, train_test_split, test_size):
-    """
-    Forecast for the first `test_size` trajectories.
-
-    Returns
-    -------
-    samples      : (test_size, H, S)
-    ground_truth : (test_size, H)
-    contexts     : (test_size, L)
-    """
+    
+    test_size = min(test_size, positions.shape[0])  # ← clamp to available N
+    positions = positions[:test_size]
+    ...
     # Limit to test_size trajectories
     positions = positions[:test_size]
     N = positions.shape[0]
