@@ -2,3 +2,6 @@ model,alanine_psi
 csdi,0.8177
 tsdiff_cond,0.8663
 arima,0.8229
+tsdiff_q,0.8792
+tsdiff_ms,0.8621
+nftsf,0.8963
