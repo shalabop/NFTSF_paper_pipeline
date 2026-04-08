@@ -56,7 +56,6 @@ mkdir -p "$KEOPS_CACHE_FOLDER"
 
 echo "PyKeOps build dir: $PYKEOPS_BUILD_DIR"
 echo "KeOps cache dir: $KEOPS_CACHE_FOLDER"
-# ==============================================================================
 
 # Verify CUDA files
 echo "Checking CUDA installation..."

@@ -17,5 +17,4 @@ sampler: ddpm
 sampler_params:
   guidance: quantile
   scale: 4
-num_samples: 100
 eval_every: 50

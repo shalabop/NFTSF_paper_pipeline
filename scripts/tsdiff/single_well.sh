@@ -76,7 +76,6 @@ python train/TSDiff/train_tsdiff.py \
     --config configs/tsdiff_train/single_well.yaml \
     --out_dir checkpoints/tsdiff/single_well
 
-# Forecasting - Quantile guidance
 echo "Forecasting with quantile guidance..."
 python eval/TSDiff/forecast_tsdiff.py \
     --config configs/tsdiff_forecast/single_well_q_4.yaml \
@@ -90,4 +89,7 @@ python eval/TSDiff/forecast_tsdiff.py \
     --dataset_path gluonts_datasets/single_well \
     --out results/tsdiff/single_well_mse_05.npz
 
-echo "Job completed!"
+python eval/TSDiff/forecast_tsdiff.py \
+    --config configs/tsdiff_forecast/single_well_mse_01.yaml \
+    --dataset_path gluonts_datasets/single_well \
+    --out results/tsdiff/single_well_mse_01.npz
