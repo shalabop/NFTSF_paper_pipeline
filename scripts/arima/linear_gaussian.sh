@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=SWarima
+#SBATCH --job-name=LGarima
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
 #SBATCH --time=3-00:00:00
@@ -7,17 +7,17 @@
 #SBATCH --ntasks=1
 #SBATCH --partition=public
 #SBATCH --qos=public
-#SBATCH --gres=gpu:2
+#SBATCH --gres=gpu:0
 #SBATCH --mem=32G
-#SBATCH --output=logs/arima/single_well_fh.%j.out
-#SBATCH --error=logs/arima/single_well_fh.%j.err
+#SBATCH --output=logs/arima/linear_gaussian.%j.out
+#SBATCH --error=logs/arima/linear_gaussian.%j.err
 
 
 source venv310/bin/activate
 which python
 
-#mkdir -p results/arima/single_well
-mkdir -p logs/arima/single_well
+mkdir -p results/arima
+mkdir -p logs/arima
 
 PROJECT_ROOT=$(pwd) 
 export PYTHONPATH=$PROJECT_ROOT:$PYTHONPATH
@@ -45,8 +45,8 @@ ls $CUDA_PATH/lib64/libnvrtc.so* || echo "libnvrtc.so not found in lib64"
 ls $CUDA_PATH/targets/x86_64-linux/lib/libnvrtc.so* || echo "libnvrtc.so not found in targets/x86_64-linux/lib"
 
 python eval/ARIMA/run_auto_arima.py \
-    --input DATA/single_well_test.npz \
-    --out results/arima/single_well_fh.npz \
+    --input DATA/linear_gaussian_test.npz \
+    --out results/arima/linear_gaussian.npz \
     --model 3000 \
     --num-samples 500 \
-    -c configs/arima/single_well.yaml
+    -c configs/arima/linear_gaussian.yaml

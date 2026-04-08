@@ -2,22 +2,22 @@
 #SBATCH --job-name=DWarima
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
-#SBATCH --time=3-00:00:00
+#SBATCH --time=1-00:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --partition=public
 #SBATCH --qos=public
-#SBATCH --gres=gpu:2
+#SBATCH --gres=gpu:0
 #SBATCH --mem=32G
-#SBATCH --output=logs/arima/double_well_out.%j.out
+#SBATCH --output=logs/arima/double_well.%j.out
 #SBATCH --error=logs/arima/double_well.%j.err
 
 
 source venv310/bin/activate
 which python
 
-mkdir -p results/arima/double_well
-mkdir -p logs/arima/double_well
+mkdir -p results/arima
+mkdir -p logs/arima
 
 PROJECT_ROOT=$(pwd) 
 export PYTHONPATH=$PROJECT_ROOT:$PYTHONPATH
