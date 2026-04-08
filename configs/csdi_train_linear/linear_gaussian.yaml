@@ -10,7 +10,7 @@ train:
   test_size: 3000
   valid_epoch_interval: 10
   stride: 5
-  training_curv: "checkpoints/csdi/single_well"
+  training_curv: "checkpoints/csdi/linear_gaussian"
   normalization: "none"
   
 diffusion:
@@ -21,7 +21,7 @@ diffusion:
   beta_start: 0.0001
   beta_end: 0.5
   num_steps: 50 
-  schedule: "quad"
+  schedule: "linear"
   is_linear: True
 
 model:
