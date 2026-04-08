@@ -93,12 +93,13 @@ def get_dataloader_md(npz_path, context_length, prediction_length,
         print("  (local: per-sample scaler = mean(|context|), ""stored in batch as 'local_scaler')")'''
 
     if flag == "train":
-        val_start = -((prediction_length + context_length) - positions.shape[1])
+        val_start = -(prediction_length + context_length)
+        train_end = -prediction_length
         
         print(positions[:, :val_start].shape[0])
         print(positions[:, :val_start].shape[1])
         train_dataset = MDTrajectoryDataset(
-            _make_train_windows(positions[:, :val_start],context_length, prediction_length, stride),
+            _make_train_windows(positions[:, :train_end],context_length, prediction_length, stride),
             context_length, prediction_length, normalization=normalization,
         )
         
