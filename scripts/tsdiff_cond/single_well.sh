@@ -66,6 +66,6 @@ python train/TSDiff/train_cond_tsdiff.py \
         --out_dir checkpoints/tsdiff_cond/single_well
 
 python eval/TSDiff/forecast_tsdiff_cond.py   \
-        --config configs/tsdiff_forecast/single_well.yaml  \
+        --config configs/tsdiff_forecast/single_well_cond.yaml  \
         --dataset_path gluonts_datasets/single_well \
         --out results/tsdiff_cond/single_well.npz
