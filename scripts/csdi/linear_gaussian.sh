@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=linearGaussianCSDI
+#SBATCH --job-name=linCSDI
 #SBATCH --time=04:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
@@ -45,7 +45,7 @@ python train/CSDI/train_csdi.py \
 echo "=== Forecasting CSDI: linear_gaussian ==="
 python eval/CSDI/forecast_csdi.py \
     --config configs/csdi_train/linear_gaussian.yaml \
-    --input  DATA/linear_gaussian.npz \
+    --input  DATA/linear_gaussian_test.npz \
     --ckpt   checkpoints/csdi/linear_gaussian/model.pth \
     --out    results/csdi/linear_gaussian.npz \
     --device cuda:0

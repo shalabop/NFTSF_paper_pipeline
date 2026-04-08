@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=lgTSFdiffcond
+#SBATCH --job-name=lgCTSFdiff
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
 #SBATCH --time=04:00:00
@@ -16,7 +16,7 @@ source venv310/bin/activate
 which python
 
 mkdir -p checkpoints/tsdiff_cond/linear_gaussian
-mkdir -p results/tsdiff_cond/linear_gaussian
+mkdir -p results/tsdiff_cond/
 #mkdir -p logs/tsdiff_cond/double_well
 
 PROJECT_ROOT=$(pwd) 
@@ -65,6 +65,6 @@ python train/TSDiff/train_cond_tsdiff.py \
         --out_dir checkpoints/tsdiff_cond/linear_gaussian
 
 python eval/TSDiff/forecast_tsdiff_cond.py   \
-        --config configs/tsdiff_forecast/linear_gaussian.yaml  \
+        --config configs/tsdiff_forecast/linear_gaussian_cond.yaml  \
         --dataset_path gluonts_datasets/linear_gaussian \
-        --out results/tsdiff_cond/linear_gaussian
+        --out results/tsdiff_cond/linear_gaussian.npz

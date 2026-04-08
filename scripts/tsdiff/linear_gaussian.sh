@@ -12,10 +12,8 @@
 #SBATCH --output=logs/tsdiff/linear_gaussian.%j.out
 #SBATCH --error=logs/tsdiff/linear_gaussian.%j.err
 
-mkdir -p XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-
 mkdir -p checkpoints/tsdiff/linear_gaussian
-mkdir -p results/tsdiff/linear_gaussian
+mkdir -p results/tsdiff
 #mkdir -p logs/tsdiff/double_well
 
 source venv310/bin/activate
@@ -77,3 +75,8 @@ python eval/TSDiff/forecast_tsdiff.py   \
         --config configs/tsdiff_forecast/linear_gaussian_mse_05.yaml  \
         --dataset_path gluonts_datasets/linear_gaussian \
         --out results/tsdiff_mse/linear_gaussian_mse_05.npz
+
+python eval/TSDiff/forecast_tsdiff.py   \
+        --config configs/tsdiff_forecast/linear_gaussian_mse_01.yaml  \
+        --dataset_path gluonts_datasets/linear_gaussian \
+        --out results/tsdiff_mse/linear_gaussian_mse_01.npz
