@@ -53,4 +53,4 @@ python train/TSDiff/train_cond_tsdiff.py \
 python eval/TSDiff/forecast_tsdiff_cond.py   \
         --config configs/tsdiff_forecast/double_well_cond.yaml  \
         --dataset_path gluonts_datasets/double_well \
-        --out results/tsdiff_cond/double_well
+        --out results/tsdiff_cond/double_well.npz
