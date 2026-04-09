@@ -1,23 +1,23 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=LGarima
+#SBATCH --job-name=LGnf
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
-#SBATCH --time=04:00:00
+#SBATCH --time=1-00:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --partition=htc
+#SBATCH --partition=public
 #SBATCH --qos=public
-#SBATCH --gres=gpu:0
+#SBATCH --gres=gpu:2
 #SBATCH --mem=32G
-#SBATCH --output=logs/arima/linear_gaussian.%j.out
-#SBATCH --error=logs/arima/linear_gaussian.%j.err
+#SBATCH --output=logs/nf/linear_gaussian.%j.out
+#SBATCH --error=logs/nf/linear_gaussian.%j.err
 
 
 source venv310/bin/activate
 which python
 
-mkdir -p results/arima
-mkdir -p logs/arima
+mkdir -p results/nf
+mkdir -p logs/nf
 
 PROJECT_ROOT=$(pwd) 
 export PYTHONPATH=$PROJECT_ROOT:$PYTHONPATH
@@ -36,7 +36,7 @@ export CPATH="$CUDA_PATH/targets/x86_64-linux/include:$CPATH"
 
 export KEOPS_CACHE_DIR=$HOME/.cache/keops
 mkdir -p $KEOPS_CACHE_DIR
-e
+
 
 ls $CUDA_PATH/include/cuda.h || echo "cuda.h not found"
 ls $CUDA_PATH/include/nvrtc.h || echo "nvrtc.h not found"
@@ -44,9 +44,14 @@ ls $CUDA_PATH/include/nvrtc.h || echo "nvrtc.h not found"
 ls $CUDA_PATH/lib64/libnvrtc.so* || echo "libnvrtc.so not found in lib64"
 ls $CUDA_PATH/targets/x86_64-linux/lib/libnvrtc.so* || echo "libnvrtc.so not found in targets/x86_64-linux/lib"
 
-python eval/ARIMA/run_auto_arima.py \
-    --input DATA/linear_gaussian_test.npz \
-    --out results/arima/linear_gaussian.npz \
-    --model 3000 \
-    --num-samples 500 \
-    -c configs/arima/linear_gaussian.yaml
+
+python eval/NF/forecast_nf.py \
+    --model_path   checkpoints/nf/linear_gaussian.pth     \
+    --config configs/nf/linear_gaussian.yaml    \
+    --data_path    DATA/linear_gaussian_test.npz    \
+    --out          results/nf/linear_gaussian.npz \
+    --context_length     100    \
+    --prediction_length     100   \
+    --n_samples    500 \
+    --train_test_split 900 \
+    --test_size 3000

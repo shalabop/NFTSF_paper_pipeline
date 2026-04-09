@@ -2,7 +2,7 @@
 #SBATCH --job-name=DWnf
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
-#SBATCH --time=3-00:00:00
+#SBATCH --time=1-00:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --partition=public
@@ -46,12 +46,13 @@ ls $CUDA_PATH/targets/x86_64-linux/lib/libnvrtc.so* || echo "libnvrtc.so not fou
 
 
 python eval/NF/forecast_nf.py \
-    --model_path   checkpoints/nf/double_well/model.pth     \
-    --config checkpoints/nf/double_well.yaml    \
+    --model_path   checkpoints/nf/double_well.pth     \
+    --config configs/nf/double_well.yaml    \
     --data_path    DATA/double_well_test.npz    \
     --out          results/nf/double_well.npz \
     --context_length     100    \
     --prediction_length     100   \
-    --n_samples    200 \
+    --n_samples    500 \
     --train_test_split 900 \
     --test_size 3000
+    
