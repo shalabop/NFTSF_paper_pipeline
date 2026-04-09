@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-compare_models_from_npz.py
+compare.py
 ==========================
 Generate comparison figures from pre-computed .npz result files.
 
 Usage
 -----
-python compare_models_from_npz.py \
+python compare.py \
     --results \
         double_well:tsdiff_q:results/tsdiff/double_well_q_4.npz \
         double_well:tsdiff_ms:results/tsdiff/double_well_mse_05.npz \
@@ -17,6 +17,23 @@ python compare_models_from_npz.py \
     --output_dir ./comparison_figures/ \
     --n_traj_show 3 \
     --seed 42
+    
+python compare.py 
+    --results 
+        alanine_psi:nftsf:results/nf/alanine_psi.npz 
+        alanine_psi:arima:results/arima/alanine_psi.npz 
+        alanine_psi:csdi:results/csdi/alanine_psi.npz 
+        alanine_psi:tsdiff_cond:results/tsdiff_cond/alanine_psi.npz 
+        alanine_psi:tsdiff_q:results/tsdiff_q/alanine_psi_q_4.npz 
+        alanine_psi:tsdiff_ms:results/tsdiff_mse/alanine_psi_mse_01.npz 
+    --data_npz 
+        alanine_psi:DATA/alanine_psi_test.npz 
+    --output_dir 
+        ./alanine_psi_NEW_2/ 
+    --n_traj_show 3
+    --seed 42
+    
+python compare.py --results alanine_phi:nftsf:results/nf/alanine_phi.npz alanine_phi:arima:results/arima/alanine_phi.npz alanine_phi:csdi:results/csdi/alanine_phi.npz alanine_phi:tsdiff_cond:results/tsdiff_cond/alanine_phi.npz alanine_phi:tsdiff_q:results/tsdiff_q/alanine_phi_q_4.npz alanine_phi:tsdiff_ms:results/tsdiff_mse/alanine_phi_mse_05.npz --data_npz alanine_phi:DATA/alanine_phi_test.npz --output_dir ./alanine_phi_NEW/ --n_traj_show 3 --seed 42 
 """
 
 import argparse
