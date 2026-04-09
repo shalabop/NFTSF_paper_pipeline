@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 #SBATCH --job-name=linearGaussianCSDI
-#SBATCH --time=04:00:00
+#SBATCH --time=08:00:00
 #SBATCH --nodes=1
-#SBATCH --ntasks=1
+#SBATCH --ntasks=1dd
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
-#SBATCH --partition=htc
+#SBATCH --partition=public
 #SBATCH --qos=public
 #SBATCH --gres=gpu:1
 #SBATCH --mem=32G
