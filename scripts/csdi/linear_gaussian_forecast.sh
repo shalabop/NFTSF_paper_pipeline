@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=linearGaussianCSDI
+#SBATCH --job-name=LGCSDI
 #SBATCH --time=08:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1

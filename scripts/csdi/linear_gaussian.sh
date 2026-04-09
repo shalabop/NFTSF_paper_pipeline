@@ -35,12 +35,6 @@ ls $CUDA_PATH/include/nvrtc.h     || echo "nvrtc.h not found"
 ls $CUDA_PATH/lib64/libnvrtc.so*  || echo "libnvrtc.so not found in lib64"
 ls $CUDA_PATH/targets/x86_64-linux/lib/libnvrtc.so* || echo "libnvrtc.so not found in targets/x86_64-linux/lib"
 
-echo "=== Training CSDI: linear_gaussian ==="
-python train/CSDI/train_csdi.py \
-    --config configs/csdi_train/linear_gaussian.yaml \
-    --input  DATA/linear_gaussian_train.npz \
-    --out    checkpoints/csdi/linear_gaussian \
-    --device cuda:0
 
 echo "=== Forecasting CSDI: linear_gaussian ==="
 python eval/CSDI/forecast_csdi.py \
