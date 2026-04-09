@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=AphiMSE
+#SBATCH --job-name=ApsiMSE
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
 #SBATCH --time=3-00:00:00
@@ -9,10 +9,9 @@
 #SBATCH --qos=public
 #SBATCH --gres=gpu:2
 #SBATCH --mem=32G
-#SBATCH --output=logs/tsdiff/alanine_phi_mse.%j.out
-#SBATCH --error=logs/tsdiff/alanine_phi_mse.%j.err
+#SBATCH --output=logs/tsdiff/alanine_psi_mse.%j.out
+#SBATCH --error=logs/tsdiff/alanine_psi_mse.%j.err
 
-mkdir -p checkpoints/tsdiff/alanine_phi
 mkdir -p results/tsdiff_q/
 mkdir -p results/tsdiff_mse/
 mkdir -p logs/tsdiff
@@ -59,16 +58,16 @@ ls $CUDA_PATH/lib64/libnvrtc.so* || ls $CUDA_PATH/targets/x86_64-linux/lib/libnv
 
 
 python eval/TSDiff/forecast_tsdiff.py   \
-        --config configs/tsdiff_forecast/alanine_phi_mse_025.yaml  \
-        --dataset_path gluonts_datasets/alanine_phi \
-        --out results/tsdiff_mse/alanine_phi_mse_025.npz
+        --config configs/tsdiff_forecast/alanine_psi_mse_025.yaml  \
+        --dataset_path gluonts_datasets/alanine_psi \
+        --out results/tsdiff_mse/alanine_psi_mse_025.npz
 
 python eval/TSDiff/forecast_tsdiff.py   \
-        --config configs/tsdiff_forecast/alanine_phi_mse_01.yaml  \
-        --dataset_path gluonts_datasets/alanine_phi \
-        --out results/tsdiff_mse/alanine_phi_mse_01.npz
+        --config configs/tsdiff_forecast/alanine_psi_mse_01.yaml  \
+        --dataset_path gluonts_datasets/alanine_psi \
+        --out results/tsdiff_mse/alanine_psi_mse_01.npz
 
 python eval/TSDiff/forecast_tsdiff.py   \
-        --config configs/tsdiff_forecast/alanine_phi_mse_05.yaml  \
-        --dataset_path gluonts_datasets/alanine_phi \
-        --out results/tsdiff_mse/alanine_phi_mse_05.npz
+        --config configs/tsdiff_forecast/alanine_psi_mse_05.yaml  \
+        --dataset_path gluonts_datasets/alanine_psi \
+        --out results/tsdiff_mse/alanine_psi_mse_05.npz
