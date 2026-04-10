@@ -65,11 +65,13 @@ ls $CUDA_PATH/lib64/libnvrtc.so* || ls $CUDA_PATH/targets/x86_64-linux/lib/libnv
 
 
 python eval/TSDiff/forecast_tsdiff.py   \
-        --config configs/tsdiff_forecast/double_well_q_4.yaml  \
+        --config configs/tsdiff_forecast/double_well_mse_025.yaml  \
         --dataset_path gluonts_datasets/double_well \
-        --out results/tsdiff_q/double_well_q_4.npz
+        --out results/tsdiff_mse/double_well_mse_025.npz
+
+
 
 python eval/TSDiff/forecast_tsdiff.py   \
-        --config configs/tsdiff_forecast/double_well_mse_05.yaml  \
+        --config configs/tsdiff_forecast/double_well_mse_01.yaml  \
         --dataset_path gluonts_datasets/double_well \
-        --out results/tsdiff_mse/double_well_mse_05.npz
+        --out results/tsdiff_mse/double_well_mse_01.npz
