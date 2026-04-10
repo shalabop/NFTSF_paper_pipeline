@@ -69,7 +69,6 @@ ls $CUDA_PATH/include/cuda.h || echo "WARNING: cuda.h not found"
 ls $CUDA_PATH/include/nvrtc.h || echo "WARNING: nvrtc.h not found"
 ls $CUDA_PATH/lib64/libnvrtc.so* || ls $CUDA_PATH/targets/x86_64-linux/lib/libnvrtc.so* || echo "WARNING: libnvrtc.so not found"
 
-# Training
 echo "Starting training..."
 python train/TSDiff/train_tsdiff.py \
     --dataset_path gluonts_datasets/single_well \
@@ -82,7 +81,6 @@ python eval/TSDiff/forecast_tsdiff.py \
     --dataset_path gluonts_datasets/single_well \
     --out results/tsdiff/single_well_q_4.npz
 
-# Forecasting - MSE guidance
 echo "Forecasting with MSE guidance..."
 python eval/TSDiff/forecast_tsdiff.py \
     --config configs/tsdiff_forecast/single_well_mse_05.yaml \
@@ -93,3 +91,8 @@ python eval/TSDiff/forecast_tsdiff.py \
     --config configs/tsdiff_forecast/single_well_mse_01.yaml \
     --dataset_path gluonts_datasets/single_well \
     --out results/tsdiff/single_well_mse_01.npz
+
+python eval/TSDiff/forecast_tsdiff.py \
+    --config configs/tsdiff_forecast/single_well_mse_025.yaml \
+    --dataset_path gluonts_datasets/single_well \
+    --out results/tsdiff/single_well_mse_025.npz

@@ -9,15 +9,15 @@
 #SBATCH --qos=public
 #SBATCH --gres=gpu:2
 #SBATCH --mem=32G
-#SBATCH --output=logs/nf/single_well_run.%j.out
-#SBATCH --error=logs/nf/single_well_run.%j.err
+#SBATCH --output=logs/nf/single_well.%j.out
+#SBATCH --error=logs/nf/single_well.%j.err
 
 
 source venv310/bin/activate
 which python
 
-mkdir -p results/arima/double_well
-mkdir -p logs/arima
+mkdir -p results/nf/single_well
+mkdir -p logs/nf
 
 PROJECT_ROOT=$(pwd) 
 export PYTHONPATH=$PROJECT_ROOT:$PYTHONPATH
