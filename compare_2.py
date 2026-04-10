@@ -303,6 +303,7 @@ def plot_trajectory_comparison_grid(
     Each cell: 90%/50% CI bands + ground-truth line.
     Shared y-limits across the entire figure.
     For alanine landscapes, y-axis ticks are shown in multiples of π.
+    Legend placed inside the first subplot (top left).
     """
     n_models = len(model_data)
     n_traj   = len(display_labels)
@@ -317,19 +318,15 @@ def plot_trajectory_comparison_grid(
     all_steps    = np.arange(0, n_past + n_future)
     g_lo, g_hi   = _global_ylim(model_data)
 
-    # Determine if we need π formatting
+    # π formatting for alanine
     use_pi_format = landscape in ("alanine_phi", "alanine_psi")
     if use_pi_format:
         from matplotlib.ticker import MultipleLocator, FuncFormatter
-        # Define π tick positions (every π/2)
-        pi_ticks = np.arange(-np.pi, np.pi + 1e-6, np.pi/2)
-        # Format function
         def pi_formatter(x, pos):
-            # Round to nearest π/2 to avoid floating noise
             val = round(x / (np.pi/2)) * (np.pi/2)
             if abs(val) < 1e-8:
                 return r"$0$"
-            num = val / np.pi          # now in units of π
+            num = val / np.pi
             if num == 1:
                 return r"$\pi$"
             elif num == -1:
@@ -339,7 +336,6 @@ def plot_trajectory_comparison_grid(
             elif num == -0.5:
                 return r"$-\frac{\pi}{2}$"
             else:
-                # For any other multiple (unlikely with our tick locator)
                 return f"${num:.0f}\\pi$"
 
     for row_idx, (model_name, mdata) in enumerate(model_data.items()):
@@ -348,8 +344,8 @@ def plot_trajectory_comparison_grid(
         color  = reg["color"]
         mlabel = reg["label"]
 
-        samples_all       = mdata["samples"]        # (N_disp, S, H)
-        ground_truths_all = mdata["ground_truths"]  # (N_disp, L+H)
+        samples_all       = mdata["samples"]
+        ground_truths_all = mdata["ground_truths"]
 
         axes[row_idx, 0].set_ylabel(
             f"{mlabel}\n{_coord_label(landscape)}", fontsize=13
@@ -357,8 +353,8 @@ def plot_trajectory_comparison_grid(
 
         for col_idx, traj_label in enumerate(display_labels):
             ax        = axes[row_idx, col_idx]
-            real_traj = ground_truths_all[col_idx]   # (L+H,)
-            samp      = samples_all[col_idx]          # (S, H)
+            real_traj = ground_truths_all[col_idx]
+            samp      = samples_all[col_idx]
 
             median = np.median(samp, axis=0)
             lo90   = np.percentile(samp,  5, axis=0)
@@ -378,7 +374,6 @@ def plot_trajectory_comparison_grid(
             ax.set_xlabel(r"Step $N$", fontsize=12)
             ax.tick_params(labelsize=12)
 
-            # Apply π formatting if needed
             if use_pi_format:
                 ax.yaxis.set_major_locator(MultipleLocator(np.pi/2))
                 ax.yaxis.set_major_formatter(FuncFormatter(pi_formatter))
@@ -386,15 +381,14 @@ def plot_trajectory_comparison_grid(
             if row_idx == 0:
                 ax.set_title(f"Trajectory {traj_label}", fontsize=13, pad=10)
 
-    # Legend placed at bottom to avoid overlap with upper titles
-    axes[0, 0].legend(loc="lower center", bbox_to_anchor=(0.5, -0.35),
-                      fontsize=12, framealpha=0.8, ncol=4)
+            # Place legend in the first subplot (top‑left)
+            if row_idx == 0 and col_idx == 0:
+                ax.legend(loc='upper left', fontsize=12, framealpha=0.8)
 
     fig.suptitle(
         f"{_land_display(landscape)} — Trajectory Comparison",
-        fontsize=15, y=1.0,
+        fontsize=15, y=1,
     )
-    # Adjust layout to prevent suptitle overlapping with subplot titles
     plt.subplots_adjust(top=0.93)
     plt.tight_layout()
     out_path = output_dir / f"trajectory_comparison_{landscape}.png"
@@ -404,110 +398,218 @@ def plot_trajectory_comparison_grid(
 # ---------------------------------------------------------------------------
 # Figure B: 2-D histogram comparison grid
 # ---------------------------------------------------------------------------
-def plot_histogram2d_comparison_grid(landscape: str, display_labels: list[int],
-                                     model_data: dict[str, dict], n_past: int,
-                                     n_future: int, output_dir: Path) -> None:
-    n_models = len(model_data)
-    n_traj = len(display_labels)
-    fig, axes = plt.subplots(n_models, n_traj, figsize=(9 * n_traj, 6 * n_models), squeeze=False)
-    future_steps = np.arange(n_past, n_past + n_future)
-    all_steps = np.arange(0, n_past + n_future)
-    g_lo, g_hi = _global_ylim(model_data)
+def plot_histogram2d_comparison_grid(
+    landscape: str,
+    display_labels: list[int],
+    model_data: dict[str, dict],
+    n_past: int,
+    n_future: int,
+    output_dir: Path,
+) -> None:
+    """
+    Same layout as Figure A but using magma 2-D density heatmaps.
+    Dark background, π‑formatted y‑axis for alanine.
+    Legend (Truth) placed inside the first subplot (top left).
+    """
+    with plt.style.context('dark_background'):
+        n_models = len(model_data)
+        n_traj   = len(display_labels)
 
-    n_x_bins = max(12, n_future // 5)
-    n_y_bins = 24
-    x_edges = np.linspace(n_past, n_past + n_future, n_x_bins + 1)
-    y_edges = np.linspace(g_lo, g_hi, n_y_bins + 1)
+        fig, axes = plt.subplots(
+            n_models, n_traj,
+            figsize=(9 * n_traj, 6 * n_models),
+            squeeze=False,
+        )
 
-    for row_idx, (model_name, mdata) in enumerate(model_data.items()):
-        reg = MODEL_REGISTRY.get(model_name, {"label": model_name, "color": "tab:orange"})
-        mlabel = reg["label"]
-        samples_all = mdata["samples"]
-        ground_truths_all = mdata["ground_truths"]
-        axes[row_idx, 0].set_ylabel(f"{mlabel}\n{_coord_label(landscape)}", fontsize=13)
+        future_steps = np.arange(n_past, n_past + n_future)
+        all_steps    = np.arange(0, n_past + n_future)
+        g_lo, g_hi   = _global_ylim(model_data)
 
-        for col_idx, traj_label in enumerate(display_labels):
-            ax = axes[row_idx, col_idx]
-            real_traj = ground_truths_all[col_idx]
-            samp = samples_all[col_idx]
-            time_rep = np.tile(future_steps, (samp.shape[0], 1))
-            ax.hist2d(time_rep.flatten(), samp.flatten(),
-                      bins=[x_edges, y_edges], cmap="magma", density=True,
-                      norm=LogNorm(vmin=1e-6))
-            ax.plot(all_steps, real_traj, color="lime", linewidth=2.5, label="Truth")
-            ax.axvline(x=n_past, color="white", linestyle="--", alpha=0.5)
-            ax.set_ylim(g_lo, g_hi)
-            ax.set_xlim(0, n_past + n_future)
-            ax.set_xlabel(r"Step $N$", fontsize=12)
-            ax.tick_params(labelsize=12)
-            if row_idx == 0:
-                ax.set_title(f"Trajectory {traj_label}", fontsize=13)
+        n_x_bins = max(12, n_future // 5)
+        n_y_bins = 24
+        x_edges  = np.linspace(n_past, n_past + n_future, n_x_bins + 1)
+        y_edges  = np.linspace(g_lo, g_hi,                n_y_bins + 1)
 
-    axes[0, 0].legend(loc="upper left", fontsize=12, framealpha=0.8)
-    fig.suptitle(f"{_land_display(landscape)} — Prediction Density Comparison", fontsize=15, y=1.01)
-    plt.tight_layout()
-    out_path = output_dir / f"histogram2d_comparison_{landscape}.png"
-    fig.savefig(out_path, dpi=600, bbox_inches="tight")
-    plt.close(fig)
-    print(f"[B] Saved: {out_path}")
+        use_pi_format = landscape in ("alanine_phi", "alanine_psi")
+        if use_pi_format:
+            from matplotlib.ticker import MultipleLocator, FuncFormatter
+            def pi_formatter(x, pos):
+                val = round(x / (np.pi/2)) * (np.pi/2)
+                if abs(val) < 1e-8:
+                    return r"$0$"
+                num = val / np.pi
+                if num == 1:
+                    return r"$\pi$"
+                elif num == -1:
+                    return r"$-\pi$"
+                elif num == 0.5:
+                    return r"$\frac{\pi}{2}$"
+                elif num == -0.5:
+                    return r"$-\frac{\pi}{2}$"
+                else:
+                    return f"${num:.0f}\\pi$"
+
+        for row_idx, (model_name, mdata) in enumerate(model_data.items()):
+            reg    = MODEL_REGISTRY.get(model_name,
+                                        {"label": model_name, "color": "tab:orange"})
+            mlabel = reg["label"]
+
+            samples_all       = mdata["samples"]
+            ground_truths_all = mdata["ground_truths"]
+
+            axes[row_idx, 0].set_ylabel(
+                f"{mlabel}\n{_coord_label(landscape)}", fontsize=13, color='white'
+            )
+
+            for col_idx, traj_label in enumerate(display_labels):
+                ax        = axes[row_idx, col_idx]
+                real_traj = ground_truths_all[col_idx]
+                samp      = samples_all[col_idx]
+
+                time_rep = np.tile(future_steps, (samp.shape[0], 1))
+                ax.hist2d(
+                    time_rep.flatten(), samp.flatten(),
+                    bins=[x_edges, y_edges],
+                    cmap="magma", density=True,
+                    norm=LogNorm(vmin=1e-6),
+                )
+                ax.plot(all_steps, real_traj, color="lime", linewidth=2.5, label="Truth")
+                ax.axvline(x=n_past, color="white", linestyle="--", alpha=0.5)
+
+                ax.set_ylim(g_lo, g_hi)
+                ax.set_xlim(0, n_past + n_future)
+                ax.set_xlabel(r"Step $N$", fontsize=12, color='white')
+                ax.tick_params(labelsize=12, colors='white')
+                ax.set_facecolor('black')
+
+                if use_pi_format:
+                    ax.yaxis.set_major_locator(MultipleLocator(np.pi/2))
+                    ax.yaxis.set_major_formatter(FuncFormatter(pi_formatter))
+
+                if row_idx == 0:
+                    ax.set_title(f"Trajectory {traj_label}", fontsize=13, color='white', pad=10)
+
+                # Legend in top‑left of first subplot
+                if row_idx == 0 and col_idx == 0:
+                    ax.legend(loc='upper left', fontsize=12, framealpha=0.8,
+                              facecolor='black', edgecolor='white', labelcolor='white')
+
+        fig.suptitle(
+            f"{_land_display(landscape)} — Prediction Density Comparison",
+            fontsize=15, y=1, color='white'
+        )
+        plt.subplots_adjust(top=0.93)
+        plt.tight_layout()
+        out_path = output_dir / f"histogram2d_comparison_{landscape}.png"
+        fig.savefig(out_path, dpi=600, bbox_inches="tight")
+        plt.close(fig)
+        print(f"[B] Saved: {out_path}")
 
 # ---------------------------------------------------------------------------
 # Figure C: Error metrics grid (landscapes × metrics)
 # ---------------------------------------------------------------------------
-def plot_error_metrics_grid(landscapes: list[str],
-                            all_metrics: dict[str, dict[str, dict[str, np.ndarray]]],
-                            output_dir: Path) -> None:
+def plot_error_metrics_grid(
+    landscapes: list[str],
+    all_metrics: dict[str, dict[str, dict[str, np.ndarray]]],
+    output_dir: Path,
+) -> None:
+    """
+    n_landscapes rows × 4 metric columns.
+    Legend with title "Methods" placed above the grid, no main figure title.
+    """
     n_land = len(landscapes)
-    n_met = len(METRIC_ORDER)
-    fig, axes = plt.subplots(n_land, n_met, figsize=(9 * n_met, 5 * n_land), squeeze=False)
+    n_met  = len(METRIC_ORDER)
 
-    # Shared y-limits per metric
-    metric_ylims = {}
+    fig, axes = plt.subplots(
+        n_land, n_met,
+        figsize=(9 * n_met, 5 * n_land),
+        squeeze=False,
+    )
+
+    # Per-metric y-range shared across all landscapes
+    metric_ylims: dict[str, tuple[float, float]] = {}
     for metric_key in METRIC_ORDER:
-        lo, hi = float("inf"), float("-inf")
+        col_lo =  float("inf")
+        col_hi = float("-inf")
         for landscape in landscapes:
             for met_dict in all_metrics[landscape].values():
-                vals = met_dict[metric_key]
-                lo = min(lo, np.min(vals))
-                hi = max(hi, np.max(vals))
-        margin = 0.05 * (hi - lo) if hi > lo else 0.05
-        metric_ylims[metric_key] = (lo - margin, hi + margin)
+                vals   = met_dict[metric_key]
+                col_lo = min(col_lo, float(np.min(vals)))
+                col_hi = max(col_hi, float(np.max(vals)))
+        margin = 0.05 * (col_hi - col_lo) if col_hi > col_lo else 0.05
+        metric_ylims[metric_key] = (col_lo - margin, col_hi + margin)
 
-    # Collect handles for one legend
-    handles, labels = [], []
-    for model_name in next(iter(all_metrics.values())).keys():
+    # Collect handles and labels for legend (Ideal first, then models)
+    model_names = list(all_metrics[landscapes[0]].keys())
+    legend_handles = []
+    legend_labels = []
+
+    # Add Ideal line first
+    legend_handles.append(Line2D([0], [0], color="black", linestyle="--", linewidth=0.8))
+    legend_labels.append("Ideal")
+
+    # Then add each model
+    for model_name in model_names:
         reg = MODEL_REGISTRY.get(model_name, {"label": model_name, "color": "tab:gray"})
-        handles.append(Line2D([0], [0], color=reg["color"], linewidth=2.0))
-        labels.append(reg["label"])
-    handles.append(Line2D([0], [0], color="black", linestyle="--", linewidth=0.8))
-    labels.append("Ideal")
+        legend_handles.append(Line2D([0], [0], color=reg["color"], linewidth=2.0))
+        legend_labels.append(reg["label"])
+
+    # Number of columns for two rows: ceil(n_items/2)
+    n_items = len(legend_handles)
+    ncol = (n_items + 1) // 2   # two rows
 
     for col_idx, metric_key in enumerate(METRIC_ORDER):
-        meta = METRIC_META[metric_key]
+        meta       = METRIC_META[metric_key]
         y_lo, y_hi = metric_ylims[metric_key]
+
         for row_idx, landscape in enumerate(landscapes):
-            ax = axes[row_idx, col_idx]
+            ax            = axes[row_idx, col_idx]
             model_metrics = all_metrics[landscape]
+
             for model_name, met_dict in model_metrics.items():
-                reg = MODEL_REGISTRY.get(model_name, {"label": model_name, "color": "tab:gray"})
-                vals = met_dict[metric_key]
-                ax.plot(np.arange(len(vals)), vals, color=reg["color"], linewidth=2.0)
+                reg   = MODEL_REGISTRY.get(model_name,
+                                           {"label": model_name, "color": "tab:gray"})
+                color = reg["color"]
+                vals  = met_dict[metric_key]
+                steps = np.arange(len(vals))
+                ax.plot(steps, vals, color=color, linewidth=2.0)
+
             if meta["ideal"] is not None:
-                ax.axhline(meta["ideal"], color="black", linestyle="--", linewidth=0.8, alpha=0.6)
+                ax.axhline(meta["ideal"], color="black", linestyle="--",
+                           linewidth=0.8, alpha=0.6)
+
             ax.set_ylim(y_lo, y_hi)
             ax.set_xlabel("Forecast step", fontsize=12)
             ax.grid(True, linestyle=":", alpha=0.4)
             ax.tick_params(labelsize=12)
+
             if col_idx == 0:
-                ax.set_ylabel(f"{_land_display(landscape)}\n{meta['ylabel']}", fontsize=12)
+                ax.set_ylabel(
+                    f"{_land_display(landscape)}\n{meta['ylabel']}", fontsize=12
+                )
             else:
                 ax.set_ylabel(meta["ylabel"], fontsize=12)
+
             if row_idx == 0:
                 ax.set_title(meta["title"], fontsize=13)
 
-    fig.suptitle("Error Metrics Comparison — All Landscapes", fontsize=15, y=1.01)
-    fig.legend(handles, labels, loc="upper center", bbox_to_anchor=(0.5, 1.1),
-               ncol=min(6, len(handles)), fontsize=12, frameon=False)
+    # Legend placed above the grid, no main title
+    fig.legend(
+        handles=legend_handles,
+        labels=legend_labels,
+        loc='upper center',
+        bbox_to_anchor=(0.5, 1.15),
+        ncol=ncol,
+        title="Methods",
+        title_fontsize=12,
+        fontsize=12,
+        frameon=True,
+        edgecolor='gray',
+        facecolor='white'
+    )
+    plt.subplots_adjust(top=0.88)  # make room for legend above
+
+    # No suptitle
     plt.tight_layout()
     out_path = output_dir / "error_metrics_comparison.png"
     fig.savefig(out_path, dpi=600, bbox_inches="tight")
