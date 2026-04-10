@@ -1,6 +1,6 @@
 data:
-  train_data: "DATA/double_well_train.npz"
-  test_data: "DATA/double_well_test.npz"
+  train_data: "DATA/linear_gaussian_train.npz"
+  test_data: "DATA/linear_gaussian_test.npz"
   L: 100
   H: 100
   train_stride: 5 
@@ -28,8 +28,8 @@ train:
   val_start: 800 ##includex context
 
 path:
-  encoder_path: "checkpoints/tcn/double_well.pth"
-  vec_path: "references/double_well/embeddings.pt"
-  futures_path: "references/double_well/futures.npy"
-  ref_path: "references/double_well/indices.pt"
-  training_curv: "checkpoints/tcn/double_well_loss.npz"
+  encoder_path: "checkpoints/tcn/linear_gaussian.pth"
+  vec_path: "references/linear_gaussian/embeddings.pt"
+  futures_path: "references/linear_gaussian/futures.npy"
+  ref_path: "references/linear_gaussian/indices.pt"
+  training_curv: "checkpoints/tcn/linear_gaussian_loss.npz"

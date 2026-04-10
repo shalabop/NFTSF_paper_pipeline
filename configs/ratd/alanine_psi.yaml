@@ -1,9 +1,9 @@
 path:
-  test_data: "DATA/double_well_test.npz"
-  train_data: "DATA/double_well_train.npz"
-  encoder_path: "checkpoints/tcn/double_well.pth"
-  futures_path: "references/double_well/futures.npy"
-  ref_path: "references/double_well/indices.pt"
+  test_data: "DATA/alanine_psi_test.npz"
+  train_data: "DATA/alanine_psi_train.npz"
+  encoder_path: "checkpoints/tcn/alanine_psi.pth"
+  futures_path: "references/alanine_psi/futures.npy"
+  ref_path: "references/alanine_psi/indices.pt"
 
 retrieval:
   L: 100
@@ -47,11 +47,11 @@ train:
   print_every: 10
   val_start: 800 #200 #includes the context 
   val_every: 50 ##run evaluation every 50 
-  path: "checkpoints/ratd/double_well"
+  path: "checkpoints/ratd/alanine_psi"
   stride: 20 ##must match retreival_stride in tcn config
   train_size: 9000
 
 forecast:
   test_size: 3000
-  out_path: "results/ratd/double_well.npz"
+  out_path: "results/ratd/alanine_psi.npz"
   n_samples: 500

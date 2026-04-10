@@ -1,9 +1,9 @@
 path:
-  test_data: "DATA/double_well_test.npz"
-  train_data: "DATA/double_well_train.npz"
-  encoder_path: "checkpoints/tcn/double_well.pth"
-  futures_path: "references/double_well/futures.npy"
-  ref_path: "references/double_well/indices.pt"
+  test_data: "DATA/linear_gaussian_test.npz"
+  train_data: "DATA/linear_gaussian_train.npz"
+  encoder_path: "checkpoints/tcn/linear_gaussian.pth"
+  futures_path: "references/linear_gaussian/futures.npy"
+  ref_path: "references/linear_gaussian/indices.pt"
 
 retrieval:
   L: 100
@@ -31,7 +31,7 @@ diffusion:
   diffusion_embedding_dim: 128
   nheads: 8
   layers: 4
-  is_linear: True 
+  is_linear: True
 
 train:
   L: 100
@@ -47,11 +47,11 @@ train:
   print_every: 10
   val_start: 800 #200 #includes the context 
   val_every: 50 ##run evaluation every 50 
-  path: "checkpoints/ratd/double_well"
-  stride: 20 ##must match retreival_stride in tcn config
+  path: "checkpoints/ratd/linear_gaussian"
+  stride: 25 ##must match retreival_stride in tcn config
   train_size: 9000
 
 forecast:
   test_size: 3000
-  out_path: "results/ratd/double_well.npz"
+  out_path: "results/ratd/linear_gaussian.npz"
   n_samples: 500

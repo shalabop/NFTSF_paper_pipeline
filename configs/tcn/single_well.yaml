@@ -1,15 +1,17 @@
 data:
-  data_path: "training_data/single_well.npz"
+  train_data: "DATA/single_well_train.npz"
+  test_data: "DATA/single_well_test.npz"
   L: 100
   H: 100
-  train_stride: 25      
-  val_stride: 25      
-  retrieval_stride: 25 #50 #stride for creating references
+  train_stride: 5 
+  val_stride: 50       
+  retrieval_stride: 20 #50 #10
+  train_test_split: 800 ##only used in embedding training context
 
 model:
   input_size: 1
-  output_size: 100 #20 must match L
-  num_channels: [32, 64, 32]    
+  output_size: 100 # must match L
+  num_channels: [16, 16, 32]      # much smaller
   kernel_size: 3
   dropout: 0.2
   use_reference: True
@@ -17,18 +19,17 @@ model:
 
 train:
   device: "cuda:0"
-  batch_size: 256                   
-  learning_rate: 0.001
-  epochs: 500
+  batch_size: 128                   
+  learning_rate: 0.0001
+  epochs: 100
   grad_clip: 1.0
   num_workers: 1                   
   print_every: 10
-  val_start: 200 ##index of time step where val start
+  val_start: 800 ##includex context
 
 path:
-  dataset_path: "training_data/single_well.npz"
-  encoder_path: "tcn_weights/tcn_encoder_sw.pth"
+  encoder_path: "checkpoints/tcn/single_well.pth"
   vec_path: "references/single_well/embeddings.pt"
   futures_path: "references/single_well/futures.npy"
   ref_path: "references/single_well/indices.pt"
-  training_curv: "tcn_weights/sw_loss.npz"
+  training_curv: "checkpoints/tcn/single_well_loss.npz"

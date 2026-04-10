@@ -7,7 +7,7 @@ path:
 retrieval:
   L: 100
   H: 100
-  stride: 25 #50 must match what is in tcn config retreival_stride
+  stride: 5 #50 must match what is in tcn config retreival_stride
   k: 3
   device: "cuda:0"
 
@@ -20,10 +20,10 @@ model:
   num_sample_features: 1
 
 diffusion:
-  num_steps: 100
+  num_steps: 50
   beta_start: 0.0001
-  beta_end: 0.02
-  schedule: "linear"
+  beta_end: 0.5
+  schedule: "quad"
   ref_size: 100 #100          # == context == L
   h_size: 100            # == prediction == H
   channels: 64
@@ -35,7 +35,7 @@ diffusion:
 train:
   device: "cuda:0"
   batch_size: 64
-  learning_rate: 0.0001 #0.001
+  learning_rate: 1.0e-3
   epochs: 1000
   milestones: [60, 85]
   gamma: 0.1
@@ -45,7 +45,7 @@ train:
   val_start: 200 #time step where val starts 
   val_every: 50 ##run evaluation every 50 
   path: "checkpoints/single_well"
-  stride: 25
+  stride: 20
 
 forecast:
   test_size: 3000
