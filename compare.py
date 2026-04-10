@@ -822,7 +822,7 @@ def plot_error_metrics_grid(
     fig.legend(
         handles=legend_handles,
         loc="upper center",
-        bbox_to_anchor=(0.5, 1.03),
+        bbox_to_anchor=(0.5, 1.1),
         ncol=len(legend_handles),
         fontsize=12,
         frameon=False,
