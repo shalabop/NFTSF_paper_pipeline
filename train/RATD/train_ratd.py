@@ -26,18 +26,18 @@ sys.path.insert(0, PROJECT_ROOT)
 
 from RATD.custom_model import RATD_Forecasting
 
-
 class RATDDataset(Dataset):
-    def __init__(self, positions, time, windows, references, indices, L, H, k):
-        self.positions  = positions                              # (N_traj, T)
-        self.time       = time                                   # (total_T,)
-        self.windows    = windows                                # list of (traj, start)
-        self.references = torch.from_numpy(references).float()  # (N_refs, H)
-        self.indices    = indices                                # (N_windows, k)
-        self.L = L
-        self.H = H
-        self.k = k
-
+    def __init__(self, positions, time, windows, references, indices, L, H, k,
+                 time_offset=0):
+        self.positions  = positions
+        self.time       = time
+        self.windows    = windows
+        self.references = torch.from_numpy(references).float()
+        self.indices    = indices
+        self.L          = L
+        self.H          = H
+        self.k          = k
+        self.time_offset = time_offset       
     def __len__(self):
         return len(self.windows)
 
@@ -50,19 +50,21 @@ class RATDDataset(Dataset):
 
         observed_mask = torch.ones(self.L + self.H)
         gt_mask       = torch.cat([torch.ones(self.L), torch.zeros(self.H)])
-        timepoints    = torch.from_numpy(
-            self.time[start:start + self.L + self.H].copy()
+
+        timepoints = torch.from_numpy(
+            self.time[self.time_offset + start :
+                      self.time_offset + start + self.L + self.H].copy()
         ).float()
 
         ref_futures = self.references[self.indices[idx]]   # (k, H)
         reference   = ref_futures.flatten().unsqueeze(-1)  # (k*H, 1)
 
         return {
-            "observed_data": full.unsqueeze(0),            # (1, L+H)
-            "observed_mask": observed_mask.unsqueeze(0),   # (1, L+H)
-            "gt_mask"      : gt_mask.unsqueeze(0),         # (1, L+H)
-            "timepoints"   : timepoints,                   # (L+H,)
-            "reference"    : reference,                    # (k*H, 1)
+            "observed_data": full.unsqueeze(0),
+            "observed_mask": observed_mask.unsqueeze(0),
+            "gt_mask"      : gt_mask.unsqueeze(0),
+            "timepoints"   : timepoints,
+            "reference"    : reference,
         }
 
 
@@ -91,6 +93,7 @@ def train_ratd(config):
     L = config['retrieval']['L']        # 100
     H = config['retrieval']['H']        # 100
     stride = config['train']['stride']       # 50
+    #stride = config['data']['retrieval_stride'] #since they have to be the same
     k = config['retrieval']['k']        # 3
     val_start = int(config['train']['val_start'])  # 800
 
@@ -113,18 +116,21 @@ def train_ratd(config):
     train_windows = get_windows(train_positions, L, H, stride)
     val_windows   = get_windows(val_positions,   L, H, stride)
 
+    print(f"stride used : {stride}")
     print(f"train_windows : {len(train_windows)}")
-    print(f"val_windows   : {len(val_windows)}")
+    print(f"val_windows : {len(val_windows)}")
+    print(f"train_indices : {len(train_indices)}")
+    print(f"val_indices : {len(val_indices)}")
 
     assert len(train_windows) == len(train_indices), \
-        f"train window/index mismatch: {len(train_windows)} vs {len(train_indices)}"
+        f"train window/index mismatch: {len(train_windows)} vs {len(train_indices)}. " \
+        f"Did build_retrieval.py use the same stride ({stride})?"
     assert len(val_windows) == len(val_indices), \
-        f"val window/index mismatch: {len(val_windows)} vs {len(val_indices)}"
+        f"val window/index mismatch: {len(val_windows)} vs {len(val_indices)}. " \
+        f"Did build_retrieval.py use the same stride ({stride})?"
 
-    train_ds = RATDDataset(train_positions, time, train_windows,
-                           ref_futures, train_indices, L, H, k)
-    val_ds  = RATDDataset(val_positions,   time, val_windows,
-                           ref_futures, val_indices,   L, H, k)
+    train_ds = RATDDataset(train_positions, time, train_windows, ref_futures, train_indices, L, H, k, time_offset=0)
+    val_ds = RATDDataset(val_positions, time, val_windows, ref_futures, val_indices, L, H, k, time_offset=val_start)
 
     train_loader = DataLoader(
         train_ds, batch_size=config['train']['batch_size'],

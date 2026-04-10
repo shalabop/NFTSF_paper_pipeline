@@ -25,41 +25,40 @@ from RATD.custom_model import RATD_Forecasting
 
 
 class RATDTestDataset(Dataset):
-    """
-    One window per test trajectory:
-        observed  : steps 800-899  (L=100)
-        target    : steps 900-999  (H=100)
-    positions shape passed in: (N_traj, 200) — already sliced to last L+H steps
-    """
-    def __init__(self, positions, references, indices, L, H, k):
-        self.positions  = positions                              # (N_traj, L+H)
-        self.references = torch.from_numpy(references).float()  # (N_refs,  H)
-        self.indices    = indices                                # (N_traj,  k)
-        self.L = L
-        self.H = H
-        self.k = k
+    def __init__(self, positions, references, indices, L, H, k, time_offset=0):           
+        self.positions  = positions
+        self.references = torch.from_numpy(references).float()
+        self.indices    = indices
+        self.L          = L
+        self.H          = H
+        self.k          = k
+        self.time_offset = time_offset      
 
     def __len__(self):
         return self.positions.shape[0]
 
     def __getitem__(self, idx):
-        full = torch.from_numpy(self.positions[idx].copy()).float()  # (L+H,)
+        full = torch.from_numpy(self.positions[idx].copy()).float()
 
         observed_mask = torch.ones(self.L + self.H)
         gt_mask       = torch.cat([torch.ones(self.L), torch.zeros(self.H)])
-        timepoints    = torch.arange(self.L + self.H).float()
 
-        ref_futures = self.references[self.indices[idx]]   # (k, H)
-        reference   = ref_futures.flatten().unsqueeze(-1)  # (k*H, 1)
+        timepoints = torch.arange(
+            self.time_offset,
+            self.time_offset + self.L + self.H,
+            dtype=torch.float32,
+        )
+
+        ref_futures = self.references[self.indices[idx]]
+        reference   = ref_futures.flatten().unsqueeze(-1)
 
         return {
-            "observed_data": full.unsqueeze(0),            # (1, L+H)
-            "observed_mask": observed_mask.unsqueeze(0),   # (1, L+H)
-            "gt_mask"      : gt_mask.unsqueeze(0),         # (1, L+H)
-            "timepoints"   : timepoints,                   # (L+H,)
-            "reference"    : reference,                    # (k*H, 1)
+            "observed_data": full.unsqueeze(0),
+            "observed_mask": observed_mask.unsqueeze(0),
+            "gt_mask"      : gt_mask.unsqueeze(0),
+            "timepoints"   : timepoints,
+            "reference"    : reference,
         }
-
 
 
 def forecast_ratd(config):
@@ -103,8 +102,13 @@ def forecast_ratd(config):
     assert test_indices.max() < len(ref_futures), \
         f"index out of bounds: max={test_indices.max()} >= {len(ref_futures)}"
 
-    test_ds = RATDTestDataset(
-        test_positions, ref_futures, test_indices, L, H, k)
+    train_test_split = int(data_test['train_test_split'])
+    test_time_offset = train_test_split - L
+
+    test_ds = RATDTestDataset( test_positions, ref_futures, test_indices, L, H, k, time_offset=test_time_offset,)
+    
+    
+    
     test_loader = DataLoader(
         test_ds,
         batch_size=config['train']['batch_size'],
