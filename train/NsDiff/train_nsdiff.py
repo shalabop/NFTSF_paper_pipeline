@@ -270,11 +270,11 @@ def main():
                 x_mark  = x_mark.to(device).float()
                 y_mark  = y_mark.to(device).float()
 
+                optimizer.zero_grad()
                 loss = process_train_batch(
                     model, cond_pred_model, cond_pred_model_g,
                     batch_x, batch_y, x_mark, y_mark,
                     pred_len, label_len, rolling_length, device)
-                optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
 
