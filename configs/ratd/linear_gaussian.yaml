@@ -17,7 +17,7 @@ model:
   featureemb: 16
   is_unconditional: false
   target_strategy: "test"
-  use_reference: True
+  use_reference: False #True
   num_sample_features: 1
 
 diffusion:
@@ -31,7 +31,7 @@ diffusion:
   diffusion_embedding_dim: 128
   nheads: 8
   layers: 4
-  is_linear: True
+  is_linear: True 
 
 train:
   L: 100
@@ -48,8 +48,8 @@ train:
   val_start: 800 #200 #includes the context 
   val_every: 50 ##run evaluation every 50 
   path: "checkpoints/ratd/linear_gaussian"
-  stride: 25 ##must match retreival_stride in tcn config
-  train_size: 9000
+  stride: 20 ##must match retreival_stride in tcn config
+  train_size: 6000
 
 forecast:
   test_size: 3000

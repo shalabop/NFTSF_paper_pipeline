@@ -17,7 +17,7 @@ model:
   featureemb: 16
   is_unconditional: false
   target_strategy: "test"
-  use_reference: True
+  use_reference: False #True
   num_sample_features: 1
 
 diffusion:
@@ -39,17 +39,17 @@ train:
   device: "cuda:0"
   batch_size: 64
   learning_rate: 1.0e-3
-  epochs: 10 #1000
+  epochs: 1000
   milestones: [60, 85]
   gamma: 0.1
   grad_clip: 1.0
   num_workers: 2
   print_every: 10
   val_start: 800 #200 #includes the context 
-  val_every: 5 #50 ##run evaluation every 50 
+  val_every: 50 ##run evaluation every 50 
   path: "checkpoints/ratd/double_well"
   stride: 20 ##must match retreival_stride in tcn config
-  train_size: 9000
+  train_size: 6000
 
 forecast:
   test_size: 3000

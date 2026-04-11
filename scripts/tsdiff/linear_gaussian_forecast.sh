@@ -62,16 +62,11 @@ ls $CUDA_PATH/include/nvrtc.h || echo "WARNING: nvrtc.h not found"
 ls $CUDA_PATH/lib64/libnvrtc.so* || ls $CUDA_PATH/targets/x86_64-linux/lib/libnvrtc.so* || echo "WARNING: libnvrtc.so not found"
 
 python eval/TSDiff/forecast_tsdiff.py   \
-        --config configs/tsdiff_forecast/linear_gaussian_q_4.yaml  \
+        --config configs/tsdiff_forecast/linear_gaussian_q_8.yaml  \
         --dataset_path gluonts_datasets/linear_gaussian \
-        --out results/tsdiff_q/linear_gaussian_q_4.npz
+        --out results/tsdiff_q/linear_gaussian_q_8.npz
 
 python eval/TSDiff/forecast_tsdiff.py   \
-        --config configs/tsdiff_forecast/linear_gaussian_mse_05.yaml  \
+        --config configs/tsdiff_forecast/linear_gaussian_q_2.yaml  \
         --dataset_path gluonts_datasets/linear_gaussian \
-        --out results/tsdiff_mse/linear_gaussian_mse_05.npz
-
-python eval/TSDiff/forecast_tsdiff.py   \
-        --config configs/tsdiff_forecast/linear_gaussian_mse_01.yaml  \
-        --dataset_path gluonts_datasets/linear_gaussian \
-        --out results/tsdiff_mse/linear_gaussian_mse_01.npz
+        --out results/tsdiff_q/linear_gaussian_q_2.npz

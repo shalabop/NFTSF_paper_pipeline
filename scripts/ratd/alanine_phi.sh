@@ -11,6 +11,8 @@
 #SBATCH --mem=32G
 #SBATCH --output=logs/ratd/alanine_phi.%j.out
 #SBATCH --error=logs/ratd/alanine_phi.%j.err
+#SBATCH --mail-user=meahmed@asu.edu
+#SBATCH --mail-type=ALL
 
 mkdir -p logs/ratd
 mkdir -p results/ratd

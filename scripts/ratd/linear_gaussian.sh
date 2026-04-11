@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=psiRATD
+#SBATCH --job-name=LGRATD
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=meahmed@asu.com
@@ -9,8 +9,8 @@
 #SBATCH --qos=public
 #SBATCH --gres=gpu:2
 #SBATCH --mem=32G
-#SBATCH --output=logs/ratd/alanine_psi.%j.out
-#SBATCH --error=logs/ratd/alanine_psi.%j.err
+#SBATCH --output=logs/ratd/double_well.%j.out
+#SBATCH --error=logs/ratd/double_well.%j.err
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
 
@@ -18,7 +18,7 @@ mkdir -p logs/ratd
 mkdir -p results/ratd
 mkdir -p checkpoints/ratd
 mkdir -p checkpoints/tcn
-mkdir -p references/alanine_psi
+mkdir -p references/double_well
 
 source venvRATD/bin/activate
 
@@ -47,12 +47,12 @@ ls $CUDA_PATH/lib64/libnvrtc.so* || echo "libnvrtc.so not found in lib64"
 ls $CUDA_PATH/targets/x86_64-linux/lib/libnvrtc.so* || echo "libnvrtc.so not found in targets/x86_64-linux/lib"
 
 
-python train/RATD/train_tcn.py --config configs/tcn/alanine_psi.yaml
+python train/RATD/train_tcn.py --config configs/tcn/linear_gaussian.yaml
 
-python train/RATD/retrieval_builder.py --config configs/tcn/alanine_psi.yaml --type encode
+python train/RATD/retrieval_builder.py --config configs/tcn/linear_gaussian.yaml --type encode
 
-python train/RATD/retrieval_builder.py --config configs/tcn/alanine_psi.yaml --type retrieval
+python train/RATD/retrieval_builder.py --config configs/tcn/linear_gaussian.yaml --type retrieval
 
-python train/RATD/train_ratd.py --config configs/ratd/alanine_psi.yaml
+python train/RATD/train_ratd.py --config configs/ratd/linear_gaussian.yaml
 
-python eval/RATD/forecast_ratd.py --config configs/ratd/alanine_psi.yaml
+python eval/RATD/forecast_ratd.py --config configs/ratd/linear_gaussian.yaml
