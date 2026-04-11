@@ -141,7 +141,8 @@ def train_tcn(config):
             if max_t <= 0:
                 continue
             
-            starts = np.random.randint(0, max_t, size=B)
+            #starts = np.random.randint(0, max_t, size=B)
+            starts = np.random.randint(0, max_t+1, size=B)
             
             x_list, y_list = [], []
             for i, s in enumerate(starts):
