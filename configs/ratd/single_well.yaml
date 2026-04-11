@@ -1,13 +1,14 @@
 path:
-  dataset_path: "training_data/single_well.npz"
-  encoder_path: "tcn_weights/tcn_encoder_sw.pth"
+  test_data: "DATA/single_well_test.npz"
+  train_data: "DATA/single_well_train.npz"
+  encoder_path: "checkpoints/tcn/single_well.pth"
   futures_path: "references/single_well/futures.npy"
   ref_path: "references/single_well/indices.pt"
 
 retrieval:
   L: 100
   H: 100
-  stride: 5 #50 must match what is in tcn config retreival_stride
+  stride: 5 #for training RATD  must be tcn confg data.train_stride
   k: 3
   device: "cuda:0"
 
@@ -16,7 +17,7 @@ model:
   featureemb: 16
   is_unconditional: false
   target_strategy: "test"
-  use_reference: true
+  use_reference: True
   num_sample_features: 1
 
 diffusion:
@@ -24,15 +25,17 @@ diffusion:
   beta_start: 0.0001
   beta_end: 0.5
   schedule: "quad"
-  ref_size: 100 #100          # == context == L
-  h_size: 100            # == prediction == H
+  ref_size: 100 
+  h_size: 100        
   channels: 64
   diffusion_embedding_dim: 128
-  nheads: 2
-  layers: 3
-  is_linear: True
+  nheads: 8
+  layers: 4
+  is_linear: True 
 
 train:
+  L: 100
+  H: 100
   device: "cuda:0"
   batch_size: 64
   learning_rate: 1.0e-3
@@ -42,12 +45,13 @@ train:
   grad_clip: 1.0
   num_workers: 2
   print_every: 10
-  val_start: 200 #time step where val starts 
+  val_start: 800 #200 #includes the context 
   val_every: 50 ##run evaluation every 50 
-  path: "checkpoints/single_well"
-  stride: 20
+  path: "checkpoints/ratd/single_well"
+  stride: 20 ##must match retreival_stride in tcn config
+  train_size: 9000
 
 forecast:
   test_size: 3000
   out_path: "results/ratd/single_well.npz"
-  n_samples: 100
+  n_samples: 500
