@@ -38,3 +38,13 @@ k_cond: 1 ##highe conditionaing??
 d_z: 8 #6
 CART_input_x_embed_dim: 32 #16
 p_hidden_layers: 2
+
+pretrain_mu_lr:      5e-4    # can be higher than diffusion lr
+pretrain_mu_epochs:  10 #200
+pretrain_mu_patience: 30
+
+pretrain_g_lr:       1e-4    # lower — variance is smoother signal
+pretrain_g_epochs:   100 #1200
+pretrain_g_patience: 30
+
+pretrain_epochs:     10 #200     # fallback if stage-specific not set

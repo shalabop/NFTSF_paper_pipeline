@@ -5,7 +5,7 @@ data:
   H: 100
   train_stride: 5 
   val_stride: 50       
-  retrieval_stride: 20 #50 #10
+  retrieval_stride: 5 #50 #10
   train_test_split: 800 ##only used in embedding training context
 
 model:
@@ -26,6 +26,7 @@ train:
   num_workers: 1                   
   print_every: 10
   val_start: 800 ##includex context
+  train_size: 6000
 
 path:
   encoder_path: "checkpoints/tcn/alanine_psi.pth"

@@ -48,7 +48,7 @@ train:
   val_start: 800 #200 #includes the context 
   val_every: 50 ##run evaluation every 50 
   path: "checkpoints/ratd/alanine_psi"
-  stride: 20 ##must match retreival_stride in tcn config
+  stride: 5 ##must match retreival_stride in tcn config
   train_size: 6000
 
 forecast:
