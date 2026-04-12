@@ -1,10 +1,10 @@
 context_length: 100
 prediction_length: 100
-stride: 5 #5 #25
+stride: 5 #25
 test_size: 10 #5 #3000
 val_size: 9000
 
-train_curv: "checkpoints/nsdiff/double_well/"
+train_curv: "checkpoints/nsdiff/alanine_phi/"
 
 epochs: 10 #1000
 batch_size: 64
@@ -20,11 +20,11 @@ beta_schedule: "linear"
 beta_start: 0.0001
 beta_end: 0.02
 
-d_model: 64 #512 #32 #16      
+d_model: 32 #32 #16      
 n_heads: 8 #2      
 e_layers: 2 #2     
 d_layers: 1 #1
-d_ff: 64  #16 #32 #64 #128    
+d_ff: 16 #16 #32 #64 #128    
 moving_avg: 25
 factor: 3
 distil: true
