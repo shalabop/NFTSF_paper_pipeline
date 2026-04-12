@@ -5,7 +5,7 @@
 #SBATCH --mail-user=meahmed@asu.com
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --partition=htc
+#SBATCH --partition=public
 #SBATCH --qos=public
 #SBATCH --gres=gpu:2
 #SBATCH --mem=32G

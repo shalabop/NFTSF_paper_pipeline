@@ -35,6 +35,8 @@ def train_tcn(config):
         print(f"GPU: {torch.cuda.get_device_name(0)}")
         print(f"GPU memory: {torch.cuda.get_device_properties(0).total_memory / 1e9:.1f} GB")
         print(f"\nLoading data from {config['data']['train_data']}")
+        
+    train_size = config['train']['train_size']
     
     train_data = np.load(config['data']['train_data'])
     #test_data = np.load(config['data']['test_data'])
@@ -57,8 +59,8 @@ def train_tcn(config):
     
     #positions_norm = ((positions - mean) / std).astype(np.float32)
     
-    train_positions = positions_train[:, :val_start]         # (N, 300)
-    val_positions   = positions_train[:, val_start:]
+    train_positions = positions_train[:train_size, :val_start]         # (N, 300)
+    val_positions   = positions_train[:train_size, val_start:]
     #test_positions  = positions_test[:, -pred_steps-lockback_L:]
     
     print(f"Train shape: {train_positions.shape}")

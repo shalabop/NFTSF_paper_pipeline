@@ -1,35 +1,3 @@
-#!/usr/bin/env python3
-"""
-pretrain_g.py
-=============
-Stage 2 of NsDiff pretraining: pretrain g_psi (g_backbone / SigmaEstimation).
-
-Paper: "Non-stationary Diffusion For Probabilistic Time Series Forecasting"
-       Section 4 — "We follow previous works (Kim et al., 2021; Liu et al.,
-       2024b) to train the prior scale of uncertainty g_psi(X). We use the
-       input variance to predict the output variance."
-
-Specifically:
-    - g_psi(X) predicts sigma_{Y_0} (the actual future variance)
-    - Loss: MSE between sqrt(g_psi(X)) and sqrt(sigma_{Y_0})
-      i.e. matching predicted std to actual future std
-    - sigma_{Y_0} is computed via wv_sigma_trailing on the concatenated
-      [context, future] window, taking the last pred_len steps
-    - g_psi is INDEPENDENT of f_phi — it only takes context X as input
-      so Stage 2 can run in parallel with or before Stage 1
-
-Data setup (matches your pipeline):
-    Train windows : positions_train[:, :800]  sliding stride windows
-    Val window    : positions_train[:, 800:]  single window per trajectory
-                    context=800:900, target=900:1000
-
-Usage:
-    python pretrain_g.py \
-        --config configs/nsdiff/double_well.yaml \
-        --input  DATA/double_well.npz \
-        --out    checkpoints/nsdiff/double_well/pretrain
-"""
-
 import argparse
 import json
 import os
@@ -56,31 +24,7 @@ from NsDiff.dataset_md import get_dataloader_md
 
 EPS = 1e-8
 
-
-# ---------------------------------------------------------------------------
-# Compute actual future variance sigma_{Y_0}
-# ---------------------------------------------------------------------------
-
 def compute_y_sigma(batch_x, batch_y, rolling_length, pred_len, device):
-    """
-    Compute sigma_{Y_0}: the actual trailing variance of the forecast window.
-
-    Paper: the forward process uses sigma_{Y_0} as the variance at t=0.
-           We compute it as the trailing wavelet variance over the
-           concatenated [context, future] sequence, then take the last
-           pred_len steps.
-
-    Parameters
-    ----------
-    batch_x        : (B, ctx_len, 1) — context
-    batch_y        : (B, pred_len, 1) — ground truth future
-    rolling_length : int — window size for wv_sigma_trailing
-    pred_len       : int — forecast horizon H
-
-    Returns
-    -------
-    y_sigma : (B, pred_len, 1) — actual future variance, clipped to EPS
-    """
     # Concatenate context + future: (B, ctx_len + pred_len, 1)
     xy = torch.cat([batch_x, batch_y], dim=1)
 
@@ -92,9 +36,6 @@ def compute_y_sigma(batch_x, batch_y, rolling_length, pred_len, device):
     return y_sigma
 
 
-# ---------------------------------------------------------------------------
-# Validation
-# ---------------------------------------------------------------------------
 
 def validate_g(model, val_loader, rolling_length, pred_len, device):
     model.eval()
@@ -106,27 +47,17 @@ def validate_g(model, val_loader, rolling_length, pred_len, device):
             batch_x = batch_x.to(device).float()  # (B, ctx_len, 1)
             batch_y = batch_y.to(device).float()  # (B, pred_len, 1)
 
-            # Predict variance from context only
-            gx      = torch.clamp(model(batch_x), min=EPS)  # (B, pred_len, 1)
+            gx = torch.clamp(model(batch_x), min=EPS)  # (B, pred_len, 1)
 
-            # Actual future variance
             y_sigma = compute_y_sigma(
                 batch_x, batch_y, rolling_length, pred_len, device)
 
-            # Loss: MSE between predicted std and actual std
-            # Paper: "use the input variance to predict the output variance"
-            # Match sqrt(gx) vs sqrt(y_sigma) = matching standard deviations
             loss = (torch.sqrt(gx) - torch.sqrt(y_sigma)).square().mean()
 
             total_loss += loss.item()
             n_batches  += 1
     model.eval()
     return total_loss / max(n_batches, 1)
-
-
-# ---------------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------------
 
 def main():
     parser = argparse.ArgumentParser(
@@ -151,74 +82,60 @@ def main():
     with open(os.path.join(args.out, "pretrain_g_config.json"), "w") as f:
         json.dump(config, f, indent=4)
 
-    device         = torch.device(args.device)
-    ctx_len        = int(config["context_length"])
-    pred_len       = int(config["prediction_length"])
+    device = torch.device(args.device)
+    ctx_len = int(config["context_length"])
+    pred_len = int(config["prediction_length"])
     rolling_length = int(config["rolling_length"])
 
-    # Pretraining-specific hyperparameters
-    lr           = float(config.get("pretrain_g_lr",      config["lr"]))
-    epochs       = int(config.get("pretrain_g_epochs",    config.get("pretrain_epochs", 100)))
-    patience     = int(config.get("pretrain_g_patience",  config.get("patience", 20)))
-    batch_size   = int(config["batch_size"])
-    stride       = int(config["stride"])
-    val_size     = int(config["val_size"])
-    test_size    = int(config["test_size"])
+    lr = float(config.get("pretrain_g_lr", config["lr"]))
+    epochs = int(config.get("pretrain_g_epochs", config.get("pretrain_epochs", 100)))
+    patience = int(config.get("pretrain_g_patience", config.get("patience", 20)))
+    batch_size = int(config["batch_size"])
+    stride = int(config["stride"])
+    val_size = int(config["val_size"])
+    test_size = int(config["test_size"])
     val_interval = int(config.get("valid_epoch_interval", 1))
 
     print(f"=== Stage 2: Pretrain g_backbone (g_psi) ===")
-    print(f"context_length   : {ctx_len}")
+    print(f"context_length: {ctx_len}")
     print(f"prediction_length: {pred_len}")
-    print(f"rolling_length   : {rolling_length}")
-    print(f"lr               : {lr}")
-    print(f"epochs           : {epochs}")
-    print(f"patience         : {patience}")
+    print(f"rolling_length : {rolling_length}")
+    print(f"lr : {lr}")
+    print(f"epochs : {epochs}")
+    print(f"patience : {patience}")
 
-    # ------------------------------------------------------------------
-    # Data — same split as train_nsdiff.py and pretrain_mu.py
-    # ------------------------------------------------------------------
     train_loader, val_loader, _ = get_dataloader_md(
-        npz_path          = args.input,
-        context_length    = ctx_len,
+        npz_path = args.input,
+        context_length = ctx_len,
         prediction_length = pred_len,
-        batch_size        = batch_size,
-        stride            = stride,
-        val_size          = val_size,
-        test_size         = test_size,
+        batch_size  = batch_size,
+        stride = stride,
+        val_size = val_size,
+        test_size = test_size,
     )
 
     print(f"train batches : {len(train_loader)}")
-    print(f"val   batches : {len(val_loader)}")
+    print(f"val batches : {len(val_loader)}")
 
-    # ------------------------------------------------------------------
-    # Model — exactly same instantiation as train_nsdiff.py
-    # kernel_size=1 means minimal smoothing; hidden_size=32 is compact
-    # ------------------------------------------------------------------
+
     model = G.SigmaEstimation(
-        ctx_len, pred_len, 1,
-        kernel_size=1,
-        hidden_size=32,
+        ctx_len, pred_len, 
+        1,
+        kernel_size=config["kernel_size"],
+        hidden_size=config["hidden_size"]
     ).float().to(device)
 
     n_params = sum(p.numel() for p in model.parameters())
     print(f"g_backbone parameters: {n_params:,}")
 
-    # ------------------------------------------------------------------
-    # Optimizer
-    # Paper: g_psi trained independently from f_phi
-    # Using a slightly lower LR than f_phi since variance is smoother
-    # ------------------------------------------------------------------
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, mode="min", factor=0.5, patience=patience // 2,
-        verbose=True,
-    )
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode="min", factor=0.5, patience=patience // 2,)
 
     best_val_loss  = float("inf")
     patience_count = 0
-    train_losses   = []
-    val_losses     = []
-    val_epochs     = []
+    train_losses = []
+    val_losses = []
+    val_epochs = []
 
     print(f"\n{'='*55}")
     print(f"Training g_backbone for up to {epochs} epochs")
@@ -233,19 +150,12 @@ def main():
             batch_x = batch_x.to(device).float()  # (B, ctx_len, 1)
             batch_y = batch_y.to(device).float()  # (B, pred_len, 1)
 
-            # Compute actual future variance sigma_{Y_0}
-            # This is the supervision signal for g_psi
-            y_sigma = compute_y_sigma(
-                batch_x, batch_y, rolling_length, pred_len, device)
+            y_sigma = compute_y_sigma(batch_x, batch_y, rolling_length, pred_len, device)
 
-            # Forward: predict variance from context g_psi(X)
             optimizer.zero_grad()
             gx = torch.clamp(model(batch_x), min=EPS)  # (B, pred_len, 1)
 
-            # Loss: match predicted std to actual future std
-            # Paper: "use the input variance to predict the output variance"
-            # This is equivalent to matching the scale of the LSNM endpoint
-            # N(f_phi(X), g_psi(X)) to the actual data distribution
+          
             loss = (torch.sqrt(gx) - torch.sqrt(y_sigma)).square().mean()
 
             loss.backward()
@@ -289,9 +199,6 @@ def main():
         else:
             print(f"[{epoch:4d}/{epochs}]  train={avg_train:.6f}")
 
-    # ------------------------------------------------------------------
-    # Save losses
-    # ------------------------------------------------------------------
     np.savez(
         os.path.join(args.out, "pretrain_g_losses.npz"),
         train_losses = np.array(train_losses),

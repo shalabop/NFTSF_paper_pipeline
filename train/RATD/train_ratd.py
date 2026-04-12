@@ -97,17 +97,17 @@ def train_ratd(config):
     k = config['retrieval']['k']        # 3
     val_start = int(config['train']['val_start'])  # 800
 
-    train_positions = positions[:, :val_start]   # (3000, 800)
-    val_positions   = positions[:, val_start:]   # (3000, 200)
+    ##testing
+    train_size=config['train']['train_size']  
+    train_positions = positions[:train_size, :val_start]   # (3000, 800)
+    val_positions = positions[:train_size, val_start:]   # (3000, 200)
 
     print(f"train_positions : {train_positions.shape}  (steps 0-{val_start-1})")
     print(f"val_positions   : {val_positions.shape}  (steps {val_start}-999)")
 
-    ref_futures   = np.load(config['path']['futures_path'])    # (39000, 100)
-    train_indices = torch.load(
-        config['path']['ref_path'].replace('.pt', '_train.pt'))  # (39000, 3)
-    val_indices   = torch.load(
-        config['path']['ref_path'].replace('.pt', '_val.pt'))    # (3000,  3)
+    ref_futures = np.load(config['path']['futures_path'])    # (39000, 100)
+    train_indices = torch.load(config['path']['ref_path'].replace('.pt', '_train.pt'))  # (39000, 3)
+    val_indices = torch.load( config['path']['ref_path'].replace('.pt', '_val.pt'))    # (3000,  3)
 
     print(f"futures       : {ref_futures.shape}")
     print(f"train_indices : {train_indices.shape}")

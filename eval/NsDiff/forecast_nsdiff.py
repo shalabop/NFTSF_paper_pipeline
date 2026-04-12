@@ -200,7 +200,7 @@ def main():
         map_location=device, weights_only=False))
 
     #cond_pred_model_g = G.SigmaEstimation(ctx_len, pred_len, 1, 512).float().to(device)
-    cond_pred_model_g = G.SigmaEstimation(ctx_len, pred_len,1, kernel_size=1, hidden_size=32).float().to(device)
+    cond_pred_model_g = G.SigmaEstimation(ctx_len, pred_len,1, kernel_size=config["kernel_size"], hidden_size=config["hidden_size"]).float().to(device)
     cond_pred_model_g.load_state_dict(torch.load(os.path.join(args.ckpt, "cond_pred_model_g.pth"),
         map_location=device, weights_only=False))
 

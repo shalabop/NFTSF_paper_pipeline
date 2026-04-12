@@ -341,12 +341,9 @@ def main():
         p.requires_grad_(False)
     print(f"Loaded and FROZEN f_phi from {mu_ckpt}")
 
-    # ------------------------------------------------------------------
-    # Load FROZEN pretrained g_psi (g_backbone)
-    # ------------------------------------------------------------------
     cond_pred_model_g = G.SigmaEstimation(
         ctx_len, pred_len, 1,
-        kernel_size=1, hidden_size=32,
+        kernel_size=config["kernel_size"], hidden_size=config["hidden_size"],
     ).float().to(device)
     g_ckpt = os.path.join(args.pretrain, "cond_pred_model_g.pth")
     if not os.path.exists(g_ckpt):
@@ -362,9 +359,7 @@ def main():
         p.requires_grad_(False)
     print(f"Loaded and FROZEN g_psi from {g_ckpt}")
 
-    # ------------------------------------------------------------------
-    # Diffusion model xi_theta — only this gets trained
-    # ------------------------------------------------------------------
+    # 
     model = NsDiff(model_args, device).to(device)
     n_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print(f"xi_theta trainable parameters: {n_params:,}")
@@ -376,14 +371,13 @@ def main():
     )
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
         optimizer, mode="min", factor=0.5, patience=patience // 2,
-        verbose=True,
     )
 
     best_val_loss  = float("inf")
     patience_count = 0
-    train_losses   = []
-    val_losses     = []
-    val_epochs     = []
+    train_losses = []
+    val_losses = []
+    val_epochs = []
 
     print(f"\n{'='*60}")
     print(f"Training xi_theta (diffusion) for up to {epochs} epochs")
@@ -472,10 +466,6 @@ def main():
                 break
         else:
             print(f"[{epoch:4d}/{epochs}]  train={avg_train:.6f}")
-
-    # ------------------------------------------------------------------
-    # Save training curves
-    # ------------------------------------------------------------------
     np.savez(
         os.path.join(args.out, "diffusion_losses.npz"),
         train_losses = np.array(train_losses),

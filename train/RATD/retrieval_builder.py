@@ -37,9 +37,10 @@ def all_encode(model, config):
     data_train = np.load(config["data"]["train_data"])
     positions = data_train["positions"]                    
     train_test_split = int(config["data"]["train_test_split"]) ##800
-    train_end = val_start = int(config["train"]["val_start"]) ##800         
+    train_end = val_start = int(config["train"]["val_start"]) ##800   
+    train_size = config['train']['train_size']      
 
-    train_positions = positions[:, :train_end]             # (N, 300)
+    train_positions = positions[:train_size, :train_end]             # (N, 300)
     N_traj, T = train_positions.shape
 
     print(f"train_test_split : {train_test_split}")
@@ -217,11 +218,12 @@ def all_retrieval(model, k, config):
     positions_test = data_test["positions"]           
     train_test_split = int(config["data"]["train_test_split"]) ##800
     train_end = val_start = int(config["train"]["val_start"]) ##800   
+    train_size = config['train']['train_size']
 
-    train_data = positions_train[:, :train_end]
+    train_data = positions_train[:train_size, :train_end]
     N_traj, T  = train_data.shape
     
-    val_data = positions_train[:, val_start:]
+    val_data = positions_train[:train_size, val_start:]
     test_data = positions_test[:, -(L + H):]
 
     print(f"train_test_split : {train_test_split}")

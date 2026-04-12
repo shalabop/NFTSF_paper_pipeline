@@ -1,27 +1,3 @@
-#!/usr/bin/env python3
-"""
-pretrain_mu.py
-==============
-Stage 1 of NsDiff pretraining: pretrain f_phi (mu_backbone).
-
-Paper: "Non-stationary Diffusion For Probabilistic Time Series Forecasting"
-       Section 4 — NsDiff trains f_phi (mean estimator) first via supervised
-       MSE regression between predicted mean y_0_hat = f_phi(X) and
-       ground truth future Y_0. This gives the diffusion model a strong
-       conditional mean prior at timestep T.
-
-Data setup (matches your pipeline):
-    Train windows : positions_train[:, :800]  sliding stride windows
-    Val window    : positions_train[:, 800:]  single window per trajectory
-                    context=800:900, target=900:1000
-
-Usage:
-    python pretrain_mu.py \
-        --config configs/nsdiff/double_well.yaml \
-        --input  DATA/double_well.npz \
-        --out    checkpoints/nsdiff/double_well/pretrain
-"""
-
 import argparse
 import json
 import os
@@ -46,39 +22,34 @@ import NsDiff.src.layer.mu_backbone as ns_Transformer
 from NsDiff.dataset_md import get_dataloader_md
 
 
-# ---------------------------------------------------------------------------
-# Build SimpleNamespace args for mu_backbone (same as train_nsdiff.py)
-# ---------------------------------------------------------------------------
-
 def build_mu_args(config, device):
     c = config
     label_len = c["context_length"] // 2
     return SimpleNamespace(
-        seq_len              = c["context_length"],
-        pred_len             = c["prediction_length"],
-        label_len            = label_len,
-        device               = device,
-        features             = None,
-        enc_in               = 1,
-        dec_in               = 1,
-        c_out                = 1,
-        d_model              = c["d_model"],
-        n_heads              = c["n_heads"],
-        e_layers             = c["e_layers"],
-        d_layers             = c["d_layers"],
-        d_ff                 = c["d_ff"],
-        moving_avg           = c["moving_avg"],
-        factor               = c.get("factor", 3),
-        distil               = c.get("distil", True),
-        embed                = "fixed",
-        freq                 = "h",
-        dropout              = c.get("dropout", 0.05),
-        activation           = c.get("activation", "gelu"),
-        output_attention     = False,
-        do_predict           = True,
-        p_hidden_dims        = [64, 64],
-        p_hidden_layers      = c.get("p_hidden_layers", 2),
-        # unused by mu_backbone but required by SimpleNamespace contract:
+        seq_len = c["context_length"],
+        pred_len = c["prediction_length"],
+        label_len = label_len,
+        device = device,
+        features = None,
+        enc_in = 1,
+        dec_in = 1,
+        c_out = 1,
+        d_model = c["d_model"],
+        n_heads = c["n_heads"],
+        e_layers = c["e_layers"],
+        d_layers = c["d_layers"],
+        d_ff = c["d_ff"],
+        moving_avg = c["moving_avg"],
+        factor = c.get("factor", 3),
+        distil = c.get("distil", True),
+        embed = "fixed",
+        freq = "h",
+        dropout = c.get("dropout", 0.05),
+        activation = c.get("activation", "gelu"),
+        output_attention = False,
+        do_predict = True,
+        p_hidden_dims = [64, 64],
+        p_hidden_layers = c.get("p_hidden_layers", 2),
         timesteps            = c["diffusion_steps"],
         beta_schedule        = c.get("beta_schedule", "linear"),
         beta_start           = c["beta_start"],
@@ -89,10 +60,6 @@ def build_mu_args(config, device):
         CART_input_x_embed_dim = c.get("CART_input_x_embed_dim", 32),
     )
 
-
-# ---------------------------------------------------------------------------
-# Single forward pass for mu_backbone
-# ---------------------------------------------------------------------------
 
 def forward_mu(model, batch_x, label_len, pred_len, device):
     """
@@ -119,14 +86,10 @@ def forward_mu(model, batch_x, label_len, pred_len, device):
 
     # x_mark passed as None (embed="fixed" so temporal marks unused)
     y_0_hat, _ = model(batch_x, None, dec_inp, None)
-    # y_0_hat: (B, pred_len, 1) ✓
-
+    # y_0_hat: (B, pred_len, 1) 
     return y_0_hat
 
 
-# ---------------------------------------------------------------------------
-# Validation
-# ---------------------------------------------------------------------------
 
 def validate_mu(model, val_loader, label_len, pred_len, device, criterion):
     model.eval()
@@ -139,17 +102,13 @@ def validate_mu(model, val_loader, label_len, pred_len, device, criterion):
             batch_y = batch_y.to(device).float()  # (B, pred_len, 1)
 
             y_0_hat = forward_mu(model, batch_x, label_len, pred_len, device)
-            loss    = criterion(y_0_hat, batch_y)
+            loss = criterion(y_0_hat, batch_y)
 
             total_loss += loss.item()
             n_batches  += 1
     model.train()
     return total_loss / max(n_batches, 1)
 
-
-# ---------------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------------
 
 def main():
     parser = argparse.ArgumentParser(
@@ -194,52 +153,35 @@ def main():
     print(f"epochs          : {epochs}")
     print(f"patience        : {patience}")
 
-    # ------------------------------------------------------------------
-    # Data — same split as train_nsdiff.py
-    # Train: sliding windows over positions_train[:, :800]
-    # Val  : single window positions_train[:val_size, 800:1000]
-    #        context=800:900, target=900:1000
-    # ------------------------------------------------------------------
     train_loader, val_loader, _ = get_dataloader_md(
-        npz_path          = args.input,
-        context_length    = ctx_len,
+        npz_path = args.input,
+        context_length = ctx_len,
         prediction_length = pred_len,
-        batch_size        = batch_size,
-        stride            = stride,
-        val_size          = val_size,
+        batch_size = batch_size,
+        stride = stride,
+        val_size = val_size,
         test_size         = test_size,
     )
 
     print(f"train batches : {len(train_loader)}")
     print(f"val   batches : {len(val_loader)}")
 
-    # ------------------------------------------------------------------
-    # Model
-    # ------------------------------------------------------------------
     model_args = build_mu_args(config, device)
-    model      = ns_Transformer.Model(model_args).float().to(device)
+    model = ns_Transformer.Model(model_args).float().to(device)
 
     n_params = sum(p.numel() for p in model.parameters())
     print(f"mu_backbone parameters: {n_params:,}")
 
-    # ------------------------------------------------------------------
-    # Optimizer and criterion
-    # Paper: f_phi trained with MSE loss on Y_0 prediction
-    # ------------------------------------------------------------------
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     criterion = nn.MSELoss()
 
-    # Optional: LR scheduler — reduce on plateau mirrors paper's practice
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, mode="min", factor=0.5, patience=patience // 2,
-        verbose=True,
-    )
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode="min", factor=0.5, patience=patience // 2)
 
     best_val_loss  = float("inf")
     patience_count = 0
-    train_losses   = []
-    val_losses     = []
-    val_epochs     = []
+    train_losses = []
+    val_losses = []
+    val_epochs = []
 
     print(f"\n{'='*55}")
     print(f"Training mu_backbone for up to {epochs} epochs")
@@ -254,12 +196,9 @@ def main():
             batch_x = batch_x.to(device).float()  # (B, ctx_len, 1)
             batch_y = batch_y.to(device).float()  # (B, pred_len, 1)
 
-            # Forward: predict conditional mean f_phi(X)
             optimizer.zero_grad()
             y_0_hat = forward_mu(model, batch_x, label_len, pred_len, device)
 
-            # Loss: MSE(f_phi(X), Y_0)
-            # Paper equation: loss_mean = E[||f_phi(X) - Y_0||^2]
             loss = criterion(y_0_hat, batch_y)
 
             loss.backward()
@@ -295,7 +234,7 @@ def main():
                 f"[{epoch:4d}/{epochs}]  "
                 f"train={avg_train:.6f}  val={val_loss:.6f}  "
                 f"lr={optimizer.param_groups[0]['lr']:.2e}"
-                + ("  ← best" if is_best else f"  (patience {patience_count}/{patience})")
+                + (" <-- best" if is_best else f"  (patience {patience_count}/{patience})")
             )
 
             if patience_count >= patience:
@@ -304,9 +243,6 @@ def main():
         else:
             print(f"[{epoch:4d}/{epochs}]  train={avg_train:.6f}")
 
-    # ------------------------------------------------------------------
-    # Save losses
-    # ------------------------------------------------------------------
     np.savez(
         os.path.join(args.out, "pretrain_mu_losses.npz"),
         train_losses = np.array(train_losses),
