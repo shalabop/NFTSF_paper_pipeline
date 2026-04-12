@@ -17,7 +17,7 @@ model:
   featureemb: 16
   is_unconditional: false
   target_strategy: "test"
-  use_reference: False #True
+  use_reference: True
   num_sample_features: 1
 
 diffusion:
@@ -40,7 +40,7 @@ train:
   batch_size: 64
   learning_rate: 1.0e-3
   epochs: 1000
-  milestones: [60, 85]
+  milestones: [600, 850]
   gamma: 0.1
   grad_clip: 1.0
   num_workers: 2
