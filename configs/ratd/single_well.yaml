@@ -13,31 +13,36 @@ retrieval:
   device: "cuda:0"
 
 model:
-  timeemb: 128
-  featureemb: 16
+  timeemb: 4 #128
+  featureemb: 8 #16
   is_unconditional: false
   target_strategy: "test"
   use_reference: True
   num_sample_features: 1
 
+
 diffusion:
-  num_steps: 50
+  num_steps: 100 #50
   beta_start: 0.0001
   beta_end: 0.5
+  num_steps: 50 
   schedule: "quad"
   ref_size: 100 
-  h_size: 100        
-  channels: 64
-  diffusion_embedding_dim: 128
-  nheads: 8
-  layers: 4
+  h_size: 100
+        
+  channels: 2
+
+  diffusion_embedding_dim: 8
+  nheads: 1 
+  layers: 2
   is_linear: True 
+
 
 train:
   L: 100
   H: 100
   device: "cuda:0"
-  batch_size: 64
+  batch_size: 32
   learning_rate: 1.0e-3
   epochs: 1000
   milestones: [600, 850]

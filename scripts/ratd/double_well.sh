@@ -2,17 +2,15 @@
 #SBATCH --job-name=DwRATD
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
-#SBATCH --mail-user=meahmed@asu.com
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --partition=public
+#SBATCH --partition=general
 #SBATCH --qos=public
-#SBATCH --gres=gpu:2
+#SBATCH --gres=gpu:1
 #SBATCH --mem=32G
 #SBATCH --output=logs/ratd/double_well.%j.out
 #SBATCH --error=logs/ratd/double_well.%j.err
-#SBATCH --mail-user=meahmed@asu.edu
-#SBATCH --mail-type=ALL
+#SBATCH --time=2-00:00:00
 
 mkdir -p logs/ratd
 mkdir -p results/ratd

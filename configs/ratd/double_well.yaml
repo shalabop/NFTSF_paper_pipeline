@@ -13,15 +13,13 @@ retrieval:
   device: "cuda:0"
 
 model:
-  timeemb: 16 #128 
-          #16 top
-  featureemb: 16
-           #16 top
+  timeemb: 4 #128
+  featureemb: 8 #16
   is_unconditional: false
   target_strategy: "test"
   use_reference: True
-          # False = top
   num_sample_features: 1
+
 
 diffusion:
   num_steps: 100 #50
@@ -33,39 +31,31 @@ diffusion:
   h_size: 100
         
   channels: 2
-          #2 top
-          #16 = does not seem to be bad
-          #4 bad
-  diffusion_embedding_dim: 16
-          #4 top
+
+  diffusion_embedding_dim: 8
   nheads: 1 
-          #1 = top
-          #2 = does not seem to be bad
   layers: 2
-          #2 top
-          #4 = does not seem to be bad
   is_linear: True 
-          # True = top
 
 train:
   L: 100
   H: 100
   device: "cuda:0"
-  batch_size: 512 #64
-  learning_rate: 1.0e-4 #1.0e-3
-  epochs: 100 #1000
+  batch_size: 32
+  learning_rate: 1.0e-3
+  epochs: 1000
   milestones: [600, 850]
   gamma: 0.1
   grad_clip: 1.0
   num_workers: 2
   print_every: 10
   val_start: 800 #200 #includes the context 
-  val_every: 2 #50 ##run evaluation every 50 
+  val_every: 50 #50 ##run evaluation every 50 
   path: "checkpoints/ratd/double_well"
   stride: 5 ##must match retreival_stride in tcn config
   train_size: 5000
 
 forecast:
-  test_size: 5 #3000
+  test_size: 3000
   out_path: "results/ratd/double_well.npz"
   n_samples: 500

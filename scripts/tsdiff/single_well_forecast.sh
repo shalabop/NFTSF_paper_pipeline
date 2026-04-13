@@ -2,7 +2,7 @@
 #SBATCH --job-name=SWTSFdiffforcast
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
-#SBATCH --time=3-00:00:00
+#SBATCH --time=1-00:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --partition=public
@@ -63,24 +63,21 @@ echo "PyKeOps build dir: $PYKEOPS_BUILD_DIR"
 echo "KeOps cache dir: $KEOPS_CACHE_FOLDER"
 # ==============================================================================
 
-# Verify CUDA files
-echo "Checking CUDA installation..."
-ls $CUDA_PATH/include/cuda.h || echo "WARNING: cuda.h not found"
-ls $CUDA_PATH/include/nvrtc.h || echo "WARNING: nvrtc.h not found"
-ls $CUDA_PATH/lib64/libnvrtc.so* || ls $CUDA_PATH/targets/x86_64-linux/lib/libnvrtc.so* || echo "WARNING: libnvrtc.so not found"
-
-# Forecasting - Quantile guidance
 echo "Forecasting with quantile guidance..."
 python eval/TSDiff/forecast_tsdiff.py \
     --config configs/tsdiff_forecast/single_well_q_4.yaml \
     --dataset_path gluonts_datasets/single_well \
     --out results/tsdiff_q/single_well_q_4.npz
 
-# Forecasting - MSE guidance
+echo "Forecasting with MSE guidance..."
+python eval/TSDiff/forecast_tsdiff.py \
+    --config configs/tsdiff_forecast/single_well_mse_01.yaml \
+    --dataset_path gluonts_datasets/single_well \
+    --out results/tsdiff_mse/single_well_mse_01.npz
+
 echo "Forecasting with MSE guidance..."
 python eval/TSDiff/forecast_tsdiff.py \
     --config configs/tsdiff_forecast/single_well_mse_05.yaml \
     --dataset_path gluonts_datasets/single_well \
     --out results/tsdiff_mse/single_well_mse_05.npz
-
 echo "job completed!"
