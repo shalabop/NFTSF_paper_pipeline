@@ -161,22 +161,24 @@ def main():
     test_size= int(config["test_size"])
     n_samples= int(config["num_of_samples"])
     val_size= int(config["val_size"])
-    label_len      = ctx_len // 2
+    train_size= int(config["train_size"])
+    label_len  = ctx_len // 2
 
     print(f"context_length   : {ctx_len}")
     print(f"prediction_length: {pred_len}")
-    print(f"n_samples        : {n_samples}")
-    print(f"normalization    : {normalization}")
+    print(f"n_samples : {n_samples}")
+    print(f"normalization : {normalization}")
 
     _, _, test_loader = get_dataloader_md(
-        npz_path          = args.input,
-        context_length    = ctx_len,
+        npz_path = args.input,
+        context_length = ctx_len,
         prediction_length = pred_len,
-        batch_size        = batch_size,
-        test_size         = test_size,
-        stride            = stride,
+        batch_size = batch_size,
+        test_size = test_size,
+        stride = stride,
         #normalization     = normalization,
-        val_size          = val_size,
+        val_size = val_size,
+        train_size = train_size
     )
 
     '''for fname, varname in [("mean.npy","mean"),("std.npy","std"),("normalization.npy", "normalization")]:

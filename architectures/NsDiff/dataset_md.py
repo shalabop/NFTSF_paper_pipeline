@@ -101,11 +101,13 @@ def _make_windows(positions, context_length, prediction_length, stride, T):
 
 
 def get_dataloader_md(npz_path, context_length, prediction_length,
-                      batch_size, val_size, test_size,
+                      batch_size, val_size, test_size, train_size,
                       stride):
     data = np.load(npz_path) ##wil be e.g double_well.npz
     positions_train = data["positions_train"]
+    positions_train = positions_train[:train_size,:]
     positions_test = data["positions_test"]
+    positions_test = positions_test[:test_size,:]
     train_test_split = int(data["train_test_split"])
 
     #train_end = train_test_split - prediction_length   

@@ -13,8 +13,8 @@ retrieval:
   device: "cuda:0"
 
 model:
-  timeemb: 128
-  featureemb: 16
+  timeemb: 4 #128
+  featureemb: 8 #16
   is_unconditional: false
   target_strategy: "test"
   use_reference: True
@@ -27,26 +27,26 @@ diffusion:
   schedule: "quad"
   ref_size: 100 
   h_size: 100        
-  channels: 64
-  diffusion_embedding_dim: 128
-  nheads: 8
-  layers: 4
+  channels: 2 #64
+  diffusion_embedding_dim: 8 #128
+  nheads: 1
+  layers: 2
   is_linear: True 
 
 train:
   L: 100
   H: 100
   device: "cuda:0"
-  batch_size: 64
+  batch_size: 32 #64
   learning_rate: 1.0e-3
-  epochs: 1000
+  epochs: 10 #1000
   milestones: [600, 850]
   gamma: 0.1
   grad_clip: 1.0
   num_workers: 2
   print_every: 10
   val_start: 800 #200 #includes the context 
-  val_every: 50 ##run evaluation every 50 
+  val_every: 5 #50 ##run evaluation every 50 
   path: "checkpoints/ratd/alanine_psi"
   stride: 5 ##must match retreival_stride in tcn config
   train_size: 6000

@@ -5,7 +5,7 @@ test_size: 3000
 val_size: 6000
 train_size: 6000
 
-train_curv: "checkpoints/nsdiff/alanine_phi/"
+train_curv: "checkpoints/nsdiff/alanine_psi/"
 
 epochs: 1000
 batch_size: 64

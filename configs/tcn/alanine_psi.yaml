@@ -4,14 +4,14 @@ data:
   L: 100
   H: 100
   train_stride: 5 
-  val_stride: 50       
+  val_stride: 5 #50       
   retrieval_stride: 5 #50 #10
   train_test_split: 800 ##only used in embedding training context
 
 model:
   input_size: 1
   output_size: 100 # must match L
-  num_channels: [16, 16, 32]      # much smaller
+  num_channels: [4, 4, 4]      # much smaller
   kernel_size: 3
   dropout: 0.2
   use_reference: True
@@ -19,14 +19,14 @@ model:
 
 train:
   device: "cuda:0"
-  batch_size: 128                   
-  learning_rate: 0.0001
+  batch_size: 64 #128                   
+  learning_rate: 0.001 #0.0001
   epochs: 1000
   grad_clip: 1.0
   num_workers: 1                   
   print_every: 10
   val_start: 800 ##includex context
-  train_size: 6000
+  train_size: 5000
 
 path:
   encoder_path: "checkpoints/tcn/alanine_psi.pth"

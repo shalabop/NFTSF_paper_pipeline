@@ -11,7 +11,7 @@ import yaml
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
-ROOT         = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.abspath(os.path.join(ROOT, "..", ".."))
 
 sys.path.insert(0, os.path.join(PROJECT_ROOT, "architectures", "NsDiff"))
@@ -94,6 +94,7 @@ def main():
     stride = int(config["stride"])
     val_size = int(config["val_size"])
     test_size = int(config["test_size"])
+    train_size = int(config["train_size"]) 
     val_interval = int(config.get("valid_epoch_interval", 1))
 
     print(f"=== Stage 2: Pretrain g_backbone (g_psi) ===")
@@ -112,6 +113,7 @@ def main():
         stride = stride,
         val_size = val_size,
         test_size = test_size,
+        train_size = train_size,
     )
 
     print(f"train batches : {len(train_loader)}")

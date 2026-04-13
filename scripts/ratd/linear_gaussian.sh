@@ -9,16 +9,18 @@
 #SBATCH --qos=public
 #SBATCH --gres=gpu:2
 #SBATCH --mem=32G
-#SBATCH --output=logs/ratd/double_well.%j.out
-#SBATCH --error=logs/ratd/double_well.%j.err
+#SBATCH --output=logs/ratd/linear_gaussian.%j.out
+#SBATCH --error=logs/ratd/linear_gaussian.%j.err
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
+#SBATCH --time=2-00:00:00
+
 
 mkdir -p logs/ratd
 mkdir -p results/ratd
 mkdir -p checkpoints/ratd
 mkdir -p checkpoints/tcn
-mkdir -p references/double_well
+mkdir -p references/linear_gaussian
 
 source venvRATD/bin/activate
 

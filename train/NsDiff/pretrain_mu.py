@@ -48,15 +48,15 @@ def build_mu_args(config, device):
         activation = c.get("activation", "gelu"),
         output_attention = False,
         do_predict = True,
-        p_hidden_dims = [64, 64],
+        p_hidden_dims = c.get("p_hidden_dims", [64, 64]),
         p_hidden_layers = c.get("p_hidden_layers", 2),
-        timesteps            = c["diffusion_steps"],
-        beta_schedule        = c.get("beta_schedule", "linear"),
-        beta_start           = c["beta_start"],
-        beta_end             = c["beta_end"],
-        k_z                  = c.get("k_z", 1e-2),
-        k_cond               = c.get("k_cond", 1),
-        d_z                  = c.get("d_z", 8),
+        timesteps = c["diffusion_steps"],
+        beta_schedule = c.get("beta_schedule", "linear"),
+        beta_start = c["beta_start"],
+        beta_end = c["beta_end"],
+        k_z = c.get("k_z", 1e-2),
+        k_cond = c.get("k_cond", 1),
+        d_z = c.get("d_z", 8),
         CART_input_x_embed_dim = c.get("CART_input_x_embed_dim", 32),
     )
 
@@ -130,28 +130,28 @@ def main():
     with open(os.path.join(args.out, "pretrain_mu_config.json"), "w") as f:
         json.dump(config, f, indent=4)
 
-    device   = torch.device(args.device)
+    device = torch.device(args.device)
     ctx_len  = int(config["context_length"])
     pred_len = int(config["prediction_length"])
     label_len = ctx_len // 2
 
-    # Pretraining-specific hyperparameters — separate from diffusion training
-    lr         = float(config.get("pretrain_mu_lr",      config["lr"]))
-    epochs     = int(config.get("pretrain_mu_epochs",    config.get("pretrain_epochs", 100)))
-    patience   = int(config.get("pretrain_mu_patience",  config.get("patience", 20)))
+    lr = float(config.get("pretrain_mu_lr", config["lr"]))
+    epochs = int(config.get("pretrain_mu_epochs", config.get("pretrain_epochs", 100)))
+    patience = int(config.get("pretrain_mu_patience",  config.get("patience", 20)))
     batch_size = int(config["batch_size"])
-    stride     = int(config["stride"])
-    val_size   = int(config["val_size"])
-    test_size  = int(config["test_size"])
+    stride = int(config["stride"])
+    val_size  = int(config["val_size"])
+    test_size = int(config["test_size"])
+    train_size = int(config["train_size"])
     val_interval = int(config.get("valid_epoch_interval", 1))
 
     print(f"=== Stage 1: Pretrain mu_backbone (f_phi) ===")
     print(f"context_length  : {ctx_len}")
     print(f"prediction_length: {pred_len}")
-    print(f"label_len       : {label_len}")
-    print(f"lr              : {lr}")
-    print(f"epochs          : {epochs}")
-    print(f"patience        : {patience}")
+    print(f"label_len : {label_len}")
+    print(f"lr : {lr}")
+    print(f"epochs : {epochs}")
+    print(f"patience : {patience}")
 
     train_loader, val_loader, _ = get_dataloader_md(
         npz_path = args.input,
@@ -161,6 +161,7 @@ def main():
         stride = stride,
         val_size = val_size,
         test_size         = test_size,
+        train_size        = train_size,
     )
 
     print(f"train batches : {len(train_loader)}")

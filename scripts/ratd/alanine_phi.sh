@@ -5,7 +5,7 @@
 #SBATCH --mail-user=meahmed@asu.com
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --partition=htc
+#SBATCH --partition=public
 #SBATCH --qos=public
 #SBATCH --gres=gpu:1
 #SBATCH --mem=32G
@@ -13,6 +13,7 @@
 #SBATCH --error=logs/ratd/alanine_phi.%j.err
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
+#SBATCH --time=1-00:00:00
 
 mkdir -p logs/ratd
 mkdir -p results/ratd

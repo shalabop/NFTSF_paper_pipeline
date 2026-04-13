@@ -287,35 +287,37 @@ def main():
     rolling_length = int(config["rolling_length"])
     label_len      = ctx_len // 2
 
-    lr           = float(config["lr"])
-    epochs       = int(config["epochs"])
-    patience     = int(config["patience"])
-    batch_size   = int(config["batch_size"])
-    stride       = int(config["stride"])
-    val_size     = int(config["val_size"])
-    test_size    = int(config["test_size"])
+    lr = float(config["lr"])
+    epochs = int(config["epochs"])
+    patience = int(config["patience"])
+    batch_size = int(config["batch_size"])
+    stride = int(config["stride"])
+    val_size = int(config["val_size"])
+    test_size = int(config["test_size"])
     val_interval = int(config.get("valid_epoch_interval", 1))
+    train_size = int(config["train_size"])
 
     print(f"=== Stage 3: Train diffusion model xi_theta ===")
     print(f"context_length   : {ctx_len}")
     print(f"prediction_length: {pred_len}")
-    print(f"rolling_length   : {rolling_length}")
-    print(f"lr               : {lr}")
-    print(f"epochs           : {epochs}")
-    print(f"patience         : {patience}")
-    print(f"pretrain dir     : {args.pretrain}")
+    print(f"rolling_length : {rolling_length}")
+    print(f"lr : {lr}")
+    print(f"epochs : {epochs}")
+    print(f"patience : {patience}")
+    print(f"pretrain dir : {args.pretrain}")
 
     # ------------------------------------------------------------------
     # Data
     # ------------------------------------------------------------------
     train_loader, val_loader, _ = get_dataloader_md(
-        npz_path          = args.input,
-        context_length    = ctx_len,
+        npz_path = args.input,
+        context_length= ctx_len,
         prediction_length = pred_len,
-        batch_size        = batch_size,
-        stride            = stride,
-        val_size          = val_size,
-        test_size         = test_size,
+        batch_size = batch_size,
+        stride = stride,
+        val_size = val_size,
+        test_size = test_size,
+        train_size = train_size
     )
 
     print(f"train batches : {len(train_loader)}")
