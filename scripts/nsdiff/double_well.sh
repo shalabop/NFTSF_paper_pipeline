@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 #SBATCH --job-name=NSDIFFdw
-#SBATCH --time=3-00:00:00
+#SBATCH --time=2-00:00:00
 #SBATCH --nodes=1
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
 #SBATCH --ntasks=1
-#SBATCH --partition=public
-#SBATCH --qos=public
+#SBATCH --partition=general
+#SBATCH --qos=grp_spresse
 #SBATCH --gres=gpu:1
 #SBATCH --mem=32G
 #SBATCH --output=logs/nsdiff/double_well.%j.out
