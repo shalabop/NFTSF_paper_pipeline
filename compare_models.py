@@ -103,6 +103,13 @@ LANDSCAPE_DISPLAY: dict[str, str] = {
     "double_well":    "Double Well",
     "alanine_phi":    r"Alanine $\varphi$ (Phi)",
     "alanine_psi":    r"Alanine $\psi$ (Psi)",
+    # SDE dataset types — model_key used as landscape name.
+    # Memory status is embedded in the display label.
+    # To add double-well SDE variants, append entries here.
+    "sw_sle_em":      "Single Well (no memory)",
+    "sw_gle_oe_em":   "Single Well (memory)",
+    # "dw_sle_em":    "Double Well (no memory)",   # PENDING
+    # "dw_gle_oe_em": "Double Well (memory)",      # PENDING
 }
 
 COORDINATE_LABEL: dict[str, str] = {
@@ -110,6 +117,11 @@ COORDINATE_LABEL: dict[str, str] = {
     "double_well":    r"Position $x$",
     "alanine_phi":    r"angle $\varphi$ (rad)",
     "alanine_psi":    r"angle $\psi$ (rad)",
+    # SDE datasets — position coordinate.
+    "sw_sle_em":      r"Position $x$",
+    "sw_gle_oe_em":   r"Position $x$",
+    # "dw_sle_em":    r"Position $x$",   # PENDING
+    # "dw_gle_oe_em": r"Position $x$",   # PENDING
 }
 
 
@@ -307,7 +319,19 @@ def _parse_nftsf_dirs_spec(spec: str) -> dict:
 
 
 def _load_test_data(data_path: str, data_format: str) -> torch.Tensor:
-    """Load .npy test data → (N_traj, T) float32 tensor."""
+    """Load .npy test data → (N_traj, T) float32 tensor.
+
+    Supported formats
+    -----------------
+    multi_sim  : NFTSF native  (T, 1+N) → transpose to (N, T)
+    single_sim : single-column (T, 1+1) → index column 1
+    tnf        : TNF format    (T, …)  → reshape to single series
+    sde        : SDE output    (N, T)  → direct load, no conversion needed.
+                 Use this format for sw_sle_em_*_x.npy and sw_gle_oe_em_*_x.npy
+                 files produced by sde/sde_data_gen.py.
+                 Comparisons with SDE data must be done within the same test
+                 split — do not mix test tensors across different model keys.
+    """
     raw = np.load(data_path, allow_pickle=True)
     t   = torch.tensor(np.asarray(raw), dtype=torch.float32)
     if data_format == "single_sim":
@@ -323,6 +347,10 @@ def _load_test_data(data_path: str, data_format: str) -> torch.Tensor:
         vals = arr[:, :, 1:].astype(np.float32) if arr.shape[2] > 1 else arr.astype(np.float32)
         series = vals[:, 0, 0].reshape(-1)
         return torch.tensor(series, dtype=torch.float32).unsqueeze(0)
+    elif data_format == "sde":
+        # SDE trajectory files are already (N_traj, T) float arrays.
+        # No column selection or transposition required.
+        return t
     else:
         raise ValueError(f"Unknown data_format: {data_format!r}")
 
