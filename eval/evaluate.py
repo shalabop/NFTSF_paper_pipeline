@@ -51,6 +51,11 @@ _PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
+# SDE dataset types — must stay in sync with train/train.py:_SDE_MODELS and
+# data/sde_loader.VALID_SDE_MODEL_KEYS.
+# To add double-well support, append the new key here.
+_SDE_MODELS = {"sw_sle_em", "sw_gle_oe_em"}
+
 
 # ---------------------------------------------------------------------------
 # Metrics (mirrors tsf_models-adam/metrics.py but extended with RMSE)
@@ -152,8 +157,13 @@ def evaluate(
 
     Parameters
     ----------
-    run_dir    : Training output directory containing ``config.json`` and checkpoint.
-    data_path  : Canonical ``.npz`` dataset.
+    run_dir    : Training output directory containing ``config.json`` and
+                 at least one model checkpoint (model_best.pth / model_final.pth).
+    data_path  : For canonical models — path to the canonical ``.npz`` dataset.
+                 For SDE models (model name in _SDE_MODELS) — path to the
+                 directory containing the .npy trajectory files produced by
+                 sde/sde_data_gen.py (e.g. ``../Data/Trajectories/``).
+                 The function auto-detects the mode from ``config.json``.
     n_samples  : Number of forecast samples per test trajectory.
 
     Returns
@@ -180,24 +190,62 @@ def evaluate(
     if device_str == "auto":
         device_str = "cuda" if torch.cuda.is_available() else "cpu"
 
-    print(f"[evaluate] Model: {model_name}  Run: {run_id}  Device: {device_str}")
+    # Derive display label (includes memory status for SDE models).
+    if model_name in _SDE_MODELS:
+        has_memory   = config.get("sde", {}).get("has_memory", "gle" in model_name)
+        memory_label = "(memory)" if has_memory else "(no memory)"
+        label        = f"{model_name} {memory_label}"
+    else:
+        label = model_name
+
+    print(f"[evaluate] Model: {label}  Run: {run_id}  Device: {device_str}")
 
     # ---- Build test tensors ----
-    from data.adapters.nftsf_adapter import get_nftsf_test_tensors
-    from data.canonical import load_canonical
+    if model_name in _SDE_MODELS:
+        # data_path is the SDE data directory.  We re-split with the same seed
+        # used during training to obtain the identical 20 % test subset.
+        from data.sde_loader import load_sde_dataset, split_sde_dataset
+        from data.preprocessing import normalize
+        from data.splitter import build_test_windows
 
-    canon = load_canonical(data_path)
-    landscape = str(canon.get("landscape", landscape))
+        seed_data = int(config["data"]["seed"])
+        sde_cfg   = config.get("sde", {})
+        norm_mean = float(sde_cfg.get("norm_mean", 0.0))
+        norm_std  = float(sde_cfg.get("norm_std",  1.0))
 
-    context, ground_truth_t = get_nftsf_test_tensors(data_path, n_past, n_future)
+        raw_dataset = load_sde_dataset(model_name, data_path)
+        splits      = split_sde_dataset(raw_dataset, random_seed=seed_data)
+
+        x_test_norm = normalize(
+            splits["x_test"].astype(np.float32), norm_mean, norm_std
+        )
+        ctx_np, tgt_np = build_test_windows(x_test_norm, n_past, n_future)
+        context        = torch.tensor(ctx_np, dtype=torch.float32)
+        ground_truth_t = torch.tensor(tgt_np, dtype=torch.float32)
+        landscape      = model_name
+        has_memory_flag = bool(splits["has_memory"])
+    else:
+        from data.adapters.nftsf_adapter import get_nftsf_test_tensors
+        from data.canonical import load_canonical
+
+        canon     = load_canonical(data_path)
+        landscape = str(canon.get("landscape", landscape))
+
+        context, ground_truth_t = get_nftsf_test_tensors(data_path, n_past, n_future)
+        has_memory_flag = False
+
     N_test = context.shape[0]
     print(f"[evaluate] Test set: {N_test} trajectories, "
           f"context={n_past} steps, horizon={n_future} steps")
 
     # ---- Instantiate and load model ----
-    from models.registry import get_model
-    ModelClass = get_model(model_name)
-    model = ModelClass(config)
+    if model_name in _SDE_MODELS:
+        from models.nftsf import NFTSFModel
+        model = NFTSFModel(config)
+    else:
+        from models.registry import get_model
+        ModelClass = get_model(model_name)
+        model = ModelClass(config)
 
     ckpt_path = _find_checkpoint(run_dir)
     print(f"[evaluate] Loading checkpoint: {ckpt_path}")
@@ -275,11 +323,14 @@ def evaluate(
         model_name=np.array(model_name),
         landscape=np.array(landscape),
         run_id=np.array(run_id),
+        # SDE-specific metadata (False for non-SDE models).
+        has_memory=np.array(has_memory_flag),
     )
     print(f"[evaluate] Results saved to {out_path}")
 
     # ---- Print summary ----
-    print(f"\n  Mean CRPS : {crps_t.mean():.4f}")
+    print(f"\n[evaluate] {label} | landscape: {landscape}")
+    print(f"  Mean CRPS : {crps_t.mean():.4f}")
     print(f"  Mean MAE  : {mae_t.mean():.4f}")
     print(f"  Mean RMSE : {rmse_t.mean():.4f}")
     print(f"  CI90 cov  : {ci90_t.mean():.3f}  (ideal 0.90)")

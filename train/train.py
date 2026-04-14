@@ -98,6 +98,117 @@ _PYTORCH_MODELS   = {"nftsf"}
 _GLUONTS_MODELS   = {"tsdiff_q", "tsdiff_ms", "tsdiff_cond", "csdi", "ratd", "nsdiff"}
 _ARIMA_MODELS     = {"arima"}
 
+# SDE dataset types — each key identifies both the dataset and the physical
+# system.  The underlying ML architecture is always NFTSFModel.
+# To add double-well support, append the new key here AND to
+# data/sde_loader.VALID_SDE_MODEL_KEYS.
+_SDE_MODELS       = {"sw_sle_em", "sw_gle_oe_em"}
+
+
+# ---------------------------------------------------------------------------
+# SDE data loading helper (used only when model_name in _SDE_MODELS)
+# ---------------------------------------------------------------------------
+
+def _load_sde_data(
+    model_name: str,
+    data_path: Path,
+    config: dict,
+    seed: int,
+):
+    """
+    Build a DataBundle from SDE trajectory files for NFTSF training.
+
+    Position trajectories (x) are used as the 1-D time series fed to the
+    normalizing-flow model (same role as canonical 'positions').  Velocity
+    trajectories (v) are loaded alongside but not passed to the model;
+    they are preserved in the split so that downstream tools can access them.
+
+    Normalization (Z-score, train-set statistics) is computed from x_train
+    and stored in the returned config under config['sde']['norm_mean/std'].
+
+    Parameters
+    ----------
+    model_name : str    One of _SDE_MODELS.
+    data_path  : Path   Directory containing the .npy trajectory files.
+    config     : dict   Merged config dict (modified copy is returned).
+    seed       : int    Random seed for the trajectory-level split.
+
+    Returns
+    -------
+    (bundle, updated_config)
+    """
+    import torch
+    from torch.utils.data import DataLoader, TensorDataset
+
+    from data.sde_loader import load_sde_dataset, split_sde_dataset
+    from data.preprocessing import (
+        compute_norm_stats,
+        normalize,
+        extract_segments,
+        split_context_target,
+    )
+    from data.loader import DataBundle
+
+    # Load raw trajectory arrays (test_id=1, skip=10 are the canonical defaults).
+    dataset = load_sde_dataset(model_name, data_path)
+    splits  = split_sde_dataset(dataset, random_seed=seed)
+
+    n_past   = int(config["data"]["n_past"])
+    n_future = int(config["data"]["n_future"])
+    stride   = int(config["data"].get("stride", 1))
+    batch_sz = int(config["training"].get("batch_size", 4096))
+    device   = config["training"].get("device", "cpu")
+
+    x_train = splits["x_train"].astype(np.float32)
+    x_val   = splits["x_val"].astype(np.float32)
+
+    # Z-score normalisation (train-set statistics only).
+    norm_mean, norm_std = compute_norm_stats(x_train)
+    x_train_norm = normalize(x_train, norm_mean, norm_std)
+    x_val_norm   = normalize(x_val,   norm_mean, norm_std)
+
+    # Sliding-window segmentation — identical to the canonical NFTSF adapter.
+    tracks_tr  = torch.tensor(x_train_norm)
+    tracks_val = torch.tensor(x_val_norm)
+    segs_tr    = extract_segments(tracks_tr,  n_past, n_future, stride)
+    segs_val   = extract_segments(tracks_val, n_past, n_future, stride)
+
+    tr_ctx, tr_tgt = split_context_target(segs_tr,  n_past)
+    vl_ctx, vl_tgt = split_context_target(segs_val, n_past)
+
+    def _loader(ctx: torch.Tensor, tgt: torch.Tensor) -> DataLoader:
+        ds = TensorDataset(ctx, tgt)
+        bs = len(ds) if batch_sz <= 0 else batch_sz
+        return DataLoader(ds, batch_size=bs, shuffle=True,
+                          pin_memory=(device != "cpu"))
+
+    bundle = DataBundle(
+        train=_loader(tr_ctx, tr_tgt),
+        val=_loader(vl_ctx, vl_tgt),
+        test=None,   # test split is evaluated separately via eval/evaluate.py
+        metadata={
+            "n_past":     n_past,
+            "n_future":   n_future,
+            "landscape":  model_name,
+            "norm_mean":  norm_mean,
+            "norm_std":   norm_std,
+        },
+    )
+
+    # Attach SDE metadata so that evaluate.py and compare_models.py can
+    # reconstruct the test split and apply correct normalisation without
+    # re-specifying model_key.
+    config = dict(config)
+    config["sde"] = {
+        "model_key":  splits["model_key"],
+        "has_memory": splits["has_memory"],
+        "norm_mean":  float(norm_mean),
+        "norm_std":   float(norm_std),
+    }
+    config["landscape"] = model_name
+
+    return bundle, config
+
 
 # ---------------------------------------------------------------------------
 # Main
@@ -155,9 +266,14 @@ def main() -> None:
 
     # ---- Run ID and output directory ----
     run_id = args.run_id or datetime.now().strftime("%Y%m%d_%H%M%S")
-    from data.canonical import load_canonical
-    meta     = load_canonical(data_path)
-    landscape = meta.get("landscape", "unknown")
+
+    if model_name in _SDE_MODELS:
+        # data_path is a directory for SDE models; landscape = model key.
+        landscape = model_name
+    else:
+        from data.canonical import load_canonical
+        meta      = load_canonical(data_path)
+        landscape = meta.get("landscape", "unknown")
 
     base_out = Path(args.output_dir) if args.output_dir else (
         project_root / "outputs"
@@ -179,19 +295,40 @@ def main() -> None:
         json.dump(merged, f, indent=2)
 
     # ---- Load data ----
-    from data.loader import get_dataloader
-    bundle = get_dataloader(merged, data_path)
+    if model_name in _SDE_MODELS:
+        bundle, merged = _load_sde_data(model_name, data_path, merged, seed)
+        # Re-save config.json now that SDE metadata (norm stats, memory flag)
+        # has been added to merged.
+        with open(output_dir / "config.json", "w") as f:
+            json.dump(merged, f, indent=2)
+        # Also write a standalone norm_stats.npz for compare_models.py.
+        np.savez(
+            output_dir / "norm_stats.npz",
+            mean=np.array(merged["sde"]["norm_mean"], dtype=np.float32),
+            std=np.array(merged["sde"]["norm_std"],  dtype=np.float32),
+        )
+    else:
+        from data.loader import get_dataloader
+        bundle = get_dataloader(merged, data_path)
     print(f"[train] Data loaded — landscape: {bundle.metadata['landscape']}, "
           f"n_past={bundle.metadata['n_past']}, n_future={bundle.metadata['n_future']}")
 
     # ---- Instantiate model ----
-    from models.registry import get_model
-    ModelClass = get_model(model_name)
-    model = ModelClass(merged)
+    if model_name in _SDE_MODELS:
+        # SDE datasets always train the NFTSF normalizing-flow architecture.
+        from models.nftsf import NFTSFModel
+        model = NFTSFModel(merged)
+    else:
+        from models.registry import get_model
+        ModelClass = get_model(model_name)
+        model = ModelClass(merged)
     print(f"[train] Model instantiated: {model.__class__.__name__}")
 
     # ---- Train ----
-    if model_name in _PYTORCH_MODELS:
+    if model_name in _PYTORCH_MODELS | _SDE_MODELS:
+        # SDE models use the same PyTorch training engine as NFTSF — position
+        # trajectories (x) are already packed into (context, target) DataLoaders
+        # by _load_sde_data above.
         from train.engine_pytorch import run as pytorch_run
         results = pytorch_run(
             model=model,
@@ -221,7 +358,10 @@ def main() -> None:
             json.dump(results, f, indent=2)
 
     else:
-        sys.exit(f"[train] No training engine for model '{model_name}'.")
+        sys.exit(
+            f"[train] No training engine for model '{model_name}'.  "
+            f"Expected one of: {sorted(_PYTORCH_MODELS | _SDE_MODELS | _GLUONTS_MODELS | _ARIMA_MODELS)}"
+        )
 
     print(f"\n[train] Training complete.  Results saved to {output_dir}")
     if results.get("best_val_loss") is not None:
