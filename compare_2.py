@@ -134,9 +134,10 @@ def load_npz_result(npz_path: str, context_length: int) -> dict:
     #L = H  # context length equals prediction length
     try:
         L = int(data["context_length"])
+        print(f'using data["context_length"] = {data["context_length"]}')
     except (KeyError, ValueError):
         L = context_length # Default to prediction length if context length is not specified
-
+        print(f'context_length = {context_length}')
     start_idx = train_test_split - L
     end_idx = train_test_split + H
     if start_idx < 0 or end_idx > full_trajectories.shape[1]:
@@ -148,6 +149,7 @@ def load_npz_result(npz_path: str, context_length: int) -> dict:
             start_idx = 0
 
     ground_truths = full_trajectories[:, start_idx:end_idx]  # (N, L+H)
+    print(ground_truths[4,4]) 
 
     print(f"      N={N}, S={S}, L={L}, H={H}")
     print(f"      ground_truths: {ground_truths.shape}, samples: {samples.shape}")
