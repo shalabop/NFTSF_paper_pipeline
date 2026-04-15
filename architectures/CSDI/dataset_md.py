@@ -79,7 +79,6 @@ def get_dataloader_md(npz_path, context_length, prediction_length,
                       stride, normalization,flag="train"):
     data = np.load(npz_path)
     positions = data["positions"]
-    train_test_split = int(data["train_test_split"])
 
     print(f"Number of trajectories: {positions.shape[0]}")
     print(f"Number of time steps: {positions.shape[1]}")
@@ -94,13 +93,13 @@ def get_dataloader_md(npz_path, context_length, prediction_length,
         print("  (local: per-sample scaler = mean(|context|), ""stored in batch as 'local_scaler')")'''
 
     if flag == "train":
-        val_start = -(prediction_length + context_length)
-        train_end = -prediction_length
-        
+        train_val_split = int(data["train_val_split"])
+        val_start = train_val_split - context_length
+
         print(positions[:, :val_start].shape[0])
         print(positions[:, :val_start].shape[1])
         train_dataset = MDTrajectoryDataset(
-            _make_train_windows(positions[:, :train_end],context_length, prediction_length, stride),
+            _make_train_windows(positions[:, :train_val_split],context_length, prediction_length, stride),
             context_length, prediction_length, normalization=normalization,
         )
         
@@ -117,6 +116,7 @@ def get_dataloader_md(npz_path, context_length, prediction_length,
     
     elif flag == "test":
         print(positions[:test_size,-(prediction_length+context_length):].shape)
+        train_test_split = int(data["train_test_split"])
         test_dataset = MDTrajectoryDataset(
             #positions[:test_size,-(prediction_length+context_length):],
             positions[:test_size, train_test_split - context_length : train_test_split + prediction_length],
