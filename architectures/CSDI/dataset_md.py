@@ -79,6 +79,7 @@ def get_dataloader_md(npz_path, context_length, prediction_length,
                       stride, normalization,flag="train"):
     data = np.load(npz_path)
     positions = data["positions"]
+    train_test_split = int(data["train_test_split"])
 
     print(f"Number of trajectories: {positions.shape[0]}")
     print(f"Number of time steps: {positions.shape[1]}")
@@ -117,7 +118,8 @@ def get_dataloader_md(npz_path, context_length, prediction_length,
     elif flag == "test":
         print(positions[:test_size,-(prediction_length+context_length):].shape)
         test_dataset = MDTrajectoryDataset(
-            positions[:test_size,-(prediction_length+context_length):],
+            #positions[:test_size,-(prediction_length+context_length):],
+            positions[:test_size, train_test_split - context_length : train_test_split + prediction_length],
             context_length, prediction_length, normalization=normalization,
         )
         test_loader = DataLoader(test_dataset, batch_size=batch_size,shuffle=False, num_workers=1)

@@ -70,6 +70,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--output_dir", default="./comparison_figures")
     p.add_argument("--n_traj_show", type=int, default=3)
     p.add_argument("--seed", type=int, default=42)
+    p.add_argument("--context_length", "-cl", type=int, default=0)
     p.add_argument("--data_npz", nargs="+", default=None,
                    metavar="LANDSCAPE:PATH")
     return p.parse_args()
@@ -108,7 +109,7 @@ def parse_result_spec(spec: str) -> dict:
         sys.exit(1)
     return {"landscape": parts[0], "model": parts[1], "npz_path": parts[2]}
 
-def load_npz_result(npz_path: str) -> dict:
+def load_npz_result(npz_path: str, context_length: int) -> dict:
     data = np.load(npz_path, allow_pickle=True)
     print(f"    Loading {npz_path}")
     print(f"      Keys: {list(data.keys())}")
@@ -130,7 +131,12 @@ def load_npz_result(npz_path: str) -> dict:
     N_check, S, H_check = samples.shape
     assert H_check == H, f"Sample H mismatch: {H_check} != {H}"
 
-    L = H  # context length equals prediction length
+    #L = H  # context length equals prediction length
+    try:
+        L = int(data["context_length"])
+    except (KeyError, ValueError):
+        L = context_length # Default to prediction length if context length is not specified
+
     start_idx = train_test_split - L
     end_idx = train_test_split + H
     if start_idx < 0 or end_idx > full_trajectories.shape[1]:
@@ -693,7 +699,7 @@ def main() -> None:
         print(f"\n  [{land}]")
         for model, npz_path in landscape_models[land].items():
             print(f"    {model}:")
-            data = load_npz_result(npz_path)
+            data = load_npz_result(npz_path, args.context_length)
             if land in norm_stats:
                 mean, std = norm_stats[land]
                 print(f"      Denormalizing: mean={mean:.6f}  std={std:.6f}")
