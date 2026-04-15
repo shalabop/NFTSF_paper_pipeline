@@ -9,7 +9,7 @@ from tqdm.auto import tqdm
 import matplotlib.pyplot as plt
 
 from gluonts.dataset.field_names import FieldName
-from gluonts.dataset.common import MetaData, TrainDatasets, FileDataset
+from gluonts.dataset.common import MetaData, TrainDatasets, FileDataset, ListDataset
 from gluonts.evaluation import make_evaluation_predictions
 
 from uncond_ts_diff.utils import (
@@ -21,6 +21,7 @@ from uncond_ts_diff.utils import (
 )
 from uncond_ts_diff.model import TSDiffCond
 import uncond_ts_diff.configs as diffusion_configs
+import pandas as pd
 
 logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -28,9 +29,6 @@ logger.setLevel(logging.INFO)
 
 
 def load_model(config: dict) -> TSDiffCond:
-    """
-    Initializes TSDiffCond architecture and loads checkpoint weights.
-    """
     model = TSDiffCond(
         **getattr(
             diffusion_configs,
@@ -52,44 +50,111 @@ def load_model(config: dict) -> TSDiffCond:
     model.load_state_dict(state_dict, strict=True)
     model = model.to(config["device"])
     model.eval()
-    logger.info(f"Loaded checkpoint from: {config['ckpt']}")
+    logger.info(f"Loaded checkpoint: {config['ckpt']}")
     return model
 
 
+def make_windowed_dataset(
+    full_trajectories: np.ndarray,
+    train_test_split: int,
+    context_length: int,
+    prediction_length: int,
+    freq: str,
+) -> ListDataset:
+    """
+    Build an in-memory GluonTS ListDataset where each series is truncated to
+    exactly [train_test_split - context_length : train_test_split + prediction_length].
+
+    This forces GluonTS test-mode splitter to pick exactly:
+        context  = [train_test_split - context_length : train_test_split]
+        forecast = [train_test_split                  : train_test_split + prediction_length]
+
+    Why this works
+    --------------
+    GluonTS create_splitter in "test" mode uses the LAST
+    (past_length + future_length) steps of each series.
+    By truncating each series to exactly that window, we guarantee
+    the splitter always picks the window we want — regardless of what
+    prediction_length was used when the FileDataset was originally created.
+
+    No files are written; this is purely in-memory.
+
+    Parameters
+    ----------
+    full_trajectories : (N, T)  full test trajectories
+    train_test_split  : int     step index where forecast starts (e.g. 900)
+    context_length    : int     L (e.g. 25)
+    prediction_length : int     H (e.g. 25)
+    freq              : str     GluonTS frequency string (e.g. "H")
+
+    Returns
+    -------
+    ListDataset with N entries, each of length context_length + prediction_length
+    """
+    start_idx = train_test_split - context_length   # e.g. 875 for 25/25
+    end_idx   = train_test_split + prediction_length # e.g. 925 for 25/25
+
+    assert start_idx >= 0, \
+        f"train_test_split ({train_test_split}) < context_length ({context_length})"
+    assert end_idx <= full_trajectories.shape[1], \
+        (f"train_test_split ({train_test_split}) + prediction_length ({prediction_length})"
+         f" = {end_idx} > T ({full_trajectories.shape[1]})")
+
+    entries = [
+        {
+            FieldName.TARGET:  traj[start_idx:end_idx].astype(np.float32),
+            FieldName.START:   pd.Timestamp("2000-01-01"),  # dummy — not used
+            FieldName.ITEM_ID: str(i),
+        }
+        for i, traj in enumerate(full_trajectories)
+    ]
+
+    logger.info(
+        f"Built ListDataset: {len(entries)} series "
+        f"of length {context_length + prediction_length}  "
+        f"(steps {start_idx}–{end_idx-1})"
+    )
+    return ListDataset(entries, freq=freq)
+
+
 def forecast(
-    config           : dict,
-    model            : TSDiffCond,
-    test_dataset,
+    config            : dict,
+    model             : TSDiffCond,
+    windowed_dataset,      
     transformation,
-    time             : np.ndarray,
-    train_test_split : int,
-    full_trajectories
+    time              : np.ndarray,
+    train_test_split  : int,
+    full_trajectories : np.ndarray,
 ) -> dict:
     """
-    Runs TSDiffCond direct inference and returns standardized forecast bundle.
+    Run TSDiffCond inference on the windowed dataset.
+
+    Because each series in windowed_dataset has length exactly
+    context_length + prediction_length, the test splitter will always
+    pick the correct window without any ambiguity.
     """
     num_samples       = config["num_samples"]
     prediction_length = config["prediction_length"]
+    context_length    = config["context_length"]
 
-    transformed_testdata = transformation.apply(test_dataset, is_train=False)
+    transformed_testdata = transformation.apply(windowed_dataset, is_train=False)
 
+    # past_length = context_length + lags (lags=0 since use_lags=False)
     test_splitter = create_splitter(
-        past_length   = config["context_length"] + max(model.lags_seq),
+        past_length   = context_length + max(model.lags_seq),
         future_length = prediction_length,
         mode          = "test",
     )
 
-    # MaskInput adds orig_past_target which TSDiffCond needs
     masking_transform = MaskInput(
         FieldName.TARGET,
         FieldName.OBSERVED_VALUES,
-        config["context_length"],
-        "none",   # no missing values for standard forecasting
+        context_length,
+        "none",
         0,
     )
     test_transform = test_splitter + masking_transform
 
-    # TSDiffCond uses get_predictor directly — no guidance sampler
     predictor = model.get_predictor(
         test_transform,
         batch_size = 1280,
@@ -101,55 +166,39 @@ def forecast(
         predictor   = predictor,
         num_samples = num_samples,
     )
-    
 
-    results = list(tqdm(forecast_it, total=len(transformed_testdata)))
-    print(f"samples shape: {results[0].samples.shape}")
-    print(f"num samples: {len(results[0].samples)}")
-    
-    #samples = np.load("results/cond_tsfdiff/double_well.npz")["samples"]
-    # check variance across samples for first trajectory
-    #print(samples[0, :, :].std(axis=1))  # std across 50 samples at each timestep
-    #ts_list          = list(ts_it)
-    #full_trajectories = np.array([ts.values.flatten() for ts in ts_list])
-    
+    results = list(tqdm(forecast_it, total=len(list(windowed_dataset))))
+    logger.info(f"samples per forecast: {results[0].samples.shape}")
 
     forecast_samples = np.array([f.samples for f in results])
-    forecast_samples = np.transpose(forecast_samples, (0, 2, 1))  # (N, T_pred, S)
+    forecast_samples = np.transpose(forecast_samples, (0, 2, 1))  # (N, H, S)
 
-    time_test  = time[train_test_split:train_test_split + prediction_length]
+    # Time arrays for the actual window used
+    time_test  = time[train_test_split : train_test_split + prediction_length]
     time_train = time[:train_test_split]
 
-    ci90_lower = np.percentile(forecast_samples, 5,  axis=2)
+    ci90_lower = np.percentile(forecast_samples, 5,  axis=2)   # (N, H)
     ci90_upper = np.percentile(forecast_samples, 95, axis=2)
     ci50_lower = np.percentile(forecast_samples, 25, axis=2)
     ci50_upper = np.percentile(forecast_samples, 75, axis=2)
 
-    # Plot 8 example forecasts
-    '''fig, axes = plt.subplots(nrows=2, ncols=4, figsize=(15, 12))
-    axes = axes.flatten()
-    for i in range(8):
-        median_forecast = np.median(forecast_samples[i], axis=1)
-        axes[i].plot(time, full_trajectories[i], color='black')
-        axes[i].plot(time_test, median_forecast, color='blue')
-        axes[i].fill_between(time_test, ci90_lower[i], ci90_upper[i], color='blue', alpha=0.3)
-        axes[i].fill_between(time_test, ci50_lower[i], ci50_upper[i], color='orange', alpha=0.3)
-        axes[i].set_xlabel("Time")
-        axes[i].set_ylabel("Position")
-        axes[i].axhline(-1, linestyle="--", color='red')
-        axes[i].axhline(1,  linestyle="--", color='red')'''
+    # Ground truth: exact forecast window from full trajectories
+    ground_truth = full_trajectories[
+        :len(results),
+        train_test_split : train_test_split + prediction_length
+    ]   # (N, H)
 
-    #fig.suptitle(f'TSDiff-Cond {config["dataset"]}', fontsize=16)
-    path = Path("plots/cond_tsfdiff")
-    path.mkdir(parents=True, exist_ok=True)
-    filename = datetime.datetime.now().strftime("cond_tsfdiff_forecasts_%Y-%m-%d_%H:%M:%S")
-    plt.savefig(path / filename)
-    plt.close()
+    # Context: exact context window
+    contexts = full_trajectories[
+        :len(results),
+        train_test_split - context_length : train_test_split
+    ]   # (N, L)
 
     return {
-        "samples"           : forecast_samples,
-        "ground_truth"      : full_trajectories[:, train_test_split:], ##INCLUDES THE FORECAST HORIZON SO PREDICTION_LENGTH -> END
-        "full_trajectories" : full_trajectories,
+        "samples"           : forecast_samples,          # (N, H, S)
+        "ground_truth"      : ground_truth,              # (N, H)
+        "contexts"          : contexts,                  # (N, L)
+        "full_trajectories" : full_trajectories[:len(results)],  # (N, T)
         "ci90_lower"        : ci90_lower,
         "ci90_upper"        : ci90_upper,
         "ci50_lower"        : ci50_lower,
@@ -157,84 +206,126 @@ def forecast(
         "time_test"         : time_test,
         "time_train"        : time_train,
         "time"              : time,
-        "train_test_split"  : train_test_split, ##SPLITS AT THE FORECAST HORIZON SO INCLUDEX PREDICTION_LENGTH -> END
+        "train_test_split"  : train_test_split,
         "prediction_length" : prediction_length,
+        "context_length"    : context_length,
         "item_ids"          : np.arange(len(results)),
     }
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Run TSDiff-Cond forecasting and save results."
+        description="TSDiff-Cond forecast — flexible L/H without GluonTS regeneration."
     )
-    parser.add_argument("--config", "-c", required=True,
-                        help="Path to forecast config yaml")
-    parser.add_argument("--checkpoint", required=False,
-                        help="Path to model checkpoint")
+    parser.add_argument("--config", "-c", required=True)
+    parser.add_argument("--checkpoint", required=False)
     parser.add_argument("--dataset_path", required=True,
-                        help="Path to GluonTS dataset directory")
-    parser.add_argument("--out", "-o", default="results/cond_tsfdiff",
-                        help="Output directory or .npz path")
+                        help="Path to GluonTS dataset directory (used for freq and time.npz)")
+    parser.add_argument("--out", "-o", default="results/cond_tsfdiff")
     parser.add_argument("--device",
                         default="cuda" if torch.cuda.is_available() else "cpu")
     args = parser.parse_args()
 
-    # Load config
+    # ── Config ────────────────────────────────────────────────────────────
     with open(args.config, "r") as f:
         config = yaml.safe_load(f)
     if config.get("ckpt") is None:
         config["ckpt"] = args.checkpoint
     config["device"] = args.device
 
+    L = config["context_length"]
+    H = config["prediction_length"]
+
     logger.info(f"dataset          : {config['dataset']}")
-    logger.info(f"context_length   : {config['context_length']}")
-    logger.info(f"prediction_length: {config['prediction_length']}")
+    logger.info(f"context_length   : {L}")
+    logger.info(f"prediction_length: {H}")
     logger.info(f"ckpt             : {config['ckpt']}")
 
-    # Load dataset
+    # ── Load dataset metadata and time array ──────────────────────────────
     dataset_path = Path(args.dataset_path)
     with open(dataset_path / "metadata.json", "r") as f:
         meta_json = yaml.safe_load(f)
 
+    freq = meta_json["freq"]
+
+    # Load full trajectories from the FileDataset (full 1000-step series)
+    # We use prediction_length from CONFIG not metadata so GluonTS doesn't
+    # interfere with the window size.
     metadata = MetaData(
-        freq              = meta_json["freq"],
-        prediction_length = meta_json["prediction_length"],
+        freq              = freq,
+        prediction_length = H,   # ← config's H, not metadata.json's value
     )
-    test_ds  = FileDataset(dataset_path / "test", freq=metadata.freq)
-    train_ds = FileDataset(dataset_path / "train", freq=metadata.freq)
+    test_ds  = FileDataset(dataset_path / "test",  freq=freq)
+    train_ds = FileDataset(dataset_path / "train", freq=freq)
     dataset  = TrainDatasets(metadata=metadata, train=train_ds, test=test_ds)
 
+    # Full trajectories — shape (N, T), T=1000
     full_trajectories = np.array([entry["target"] for entry in dataset.test])
+    N, T = full_trajectories.shape
+    logger.info(f"Full trajectories: {full_trajectories.shape}")
 
+    # Time array and train_test_split
     time_npz         = np.load(dataset_path / "time.npz")
     time             = time_npz["time"]
     train_test_split = int(time_npz["train_test_split"])
 
-    # Load model
+    logger.info(f"train_test_split : {train_test_split}")
+    logger.info(f"Context window   : steps {train_test_split-L}–{train_test_split-1}")
+    logger.info(f"Forecast window  : steps {train_test_split}–{train_test_split+H-1}")
+
+    # Verify the requested window fits within the data
+    assert train_test_split - L >= 0, \
+        f"Context window starts at {train_test_split-L} which is before the start of data"
+    assert train_test_split + H <= T, \
+        f"Forecast window ends at {train_test_split+H} which exceeds T={T}"
+
+    windowed_ds = make_windowed_dataset(
+        full_trajectories = full_trajectories,
+        train_test_split  = train_test_split,
+        context_length    = L,
+        prediction_length = H,
+        freq              = freq,
+    )
+
     model = load_model(config)
 
-    # Setup transformation
     transformation = create_transforms(
         num_feat_dynamic_real = 0,
         num_feat_static_cat   = 0,
         num_feat_static_real  = 0,
         time_features         = model.time_features,
-        prediction_length     = config["prediction_length"],
+        prediction_length     = H,
     )
 
-    # Run forecast
+    # ── Forecast ──────────────────────────────────────────────────────────
     logger.info("Running forecast...")
     results = forecast(
-        config           = config,
-        model            = model,
-        test_dataset     = dataset.test,
-        transformation   = transformation,
-        time             = time,
-        train_test_split = train_test_split,
-        full_trajectories=full_trajectories
+        config            = config,
+        model             = model,
+        windowed_dataset  = windowed_ds,
+        transformation    = transformation,
+        time              = time,
+        train_test_split  = train_test_split,
+        full_trajectories = full_trajectories,
     )
 
-    # Save results
+    # ── Verify ground truth alignment ─────────────────────────────────────
+    logger.info("Verifying ground truth alignment...")
+    gt_check = results["ground_truth"]
+    ft_check = full_trajectories[:len(gt_check),
+                                  train_test_split:train_test_split + H]
+    assert np.allclose(gt_check, ft_check, atol=1e-4), \
+        "Ground truth mismatch — check train_test_split and prediction_length"
+    logger.info("Ground truth alignment verified ✓")
+
+    ctx_check = results["contexts"]
+    ctx_expected = full_trajectories[:len(ctx_check),
+                                      train_test_split-L:train_test_split]
+    assert np.allclose(ctx_check, ctx_expected, atol=1e-4), \
+        "Context mismatch — check train_test_split and context_length"
+    logger.info("Context alignment verified ✓")
+
+    # ── Save ──────────────────────────────────────────────────────────────
     out_path = Path(args.out)
     if out_path.suffix != ".npz":
         out_path.mkdir(parents=True, exist_ok=True)
@@ -244,9 +335,10 @@ def main():
 
     np.savez_compressed(
         out_path,
-        samples           = results["samples"],
-        ground_truth      = results["ground_truth"],
-        full_trajectories = results["full_trajectories"],
+        samples           = results["samples"],           # (N, H, S)
+        ground_truth      = results["ground_truth"],      # (N, H)
+        contexts          = results["contexts"],           # (N, L)
+        full_trajectories = results["full_trajectories"], # (N, T)
         ci90_lower        = results["ci90_lower"],
         ci90_upper        = results["ci90_upper"],
         ci50_lower        = results["ci50_lower"],
@@ -256,12 +348,14 @@ def main():
         time              = results["time"],
         train_test_split  = results["train_test_split"],
         prediction_length = results["prediction_length"],
+        context_length    = results["context_length"],
         item_ids          = results["item_ids"],
     )
 
-    logger.info(f"Saved to: {out_path}")
-    logger.info(f"  samples shape     : {results['samples'].shape}")
-    logger.info(f"  ground_truth shape: {results['ground_truth'].shape}")
+    logger.info(f"Saved: {out_path}")
+    logger.info(f"  samples      : {results['samples'].shape}  (N, H, S)")
+    logger.info(f"  ground_truth : {results['ground_truth'].shape}  (N, H)")
+    logger.info(f"  contexts     : {results['contexts'].shape}  (N, L)")
 
 
 if __name__ == "__main__":

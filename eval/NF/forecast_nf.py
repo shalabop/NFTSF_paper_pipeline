@@ -138,7 +138,7 @@ def load_norm_stats(norm_stats_path, positions_train=None):
 def run_forecast(model, positions, context_length, prediction_length, n_samples,
                  mean, std, device, train_test_split, test_size):
     
-    test_size = min(test_size, positions.shape[0])  # ← clamp to available N
+    test_size = min(test_size, positions.shape[0]) 
     positions = positions[:test_size]
     ...
     # Limit to test_size trajectories
@@ -234,7 +234,7 @@ def main():
 
     save_dict = dict(
         samples           = samples,           # (N, H, S)
-        ground_truth      = full_trajectories[:,train_test_split:],      # (N, H)
+        ground_truth      = full_trajectories[:,train_test_split:train_test_split+prediction_length],      # (N, H)
         contexts          = contexts,          # (N, L)
         ci90_lower        = ci90_lower,        # (N, H)
         ci90_upper        = ci90_upper,
@@ -244,6 +244,7 @@ def main():
         train_test_split  = train_test_split,
         prediction_length = prediction_length,
         num_of_samples    = args.n_samples,
+        context_length    = context_length,
     )
     if time is not None:
         save_dict["time"]       = time

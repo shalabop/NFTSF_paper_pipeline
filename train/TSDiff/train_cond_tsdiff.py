@@ -8,7 +8,7 @@ import yaml
 import torch
 from tqdm.auto import tqdm
 import pytorch_lightning as pl
-from pytorch_lightning.callbacks import ModelCheckpoint, RichProgressBar
+from pytorch_lightning.callbacks import ModelCheckpoint, RichProgressBar, EarlyStopping
 
 from gluonts.dataset.loader import TrainDataLoader, ValidationDataLoader
 from gluonts.dataset.split import OffsetSplitter
@@ -36,6 +36,7 @@ from gluonts.dataset.common import (
     FileDataset,
 )
 
+import numpy as np
 import matplotlib.pyplot as plt
 
 #with torch.serialization.safe_globals([linear_beta_schedule]):
@@ -115,6 +116,7 @@ def main(config, log_dir,dataset_path):
     freq = config["freq"]
     context_length = config["context_length"]
     prediction_length = config["prediction_length"]
+#    train_test_split = config["train_test_split"]
     total_length = context_length + prediction_length
 
     # Create model
@@ -128,11 +130,11 @@ def main(config, log_dir,dataset_path):
     dataset = TrainDatasets(metadata=metadata, train=train_ds, test=test_ds)
 
     #ensure they're equal
-    print(dataset.metadata.prediction_length)
-    print(prediction_length)
+    #print(dataset.metadata.prediction_length)
+    #print(prediction_length)
 
-    assert dataset.metadata.freq == freq
-    assert dataset.metadata.prediction_length == prediction_length
+    #assert dataset.metadata.freq == freq
+    #assert dataset.metadata.prediction_length == prediction_length
 
     if config["setup"] == "forecasting":
         training_data = dataset.train
@@ -144,7 +146,6 @@ def main(config, log_dir,dataset_path):
     
     #To ensure that it is correctly reading the data
     logger.info("RUNNING TEST1")
-    import numpy as np
 
     iterator = iter(dataset.test)
     for i in range(6):
@@ -196,8 +197,12 @@ def main(config, log_dir,dataset_path):
     callbacks = []
     val_loader = None
     if config["use_validation_set"]:
+        #print(f"cardinality: {dataset.metadata}")
+        
+        val_por=0.1
         train_val_splitter = OffsetSplitter(
-            offset=-config["prediction_length"] * num_rolling_evals
+            #offset=-config["prediction_length"] * num_rolling_evals
+            offset=-int(1000* val_por) * num_rolling_evals
         )
         train_data_post, val_gen = train_val_splitter.split(training_data)
         transformed_data = transformation.apply(train_data_post, is_train=True)
@@ -242,10 +247,17 @@ def main(config, log_dir,dataset_path):
         mode="min",
         filename=filename,
         save_last=True,
-       save_weights_only=True,
+        save_weights_only=True,
        # save_weights_only=False,
        )
-
+    
+    early_stop_callback = EarlyStopping(
+        monitor="valid_loss",   
+        patience=10,            
+        mode="min",             
+        verbose=True            
+    )
+    callbacks.append(early_stop_callback)
     callbacks.append(checkpoint_callback)
     #callbacks.append(RichProgressBar())
     

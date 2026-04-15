@@ -164,6 +164,7 @@ def main():
         train_test_split  = train_test_split,
         prediction_length = prediction_length,
         num_of_samples    = num_of_samples,
+        context_length    = context_length,
     )
     print(f"Saved: {args.out}")
 

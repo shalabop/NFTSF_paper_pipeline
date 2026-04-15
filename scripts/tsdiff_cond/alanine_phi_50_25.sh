@@ -5,10 +5,10 @@
 #SBATCH --time=1-00:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --partition=public
-#SBATCH --qos=public
+#SBATCH --partition=general
+#SBATCH --qos=grp_spresse
 #SBATCH --gres=gpu:1
-#SBATCH --mem=32G
+#SBATCH --mem=16G
 #SBATCH --output=logs/tsdiff_cond/alanine_phi_50_25.%j.out
 #SBATCH --error=logs/tsdiff_cond/alanine_phi_50_25.%j.err
 
