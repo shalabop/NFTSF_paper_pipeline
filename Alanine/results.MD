@@ -10,7 +10,6 @@
 <img src="./phi_50_25/histogram2d_comparison_alanine_phi.png" width="900">
 <img src="./phi_50_25/table_alanine_phi.png" width="900">
 
-
 ### Alanine Phi 50/50
 <img src="./phi_50_50/error_metrics_comparison.png" width="900">
 <img src="./phi_50_50/histogram2d_comparison_alanine_phi.png" width="900">
@@ -21,6 +20,13 @@
 <img src="./phi_100_50/error_metrics_comparison.png" width="900">
 <img src="./phi_100_50/histogram2d_comparison_alanine_phi.png" width="900">
 <img src="./phi_100_50/table_alanine_phi.png" width="900">
+
+
+### Alanine Phi 100/100
+<img src="./phi_100_100/error_metrics_comparison.png" width="900">
+<img src="./phi_100_100/histogram2d_comparison_alanine_phi.png" width="900">
+<img src="./phi_100_100/table_alanine_phi.png" width="900">
+
 
 # Alanine Psi
 
@@ -45,3 +51,8 @@
 <img src="./psi_100_50/error_metrics_comparison.png" width="900">
 <img src="./psi_100_50/histogram2d_comparison_alanine_psi.png" width="900">
 <img src="./psi_100_50/table_alanine_psi.png" width="900">
+
+### Alanine Psi 100/100
+<img src="./psi_100_100/error_metrics_comparison.png" width="900">
+<img src="./psi_100_100/histogram2d_comparison_alanine_psi.png" width="900">
+<img src="./psi_100_100/table_alanine_psi.png" width="900">
