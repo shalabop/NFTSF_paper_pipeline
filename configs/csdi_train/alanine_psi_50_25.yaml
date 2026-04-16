@@ -10,7 +10,7 @@ train:
   test_size: 3000
   valid_epoch_interval: 10
   stride: 5
-  training_curv: "checkpoints_50_25/csdi/alanine_phi"
+  training_curv: "checkpoints_50_25/csdi/alanine_psi"
   normalization: "none"
   
 diffusion:

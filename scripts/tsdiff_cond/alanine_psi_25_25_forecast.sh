@@ -5,14 +5,12 @@
 #SBATCH --time=1-00:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --partition=public
-#SBATCH --qos=public
+#SBATCH --partition=general
+#SBATCH --qos=grp_spresse
 #SBATCH --gres=gpu:1
 #SBATCH --mem=32G
 #SBATCH --output=logs/tsdiff_cond/alanine_psi_25_25.%j.out
 #SBATCH --error=logs/tsdiff_cond/alanine_psi_25_25.%j.err
-
-
 
 source venv310/bin/activate
 which python
@@ -58,11 +56,6 @@ echo "Checking CUDA installation..."
 ls $CUDA_PATH/include/cuda.h || echo "WARNING: cuda.h not found"
 ls $CUDA_PATH/include/nvrtc.h || echo "WARNING: nvrtc.h not found"
 ls $CUDA_PATH/lib64/libnvrtc.so* || ls $CUDA_PATH/targets/x86_64-linux/lib/libnvrtc.so* || echo "WARNING: libnvrtc.so not found"
-
-python train/TSDiff/train_cond_tsdiff.py \
-        --dataset_path gluonts_datasets/alanine_psi \
-        --config configs/tsdiff_cond_train/alanine_psi_25_25.yaml \
-        --out_dir checkpoints_25_25/tsdiff_cond/alanine_psi
 
 python eval/TSDiff/forecast_tsdiff_cond.py   \
         --config configs/tsdiff_forecast/alanine_psi_cond_25_25.yaml  \
