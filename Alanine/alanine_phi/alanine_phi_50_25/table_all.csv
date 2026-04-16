@@ -1,0 +1,4 @@
+landscape,model,mae,crps,ci50,ci90
+alanine_phi,NFTSF,0.4729,0.3242,0.4925,0.8925
+alanine_phi,CSDI,0.4710,0.3204,0.4749,0.8725
+alanine_phi,TSDiff-Cond,0.4743,0.3294,0.4869,0.8733
