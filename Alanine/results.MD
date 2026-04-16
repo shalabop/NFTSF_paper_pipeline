@@ -37,8 +37,8 @@
 
 ### Alanine Psi 50/50
 <img src="./psi_50_50/error_metrics_comparison.png" width="900">
-<img src="./psi_50_50/histogram2d_comparison_alanine_psi.psg" width="900">
-<img src="./psi_50_50/table_alanine_psi.psg" width="900">
+<img src="./psi_50_50/histogram2d_comparison_alanine_psi.png" width="900">
+<img src="./psi_50_50/table_alanine_psi.png" width="900">
 
 
 ### Alanine Psi 100/50
