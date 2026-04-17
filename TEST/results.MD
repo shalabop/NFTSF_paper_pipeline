@@ -33,10 +33,10 @@
 ---------------------------------------------------------------------------------------------------------------------------------------
 
 ### Alanine Phi 100/100
-<img src="./phi_test_100_50/table_alanine_phi.png" width="900">
+<img src="./phi_test_100_100/table_alanine_phi.png" width="900">
 
-<img src="./phi_test_100_50/error_metrics_comparison.png" width="900">
-<img src="./phi_test_100_50/histogram2d_comparison_alanine_phi.png" width="900">
+<img src="./phi_test_100_100/error_metrics_comparison.png" width="900">
+<img src="./phi_test_100_100/histogram2d_comparison_alanine_phi.png" width="900">
 
 ---------------------------------------------------------------------------------------------------------------------------------------
 
