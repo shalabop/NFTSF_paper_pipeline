@@ -197,16 +197,32 @@ def _coverage_per_step(gt_future: np.ndarray, samples: np.ndarray, lo_pct: float
         cover.append(((gt_future[i] >= lo) & (gt_future[i] <= hi)).astype(float))
     return np.mean(cover, axis=0)
 
+def _coverage_all_intervals(
+    gt_future: np.ndarray,   # (N, H)
+    samples: np.ndarray,     # (N, S, H)
+) -> dict[str, np.ndarray]:
+    """
+    Compute empirical coverage for CI levels 10%, 20%, ..., 90%.
+    Returns dict keyed by e.g. 'ci10', 'ci20', ..., 'ci90'.
+    Each value is (H,) array — coverage per forecast step.
+    """
+    result = {}
+    for pct in range(10, 100, 10):
+        lo_pct = (100 - pct) / 2.0   # e.g. pct=50 → lo=25, hi=75
+        hi_pct = 100 - lo_pct
+        key    = f"ci{pct}"
+        result[key] = _coverage_per_step(gt_future, samples, lo_pct, hi_pct)
+    return result
+
 def compute_metrics(ground_truths: np.ndarray, samples: np.ndarray, n_past: int) -> dict:
     gt_future = ground_truths[:, n_past:]
-    
-    return {
+    metrics = {
         "mae":  _mae_per_step(gt_future, samples),
         "crps": _crps_per_step(gt_future, samples),
-        "ci50": _coverage_per_step(gt_future, samples, 25.0, 75.0),
-        "ci90": _coverage_per_step(gt_future, samples,  5.0, 95.0),
-
     }
+    # Add all CI levels ci10 through ci90
+    metrics.update(_coverage_all_intervals(gt_future, samples))
+    return metrics
 
 # ---------------------------------------------------------------------------
 # Y-limit helpers
@@ -233,9 +249,17 @@ def _global_ylim(model_data: dict[str, dict]) -> tuple[float, float]:
 METRIC_META = {
     "mae":  {"title": "MAE",           "ylabel": "MAE",      "ideal": None},
     "crps": {"title": "CRPS",          "ylabel": "CRPS",     "ideal": None},
-    "ci50": {"title": "CI50 Coverage", "ylabel": "Coverage", "ideal": 0.50},
-    "ci90": {"title": "CI90 Coverage", "ylabel": "Coverage", "ideal": 0.90},
 }
+for _pct in range(10, 100, 10):
+    METRIC_META[f"ci{_pct}"] = {
+        "title": f"CI{_pct}",
+        "ylabel": "Coverage",
+        "ideal": _pct / 100.0,
+    }
+
+METRIC_ORDER_PLOT = ["mae", "crps", "ci50", "ci90"]
+METRIC_ORDER_ALL  = ["mae", "crps"] + [f"ci{p}" for p in range(10, 100, 10)]
+METRIC_ORDER   = METRIC_ORDER_ALL  
 METRIC_ORDER = ["mae", "crps", "ci50", "ci90"]
 
 # ---------------------------------------------------------------------------
@@ -532,10 +556,11 @@ def plot_error_metrics_grid(
     Legend with title "Methods" placed above the grid, no main figure title.
     """
     n_land = len(landscapes)
-    n_met  = len(METRIC_ORDER)
+    n_met = len(METRIC_ORDER_PLOT)
 
     fig, axes = plt.subplots(
         n_land, n_met,
+        
         figsize=(9 * n_met, 5 * n_land),
         squeeze=False,
     )
@@ -572,7 +597,7 @@ def plot_error_metrics_grid(
     n_items = len(legend_handles)
     ncol = (n_items + 1) // 2   # two rows
 
-    for col_idx, metric_key in enumerate(METRIC_ORDER):
+    for col_idx, metric_key in enumerate(METRIC_ORDER_PLOT):
         meta       = METRIC_META[metric_key]
         y_lo, y_hi = metric_ylims[metric_key]
 
@@ -633,71 +658,82 @@ def plot_error_metrics_grid(
 # ---------------------------------------------------------------------------
 # Figure D: Summary tables
 # ---------------------------------------------------------------------------
-def plot_metric_tables(landscapes: list[str], model_names: list[str],
-                       all_metrics: dict[str, dict[str, dict[str, np.ndarray]]],
-                       output_dir: Path) -> None:
-    col_labels = [METRIC_META[k]["title"] for k in METRIC_ORDER]
+def plot_metric_tables(landscapes, model_names, all_metrics, output_dir):
+    col_labels = [METRIC_META[k]["title"] for k in METRIC_ORDER_ALL]
+    ideal_vals = {k: METRIC_META[k]["ideal"] for k in METRIC_ORDER_ALL}
+
     # CSV
     csv_path = output_dir / "table_all.csv"
     with open(csv_path, "w") as f:
-        f.write("landscape,model," + ",".join(METRIC_ORDER) + "\n")
+        f.write("landscape,model," + ",".join(METRIC_ORDER_ALL) + "\n")
         for landscape in landscapes:
             for model_name in model_names:
                 if model_name not in all_metrics[landscape]:
                     continue
-                row_vals = [f"{all_metrics[landscape][model_name][k].mean():.4f}" for k in METRIC_ORDER]
+                row_vals = [
+                    f"{all_metrics[landscape][model_name][k].mean():.4f}"
+                    for k in METRIC_ORDER_ALL
+                ]
                 label = MODEL_REGISTRY.get(model_name, {"label": model_name})["label"]
                 f.write(f"{landscape},{label}," + ",".join(row_vals) + "\n")
     print(f"[D] Saved: {csv_path}")
 
-    # PNG tables per landscape
     for landscape in landscapes:
-        row_labels, table_data = [], []
-        metric_values = []  # Store numeric values for comparison
+        row_labels, table_data, metric_values = [], [], []
         for model_name in model_names:
             if model_name not in all_metrics[landscape]:
                 continue
-            row_labels.append(MODEL_REGISTRY.get(model_name, {"label": model_name})["label"])
-            vals = [all_metrics[landscape][model_name][k].mean() for k in METRIC_ORDER]
+            row_labels.append(
+                MODEL_REGISTRY.get(model_name, {"label": model_name})["label"])
+            vals = [
+                all_metrics[landscape][model_name][k].mean()
+                for k in METRIC_ORDER_ALL
+            ]
             metric_values.append(vals)
             table_data.append([f"{v:.4f}" for v in vals])
-        
-        # Determine best values for each metric
+
+        # Best value per column
         best_indices = {}
         if metric_values:
-            for col_idx, metric_key in enumerate(METRIC_ORDER):
-                col_vals = [metric_values[row_idx][col_idx] for row_idx in range(len(metric_values))]
-                if metric_key in ("mae", "crps"):
-                    # Lowest is best
-                    best_indices[col_idx] = np.argmin(col_vals)
-                elif metric_key == "ci50":
-                    # Closest to 0.50 is best
-                    best_indices[col_idx] = np.argmin(np.abs(np.array(col_vals) - 0.50))
-                elif metric_key == "ci90":
-                    # Closest to 0.90 is best
-                    best_indices[col_idx] = np.argmin(np.abs(np.array(col_vals) - 0.90))
-        
-        n_rows, n_cols = len(row_labels), len(col_labels)
-        fig, ax = plt.subplots(figsize=(max(9, 2.8 * n_cols), 1.5 + 0.6 * n_rows))
+            for col_idx, metric_key in enumerate(METRIC_ORDER_ALL):
+                col_vals = [metric_values[r][col_idx] for r in range(len(metric_values))]
+                ideal = ideal_vals[metric_key]
+                if ideal is None:
+                    best_indices[col_idx] = int(np.argmin(col_vals))
+                else:
+                    best_indices[col_idx] = int(
+                        np.argmin(np.abs(np.array(col_vals) - ideal)))
+
+        n_rows = len(row_labels)
+        n_cols = len(col_labels)
+        # Wider figure to accommodate all CI columns
+        fig, ax = plt.subplots(
+            figsize=(max(9, 1.8 * n_cols), 1.5 + 0.6 * n_rows))
         ax.axis("off")
-        tbl = ax.table(cellText=table_data, rowLabels=row_labels, colLabels=col_labels,
-                       cellLoc="center", loc="center")
+        tbl = ax.table(
+            cellText=table_data,
+            rowLabels=row_labels,
+            colLabels=col_labels,
+            cellLoc="center",
+            loc="center",
+        )
         tbl.auto_set_font_size(False)
-        tbl.set_fontsize(12)
-        tbl.scale(1.3, 2.1)
+        tbl.set_fontsize(10)   # slightly smaller to fit all columns
+        tbl.scale(1.2, 2.0)
+
         for (r, c), cell in tbl.get_celld().items():
             if r == 0 or c == -1:
                 cell.set_facecolor("#D0D8E8")
-                cell.set_text_props(weight="bold", fontsize=12)
+                cell.set_text_props(weight="bold", fontsize=10)
             else:
                 cell.set_facecolor("#F7F9FC")
-                # Underline best values (r >= 1 for data rows)
                 if r > 0 and c >= 0 and c in best_indices and best_indices[c] == r - 1:
-                    cell.set_text_props(weight="normal", fontsize=12, 
-                                       bbox=dict(boxstyle="round,pad=0.3", 
-                                                facecolor="yellow", alpha=0.3))
-        ax.set_title(f"{_land_display(landscape)} — Metrics Summary (mean over forecast steps)",
-                     fontsize=13, pad=14)
+                    cell.set_facecolor("#FFF3B0")   # yellow highlight for best
+                    cell.set_text_props(weight="bold", fontsize=10)
+
+        ax.set_title(
+            f"{_land_display(landscape)} — Metrics Summary (mean over forecast steps)",
+            fontsize=13, pad=14)
         png_path = output_dir / f"table_{landscape}.png"
         fig.savefig(png_path, dpi=600, bbox_inches="tight")
         plt.close(fig)
