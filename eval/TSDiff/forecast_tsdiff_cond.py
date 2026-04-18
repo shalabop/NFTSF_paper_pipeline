@@ -37,7 +37,6 @@ def load_model(config: dict) -> TSDiffCond:
         freq              = config["freq"],
         use_features      = config["use_features"],
         use_lags          = config["use_lags"],
-        normalization     = config["normalization"],
         context_length    = config["context_length"],
         prediction_length = config["prediction_length"],
         init_skip         = config["init_skip"],

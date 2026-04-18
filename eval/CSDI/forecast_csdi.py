@@ -19,16 +19,7 @@ from CSDI.dataset_md import get_dataloader_md
 from CSDI.utils import train
 
 def evaluate_csdi(model, test_loader, n_samples, device,
-                  prediction_length, normalization=None, mea=0, std=0):
-    """
-    Returns samples and gt in original (denormalized) units.
-
-    For normalization="local": each sample is denormalized by its own
-    per-sample scaler stored in batch["local_scaler"].
-
-    For all other modes: global denormalization applied after collecting
-    all batches.
-    """
+                  prediction_length):
     model.eval()
     all_samples = []
     all_gt      = []
@@ -48,15 +39,6 @@ def evaluate_csdi(model, test_loader, n_samples, device,
             samples = samples.permute(0, 2, 1)               
             gt = observed_data[:, 0, -prediction_length:].clone()  
 
-            '''if normalization == "local":
-                scaler = batch["local_scaler"].to(device)    
-                samples = samples * scaler.unsqueeze(-1)     
-                gt      = gt * scaler                        
-                all_samples.append(samples.cpu().numpy())
-                all_gt.append(gt.cpu().numpy())
-            else:
-                all_samples.append(samples.cpu().numpy())
-                all_gt.append(gt.cpu().numpy())'''
             all_samples.append(samples.cpu().numpy())
             all_gt.append(gt.cpu().numpy())
 
@@ -85,13 +67,11 @@ def main():
     batch_size        = config["train"]["batch_size"]
     test_size         = config["train"]["test_size"]
     stride            = config["train"]["stride"]
-    normalization     = config["train"]["normalization"]
     val_size         = config["train"]["val_size"]
 
     print(f"prediction_length : {prediction_length}")
     print(f"context_length    : {context_length}")
     print(f"num_of_samples    : {num_of_samples}")
-    print(f"normalization     : {normalization}")
 
     ckpt_dir = os.path.dirname(args.ckpt)
 
@@ -103,24 +83,11 @@ def main():
         batch_size        = batch_size,
         test_size         = test_size,
         stride            = stride,
-        normalization     = normalization,
         val_size=val_size
     )
 
     batch = next(iter(test_loader))
     print("gt_mask sample:", batch["gt_mask"][0, :, 0])
-
-    for fname, varname in [("mean.npy", "mean"),("std.npy", "std"),("normalization.npy", "normalization")]:
-        path = os.path.join(ckpt_dir, fname)
-        if os.path.exists(path):
-            val = np.load(path)[0]
-            if varname == "mean":
-                mean = float(val)
-            elif varname == "std":
-                std = float(val)
-            else:
-                normalization = str(val)
-            print(f"Loaded {varname}={val} from checkpoint")
 
     model = CSDI_Forecasting(config, args.device, target_dim=1).to(args.device)
     model.load_state_dict(torch.load(args.ckpt, map_location=args.device, weights_only=False))

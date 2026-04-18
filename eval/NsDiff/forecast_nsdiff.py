@@ -63,15 +63,6 @@ def build_args(config, device):
         CART_input_x_embed_dim = c.get("CART_input_x_embed_dim", 32),
     )
 
-
-def denormalize(x, mean, std, normalization):
-    if normalization == "zscore":
-        return x * std + mean
-    elif normalization == "std":
-        return x * std
-    return x
-
-
 def generate_samples(model, cond_pred_model, cond_pred_model_g,
                      batch_x, batch_x_mark, label_len, pred_len,
                      n_samples, device, repeat_n=10):
@@ -157,7 +148,6 @@ def main():
     pred_len= int(config["prediction_length"])
     batch_size= int(config["batch_size"])
     stride= int(config["stride"])
-    normalization= config["normalization"]
     test_size= int(config["test_size"])
     n_samples= int(config["num_of_samples"])
     val_size= int(config["val_size"])
@@ -167,7 +157,6 @@ def main():
     print(f"context_length   : {ctx_len}")
     print(f"prediction_length: {pred_len}")
     print(f"n_samples : {n_samples}")
-    print(f"normalization : {normalization}")
 
     _, _, test_loader = get_dataloader_md(
         npz_path = args.input,
@@ -176,19 +165,10 @@ def main():
         batch_size = batch_size,
         test_size = test_size,
         stride = stride,
-        #normalization     = normalization,
         val_size = val_size,
         train_size = train_size
     )
 
-    '''for fname, varname in [("mean.npy","mean"),("std.npy","std"),("normalization.npy", "normalization")]:
-        path = os.path.join(args.ckpt, fname)
-        if os.path.exists(path):
-            val = np.load(path)[0]
-            if varname == "mean": mean = float(val)
-            elif varname == "std": std  = float(val)
-            else:normalization = str(val)
-            print(f"Loaded {varname}={val} from checkpoint")'''
 
     model_args = build_args(config, args.device)
 
@@ -225,14 +205,6 @@ def main():
             n_samples, device, repeat_n=10)     
 
         gt = batch_y[:, :, 0].numpy() 
-
-        if normalization == "local":
-            sc = local_scaler.numpy()[:, :, None] 
-            samples = samples * sc
-            gt = gt * local_scaler.numpy()
-        #else:
-        #    samples = denormalize(samples, mean, std, normalization)
-        #    gt = denormalize(gt, mean, std, normalization)
 
         all_samples.append(samples)
         all_gt.append(gt)

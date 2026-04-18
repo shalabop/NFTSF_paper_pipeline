@@ -93,7 +93,6 @@ def main():
         context_length = cfg["data"]["context_length"],
         prediction_length = cfg["data"]["prediction_length"],
         batch_size = cfg["train"]["batch_size"],
-        normalization = cfg["train"]["normalization"],
         stride=cfg["train"]["stride"],
         val_size = cfg["train"]["val_size"],
         test_size = cfg["train"]["test_size"],

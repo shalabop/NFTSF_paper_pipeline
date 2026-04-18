@@ -54,7 +54,7 @@ import yaml
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
-ROOT         = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.abspath(os.path.join(ROOT, "..", ".."))
 
 sys.path.insert(0, os.path.join(PROJECT_ROOT, "architectures", "NsDiff"))
@@ -71,58 +71,49 @@ from NsDiff.dataset_md import get_dataloader_md
 EPS = 1e-8
 
 
-# ---------------------------------------------------------------------------
-# Build args — same as train_nsdiff.py / pretrain_mu.py
-# ---------------------------------------------------------------------------
-
 def build_args(config, device):
-    c         = config
+    c = config
     label_len = c["context_length"] // 2
     return SimpleNamespace(
-        seq_len              = c["context_length"],
-        pred_len             = c["prediction_length"],
-        label_len            = label_len,
-        device               = device,
-        features             = None,
-        enc_in               = 1,
-        dec_in               = 1,
-        c_out                = 1,
-        d_model              = c["d_model"],
-        n_heads              = c["n_heads"],
-        e_layers             = c["e_layers"],
-        d_layers             = c["d_layers"],
-        d_ff                 = c["d_ff"],
-        moving_avg           = c["moving_avg"],
-        timesteps            = c["diffusion_steps"],
-        factor               = c.get("factor", 3),
-        distil               = c.get("distil", True),
-        beta_schedule        = c.get("beta_schedule", "linear"),
-        beta_start           = c["beta_start"],
-        beta_end             = c["beta_end"],
-        embed                = "fixed",
-        freq                 = "h",
-        dropout              = c.get("dropout", 0.05),
-        activation           = c.get("activation", "gelu"),
-        output_attention     = False,
-        do_predict           = True,
-        k_z                  = c.get("k_z", 1e-2),
-        k_cond               = c.get("k_cond", 1),
-        p_hidden_dims        = [64, 64],
-        p_hidden_layers      = c.get("p_hidden_layers", 2),
-        d_z                  = c.get("d_z", 8),
+        seq_len = c["context_length"],
+        pred_len = c["prediction_length"],
+        label_len = label_len,
+        device = device,
+        features = None,
+        enc_in = 1,
+        dec_in = 1,
+        c_out = 1,
+        d_model = c["d_model"],
+        n_heads = c["n_heads"],
+        e_layers = c["e_layers"],
+        d_layers = c["d_layers"],
+        d_ff = c["d_ff"],
+        moving_avg = c["moving_avg"],
+        timesteps = c["diffusion_steps"],
+        factor = c.get("factor", 3),
+        distil = c.get("distil", True),
+        beta_schedule = c.get("beta_schedule", "linear"),
+        beta_start = c["beta_start"],
+        beta_end = c["beta_end"],
+        embed = "fixed",
+        freq = "h",
+        dropout = c.get("dropout", 0.05),
+        activation = c.get("activation", "gelu"),
+        output_attention = False,
+        do_predict = True,
+        k_z = c.get("k_z", 1e-2),
+        k_cond = c.get("k_cond", 1),
+        p_hidden_dims = [64, 64],
+        p_hidden_layers = c.get("p_hidden_layers", 2),
+        d_z = c.get("d_z", 8),
         CART_input_x_embed_dim = c.get("CART_input_x_embed_dim", 32),
     )
 
 
-# ---------------------------------------------------------------------------
-# One training step — only xi_theta is optimized
-# f_phi and g_psi are frozen (torch.no_grad() context)
-# ---------------------------------------------------------------------------
-
 def process_diffusion_batch(
-    model,                  # NsDiff — xi_theta
-    cond_pred_model,        # mu_backbone — FROZEN f_phi
-    cond_pred_model_g,      # g_backbone  — FROZEN g_psi
+    model,                  
+    cond_pred_model,       
+    cond_pred_model_g,      
     batch_x, batch_y,
     pred_len, label_len, rolling_length, device
 ):

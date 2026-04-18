@@ -24,8 +24,7 @@ def parse_args():
                    help="Path to trained model .pth file")
     p.add_argument("--config",     default=None,
                    help="Path to training config_*.json (for architecture params)")
-    p.add_argument("--norm_stats_path", default=None,
-                   help="Path to normalization stats .npz file")
+  
     p.add_argument("--data_path",       required=True,
                    help="Path to test data .npz file")
     p.add_argument("--out",  "-o",      required=True,
@@ -115,26 +114,6 @@ def load_test_data(data_path):
     print(f"Test data: {positions.shape}  (N_traj, T)")
     return positions, time, tts
 
-
-def load_norm_stats(norm_stats_path, positions_train=None):
-    """Load or compute normalization statistics."""
-    if norm_stats_path and os.path.exists(norm_stats_path):
-        stats = np.load(norm_stats_path)
-        mean = float(stats["mean"])
-        std  = float(stats["std"])
-        print(f"Loaded norm stats: mean={mean:.4f}  std={std:.4f}")
-        return mean, std
-    # Fallback: compute from the provided array
-    if positions_train is not None:
-        mean = float(positions_train.mean())
-        std  = float(positions_train.std())
-        print(f"Computed norm stats from data: mean={mean:.4f}  std={std:.4f}")
-        return mean, std
-    print("No norm stats — using mean=0, std=1")
-    return 0.0, 1.0
-
-
-
 def run_forecast(model, positions, context_length, prediction_length, n_samples,
                  mean, std, device, train_test_split, test_size):
     
@@ -149,7 +128,6 @@ def run_forecast(model, positions, context_length, prediction_length, n_samples,
     ctx_raw = positions[:, train_test_split - context_length : train_test_split]   # (test_size, L)
     gt_raw  = positions[:, train_test_split : train_test_split + prediction_length] # (test_size, H)
 
-    # No normalization (assume data already normalized)
     ctx_norm = ctx_raw
 
     samples_out = np.zeros((N, prediction_length, n_samples), dtype=np.float32)
@@ -197,9 +175,6 @@ def main():
         f"train_test_split ({train_test_split}) must be >= n_past ({args.context_length})"
     assert train_test_split + args.prediction_length <= T, \
         f"train_test_split + n_future ({train_test_split + args.prediction_length}) exceeds T ({T})"
-
-    #if normalization 
-    #mean, std = load_norm_stats(args.norm_stats_path, positions)
 
     context_length=args.context_length
     prediction_length = args.prediction_length

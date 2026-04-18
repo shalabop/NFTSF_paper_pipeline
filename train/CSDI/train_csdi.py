@@ -33,7 +33,6 @@ def main():
 
     config["model"]["is_unconditional"] = 0
     stride = config["train"]["stride"]
-    normalization = config["train"]["normalization"]
     context_length = config["train"]["context_length"]
     prediction_length = config["train"]["prediction_length"]
     batch_size = config["train"]["batch_size"]
@@ -57,8 +56,7 @@ def main():
         batch_size = batch_size,
         val_size = val_size,
         test_size = test_size,
-        stride = stride,
-        normalization = normalization
+        stride = stride
     )
     '''print(f"std={std:.4f}  train={len(train_loader)}  "
           f"val={len(val_loader)}  test={len(test_loader)}")'''

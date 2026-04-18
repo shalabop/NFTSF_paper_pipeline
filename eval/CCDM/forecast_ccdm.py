@@ -19,7 +19,7 @@ from CCDM.diffusion   import DDPM              # noqa
 from CCDM.dataset_md  import get_dataloader_md # noqa
 
 def forecast_ccdm(denoiser, diffusion, test_loader, n_samples,
-                  device, pred_len, num_feat, use_norm):
+                  device, pred_len, num_feat):
     """
     Run reverse-diffusion sampling over the test set.
 
@@ -38,27 +38,13 @@ def forecast_ccdm(denoiser, diffusion, test_loader, n_samples,
             batch_x  = batch_x.float().to(device)   # (B, L, D)
             batch_y0 = batch_y0.float().to(device)  # (B, H, D)
             x_mark, y0_mark = x_mark.float().to(device), y0_mark.float().to(device)
-            
-            if use_norm:
-                mean = batch_x.mean(dim=1, keepdim=True)
-                std  = (batch_x.var(dim=1, keepdim=True, unbiased=False) + 1e-5).sqrt()
-                batch_x_n = (batch_x - mean) / std
-            else:
-                batch_x_n = batch_x
-                mean = torch.zeros(batch_x.shape[0], 1, batch_x.shape[2], device=device)
-                std  = torch.ones_like(mean)
+        
+            batch_x_n = batch_x
+
 
             # (B*n_samples, H, D)
             samples = diffusion.sampling(n_samples, batch_x_n,
                                          x_mark=None, y0_mark=None)
-            '''samples = diffusion.sampling(n_samples, batch_x_n,
-                                         x_mark=x_mark, y0_mark=y0_mark)'''
-
-            if use_norm:
-                B  = batch_x.shape[0]
-                mu = mean.repeat_interleave(n_samples, dim=0).expand(-1, pred_len, -1)
-                sg = std.repeat_interleave(n_samples,  dim=0).expand(-1, pred_len, -1)
-                samples = samples * sg + mu
 
             B = batch_x.shape[0]
             samples = samples.view(B, n_samples, pred_len, num_feat)  # (B, S, H, D)
@@ -118,7 +104,6 @@ def main():
     context_length = cfg["data"]["context_length"]
     n_samples = cfg["train"]["n_samples"]
     batch_size = cfg["train"]["batch_size"]
-    normalization = cfg["train"].get("normalization", "none")
     test_size = cfg["train"]["test_size"]
     
     val_size = cfg["train"]["val_size"]
@@ -138,7 +123,6 @@ def main():
         context_length = context_length,
         prediction_length = prediction_length,
         batch_size = batch_size,
-        normalization = normalization,
         test_size = test_size,
         val_size = val_size,
         stride = stride,
@@ -158,12 +142,11 @@ def main():
         torch.load(args.ckpt, map_location=device, weights_only=False))
     print(f"Loaded checkpoint : {args.ckpt}")
 
-    use_norm = cfg["data"]["use_window_norm"]
 
     # Forecast
     samples, gt, contexts = forecast_ccdm(
         denoiser, diffusion, test_loader,
-        n_samples, device, prediction_length, D, use_norm,
+        n_samples, device, prediction_length, D,
     )
 
     ci90_lower = np.percentile(samples,  5, axis=1)   # (N, H, D)

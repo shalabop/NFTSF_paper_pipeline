@@ -39,29 +39,16 @@ def train_tcn(config):
     train_size = config['train']['train_size']
     
     train_data = np.load(config['data']['train_data'])
-    #test_data = np.load(config['data']['test_data'])
     positions_train = train_data['positions']  # (N_traj, T)
-    #positions_test = test_data['positions']  # (N_traj, T)
-    #train_test_split = int(train_data['train_test_split'])
-    #train_test_split=int(config['data']['train_test_split'])
+
     val_start = int(config["train"]["val_start"]) 
     
     lockback_L = config['data']['L']
     pred_steps = config['data']['H']
-    
-    # Normalize based on training data
-    #train_end = train_test_split - pred_steps
-    #train_data = positions[:, :train_end]
-    #mean = train_data.mean()
-    #std = train_data.std()
-    
-    #print(f"Normalization: mean={mean:.4f}, std={std:.4f}")
-    
-    #positions_norm = ((positions - mean) / std).astype(np.float32)
+
     
     train_positions = positions_train[:train_size, :val_start]         # (N, 300)
     val_positions   = positions_train[:train_size, val_start:]
-    #test_positions  = positions_test[:, -pred_steps-lockback_L:]
     
     print(f"Train shape: {train_positions.shape}")
     print(f"Val shape: {val_positions.shape}")
