@@ -80,6 +80,8 @@ class DiffMTS:
         self.temperature      = configs.temperature
         self.init_lr          = configs.init_lr
         self.non_attn         = configs.non_attn
+        self.prediction_length = configs.prediction_length
+        self.context_length = configs.context_length
 
         self.out_dir = Path(out_dir) if out_dir else \
                        Path("checkpoints") / "ccdm" / configs.data_name
@@ -123,15 +125,16 @@ class DiffMTS:
 
 
     def negative_sampling(self, y0, mode):
-        B      = y0.shape[0]
+        B = y0.shape[0]
         y0_len = y0.shape[1]
 
         if mode == "variation":
             #patch_size = 8
             #n_patches  = y0_len // 8
             #for our case
-            patch_size = 10
-            n_patches  = y0_len // 10
+            patch_size = 5
+            n_patches  = y0_len // patch_size
+            
             y0_patch   = y0.view(B, n_patches, patch_size, self.num_feat)
             neg_samples = torch.zeros(
                 (B * self.n_negatives, y0_len, self.num_feat),
@@ -226,7 +229,6 @@ class DiffMTS:
 
         yk     = self.diffusion.q_sample(y0, k, noise)
         pred_k = self.denoiser(x, yk, k, x_mark, y0_mark)
-        #pred_k = self.denoiser(x, yk, k, None, None)
 
         if self.parameterization == "noise":
             target = noise
@@ -242,7 +244,6 @@ class DiffMTS:
 
         neg_variation_samples = self.negative_sampling(y0, mode="variation")
         neg_scale_samples     = self.negative_sampling(y0, mode="scaling")
-
         neg_variation_loss = self.cal_contrastive_loss(neg_variation_samples, x, k, noise=None, loss_type=loss_type)
         neg_scale_loss     = self.cal_contrastive_loss(neg_scale_samples,     x, k, noise=None, loss_type=loss_type)
 
@@ -284,6 +285,8 @@ class DiffMTS:
         is_refine=False : end-to-end training for self.n_epochs epochs.
         is_refine=True  : two-stage — load model_path, fine-tune refine_epochs.
         """
+        
+        
         weight_dir = self.out_dir
         weight_dir.mkdir(parents=True, exist_ok=True)
 
@@ -300,11 +303,13 @@ class DiffMTS:
 
         print("Training stage is beginning!")
         for epoch_no in range(self.n_epochs):
-            self.denoiser.train()
+            #self.denoiser.train()
             batch_loss = {"Denoising": [], "Contrastive": [], "Total": []}
             start_time = time.time()
 
-            #for batch_x, batch_y0, _ in self.train_loader:
+            print(epoch_no)
+            print(len(self.train_loader))
+
             for batch_x, batch_y0, local_scalr, x_mark, y0_mark in self.train_loader:
                 self.optimizer.zero_grad()
                 batch_x  = batch_x.float().to(self.device)
@@ -313,16 +318,10 @@ class DiffMTS:
 
                 if self.use_window_norm:
                     batch_x, batch_y0, _, _ = self.instance_normalization(batch_x, batch_y0)
-
-                '''denoise_loss, contrast_loss = self.cal_train_loss(
-                    batch_x, batch_y0,
-                    x_mark=None, y0_mark=None,
-                    loss_type="similarity",
-                )'''
-                
+            
                 denoise_loss, contrast_loss = self.cal_train_loss(
                     batch_x, batch_y0,
-                    x_mark=batch_x_mark, y0_mark=batch_y0_mark,
+                    x_mark=None, y0_mark=None,
                     loss_type="similarity",
                 )
                 total_loss = denoise_loss + self.contrast_weight * contrast_loss
@@ -348,14 +347,12 @@ class DiffMTS:
                 f"time: {end_time - start_time:.1f}s"
             )
 
-            # ── periodic epoch checkpoint (mirrors original) ──
             if (epoch_no % save_epoch_interval == 0) or (epoch_no == self.n_epochs - 1):
                 torch.save(
                     self.denoiser.state_dict(),
                     weight_dir / f"epoch{epoch_no}.pt",
                 )
 
-            # ── val loss + best model (our addition) ──
             if (epoch_no % valid_epoch_interval == 0) or (epoch_no == self.n_epochs - 1):
                 val_loss = self._val_loss()
                 if val_loss < best_val_loss:
@@ -366,7 +363,6 @@ class DiffMTS:
                     )
                     print(f"  ↳ best model saved (val={val_loss:.5f})")
 
-        # ── save loss curves ──
         epochs_arr = np.arange(self.n_epochs)
         save_path  = Path(loss_path) if loss_path else weight_dir / "training_loss.npz"
         np.savez(
@@ -451,8 +447,7 @@ class DiffMTS:
             '''pred_out = self.diffusion.sampling(n_samples, batch_x,
                                                x_mark=None, y0_mark=None)'''
                                                
-            pred_out = self.diffusion.sampling(n_samples, batch_x,
-                                               x_mark=x_mark, y0_mark=y0_mark)
+            pred_out = self.diffusion.sampling(n_samples, batch_x, x_mark=x_mark, y0_mark=y0_mark)
 
             if self.use_window_norm:
                 pred_out = self.instance_denormalization(pred_out, x_mean, x_std)

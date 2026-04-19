@@ -37,14 +37,20 @@ def forecast_ccdm(denoiser, diffusion, test_loader, n_samples,
         for batch_x, batch_y0, local_scaler, x_mark, y0_mark in tqdm(test_loader, desc="Forecasting"):
             batch_x  = batch_x.float().to(device)   # (B, L, D)
             batch_y0 = batch_y0.float().to(device)  # (B, H, D)
-            x_mark, y0_mark = x_mark.float().to(device), y0_mark.float().to(device)
-        
-            batch_x_n = batch_x
-
+            x_mark= x_mark.float().to(device)
+            y0_mark = y0_mark.float().to(device)
 
             # (B*n_samples, H, D)
-            samples = diffusion.sampling(n_samples, batch_x_n,
-                                         x_mark=None, y0_mark=None)
+            '''samples = diffusion.sampling(n_samples, batch_x_n,
+                                         x_mark=None, y0_mark=None)'''
+
+            print(f'batch_x : {batch_x.shape}')
+            print(f'batch_y0 : {batch_y0.shape}')
+            print(f'x_mark : {x_mark.shape}')
+            print(f'y0_mark : {y0_mark.shape}')
+            
+            samples = diffusion.sampling(n_samples, batch_x,
+                x_mark=x_mark, y0_mark=y0_mark)
 
             B = batch_x.shape[0]
             samples = samples.view(B, n_samples, pred_len, num_feat)  # (B, S, H, D)
@@ -94,6 +100,7 @@ def main():
     parser.add_argument("--input",  "-i", required=True)
     parser.add_argument("--ckpt",   "-k", required=True)
     parser.add_argument("--out",    "-o", required=True)
+    parser.add_argument("--train_test_split", "-tts", required=True)
     parser.add_argument("--device", "-d", default="cuda:0")
     args = parser.parse_args()
 
@@ -126,7 +133,8 @@ def main():
         test_size = test_size,
         val_size = val_size,
         stride = stride,
-        flag="test"
+        flag="test",
+        train_test_split=int(args.train_test_split)
     )
 
     # Infer D

@@ -56,18 +56,19 @@ def build_configs(cfg, num_feat, device):
     c.init_lr = cfg["train"]["lr"]
 
     c.device = device
+    c.prediction_length = cfg["data"]["prediction_length"]
+    c.context_length = cfg["data"]["context_length"]
     return c
 
 
 def main():
     parser = argparse.ArgumentParser(description="Train CCDM on MD data")
     parser.add_argument("--config", "-c", required=True, help="Path to config_double_well.yaml")
-    parser.add_argument("--input",  "-i", required=True, help="Path to data/double_well.npz")
+    parser.add_argument("--input",  "-i", required=True, help="Path to data/data_train.npz")
     parser.add_argument("--out",    "-o", required=True, help="Output folder, e.g. checkpoints/ccdm/double_well")
     parser.add_argument("--device", "-d", default="cuda:0")
-    parser.add_argument("--two_stage",      action="store_true", default=False)
-    parser.add_argument("--pretrain_epoch", type=int, default=None)
-    parser.add_argument("--refine_epochs",  type=int, default=30)
+    parser.add_argument("--two_stage", "-ts",     action="store_true", default=False)
+    parser.add_argument("--refine_epochs", "-re" , type=int, default=0)
     args = parser.parse_args()
 
     seed = 2024

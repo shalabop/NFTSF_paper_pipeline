@@ -57,8 +57,8 @@ class DDPM(nn.Module):
     # p(y_{k-1}|y_k)
     @torch.no_grad()
     def p_sample(self, x, yk, k, x_mark, y0_mark):
-        #pred_k = self.denoiser(x, yk, k, x_mark, y0_mark)
-        pred_k = self.denoiser(x, yk, k, None, None)
+        pred_k = self.denoiser(x, yk, k, x_mark, y0_mark)
+        #pred_k = self.denoiser(x, yk, k, None, None)
         post_mean, post_var = self.q_posterior(yk, pred_k, k)
         z = torch.randn(yk.shape, device=yk.device)
         return post_mean + (post_var**0.5)*z
@@ -70,12 +70,14 @@ class DDPM(nn.Module):
         sample_shape = (B*n_samples, self.pred_len, D)
         yk = torch.randn(sample_shape, device=x.device)
         x = torch.repeat_interleave(x, n_samples, dim=0)  # (B*n_samples, cont_len, D)
+        
+        x_mark = torch.repeat_interleave(x_mark, n_samples, dim=0)  # (B*n_samples, cont_len, 4)
+        #x0_mark = torch.repeat_interleave(y0_mark, n_samples, dim=0)  # (B*n_samples, pred_len, 4)
         #x_mark = torch.repeat_interleave(x_mark, n_samples, dim=0)  # (B*n_samples, cont_len, 4)
-        #0_mark = torch.repeat_interleave(y0_mark, n_samples, dim=0)  # (B*n_samples, pred_len, 4)
-        #x_mark = torch.repeat_interleave(x_mark, n_samples, dim=0)  # (B*n_samples, cont_len, 4)
-        #y0_mark = torch.repeat_interleave(y0_mark, n_samples, dim=0)  # (B*n_samples, pred_len, 4)
+        y0_mark = torch.repeat_interleave(y0_mark, n_samples, dim=0)  # (B*n_samples, pred_len, 4)
         # x_emb = torch.repeat_interleave(x_emb, n_samples, dim=0)  # (B*n_samples, D, d_model)
         for j in reversed(range(0, self.n_steps, 1)):
             k = torch.ones(B*n_samples, dtype=torch.long, device=x.device)*j
-            yk = self.p_sample(x, yk, k, None, None)
+            #yk = self.p_sample(x, yk, k, None, None)
+            yk = self.p_sample(x, yk, k, x_mark, y0_mark)
         return yk  # (B*n_samples, pred_len, D)

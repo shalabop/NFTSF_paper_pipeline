@@ -19,17 +19,28 @@ class MDTrajectoryDataset(Dataset):
         return len(self.contexts)
     
     def _create_positional_features(self, times):
+        """
+        Positional features for synthetic data.
+        Designed to match the [-0.5, 0.5] range of the original
+        calendar-based time features in Dataset_MTS.
+        
+        Four features, all in [-0.5, 0.5] or [-1, 1]:
+        0: linear position normalized to [-0.5, 0.5]
+        1: sin(2*pi*t)  — period = L+H steps
+        2: cos(2*pi*t)  — period = L+H steps  
+        3: sin(4*pi*t)  — period = (L+H)/2 steps (captures finer structure)
+        """
         n = len(times)
-        features = np.zeros((n, 4), dtype=np.float32)
-
-        max_time = self.context_length + self.prediction_length
-        t_norm = times / max_time
-
-        features[:, 0] = times
-        features[:, 1] = np.sin(2 * np.pi * t_norm)
-        features[:, 2] = np.cos(2 * np.pi * t_norm)
-        features[:, 3] = t_norm ** 2
-
+        max_time = float(self.context_length + self.prediction_length)
+        t_norm = times / max_time   # [0, 1)
+        
+        features = np.stack([
+            t_norm - 0.5,                    # linear, [-0.5, 0.5)
+            np.sin(2 * np.pi * t_norm),      # [-1, 1]
+            np.cos(2 * np.pi * t_norm),      # [-1, 1]
+            np.sin(4 * np.pi * t_norm),      # [-1, 1] finer period
+        ], axis=1).astype(np.float32)        # (n, 4)
+        
         return features
 
     def __getitem__(self, index):
@@ -57,11 +68,6 @@ class MDTrajectoryDataset(Dataset):
             torch.from_numpy(y_mark),
             
         )
-        '''return (
-            torch.from_numpy(batch_x),        
-            torch.from_numpy(batch_y),        
-            torch.from_numpy(local_scaler),   
-        )'''
 
 
 def _make_windows(positions, context_length, prediction_length, stride, T):
@@ -83,7 +89,7 @@ def _make_windows(positions, context_length, prediction_length, stride, T):
 
 def get_dataloader_md(npz_path, context_length, prediction_length,
                       batch_size, val_size, test_size,
-                      stride, flag="train"):
+                      stride, flag="train",train_test_split=None):
     data = np.load(npz_path)
     positions = data["positions"]
     
@@ -94,9 +100,10 @@ def get_dataloader_md(npz_path, context_length, prediction_length,
         print(positions[:, :val_start].shape[0])
         print(positions[:, :val_start].shape[1])
         
-        train_dataset =  MDTrajectoryDataset(_make_windows(
-        positions, context_length, prediction_length,
+        train_ctx, train_forecasts= _make_windows( positions[:,:], context_length, prediction_length,
         stride=stride, T=train_val_split,)
+        
+        train_dataset =  MDTrajectoryDataset(train_ctx, train_forecasts
         )
         
         val_ctx  = positions[:val_size, val_start:val_start + context_length]
@@ -112,9 +119,9 @@ def get_dataloader_md(npz_path, context_length, prediction_length,
         return train_loader, val_loader
     
     if flag == "test":
-        train_test_split = int(data["train_test_split"])
-        context_length = int(data["context_length"])
-        prediction_length = int(data["prediction_length"])
+        print(f'train_test_split {train_test_split}')
+        print(f'context_length {context_length}')
+        print(f'prediction_length {prediction_length}')
         test_start = train_test_split - context_length
         test_end =  train_test_split + prediction_length
         
