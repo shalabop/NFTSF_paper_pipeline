@@ -550,7 +550,7 @@ def main():
         transformation   = transformation,
         time             = time,
         train_test_split = train_test_split,
-        full_trajectories = full_trajectories,  
+        full_trajectories = test_trajectories,  
     )
 
     out_path = Path(args.out)

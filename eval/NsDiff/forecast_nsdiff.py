@@ -194,6 +194,8 @@ def main():
     all_samples = []
     all_gt = []
 
+    start_total = time.time()
+    
     for batch in tqdm(test_loader, desc="Forecasting"):
         batch_x, batch_y, x_mark, y_mark, local_scaler = batch
         batch_x = batch_x.to(device).float()
@@ -208,6 +210,9 @@ def main():
 
         all_samples.append(samples)
         all_gt.append(gt)
+
+
+    time_elapsed = start_total - time.time()
 
     samples_out = np.concatenate(all_samples, axis=0) 
     gt_out = np.concatenate(all_gt, axis=0) 
@@ -242,6 +247,7 @@ def main():
         train_test_split  = train_test_split,
         prediction_length = pred_len,
         num_of_samples    = n_samples,
+        time_elapsed = time_elapsed,
     )
     print(f"Saved: {args.out}")
 

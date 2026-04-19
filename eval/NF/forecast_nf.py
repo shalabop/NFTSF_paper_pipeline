@@ -185,6 +185,9 @@ def main():
         context_length, prediction_length, device,
     )
 
+    #start time measurment
+    time_start = time.time()
+    
     samples, ground_truth, contexts = run_forecast(
         model, positions,
         context_length=context_length, prediction_length=prediction_length,
@@ -194,6 +197,9 @@ def main():
         device=device,
         train_test_split=train_test_split,
     )
+    
+    time_elapsed = time_start - time.time()
+    
     ci90_lower = np.percentile(samples, 5,  axis=2)   # (N, H)
     ci90_upper = np.percentile(samples, 95, axis=2)
     ci50_lower = np.percentile(samples, 25, axis=2)
@@ -208,18 +214,19 @@ def main():
     os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
 
     save_dict = dict(
-        samples           = samples,           # (N, H, S)
-        ground_truth      = full_trajectories[:,train_test_split:train_test_split+prediction_length],      # (N, H)
-        contexts          = contexts,          # (N, L)
-        ci90_lower        = ci90_lower,        # (N, H)
-        ci90_upper        = ci90_upper,
-        ci50_lower        = ci50_lower,
-        ci50_upper        = ci50_upper,
+        samples = samples,           # (N, H, S)
+        ground_truth = full_trajectories[:,train_test_split:train_test_split+prediction_length],      # (N, H)
+        contexts = contexts,          # (N, L)
+        ci90_lower = ci90_lower,        # (N, H)
+        ci90_upper = ci90_upper,
+        ci50_lower = ci50_lower,
+        ci50_upper = ci50_upper,
         full_trajectories = full_trajectories, # (N, L+H)
-        train_test_split  = train_test_split,
+        train_test_split = train_test_split,
         prediction_length = prediction_length,
-        num_of_samples    = args.n_samples,
-        context_length    = context_length,
+        num_of_samples = args.n_samples,
+        context_length = context_length,
+        time_elapsed = time_elapsed
     )
     if time is not None:
         save_dict["time"]       = time

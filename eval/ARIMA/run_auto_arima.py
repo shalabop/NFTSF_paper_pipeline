@@ -194,6 +194,7 @@ def fit_and_forecast(
         date = datetime.datetime.now().strftime("ARIMA_forecasts_%Y%m%d_%H%M%S.png")
         filename=f"./plots/ARIMA/{label}_{date}"
 
+    time_start = time.time()
     for i in tqdm(range(N), desc="Fitting ARIMA models"):
         #train_series = pd.Series(positions[i, :train_test_split])
         #np.random.seed(42)
@@ -222,6 +223,8 @@ def fit_and_forecast(
         ci90_upper_est[i] = np.percentile(sims,95,axis=1)
         ci50_lower_est[i] = np.percentile(sims,25,axis=1)
         ci50_upper_est[i] = np.percentile(sims,75,axis=1)
+        
+    total_elapsed = time.time() - time_start
 
     ##only if time is passed 
     if save_figures:
@@ -255,6 +258,7 @@ def fit_and_forecast(
         "ci50_lower"  : ci50_lower_est,    
         "ci50_upper"  : ci50_upper_est,    
         'full_trajectories' : full_trajectories,
+        "total_elapsed" : total_elapsed
     }
 
 def main():

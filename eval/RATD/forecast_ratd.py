@@ -125,6 +125,8 @@ def forecast_ratd(config):
 
     all_samples = []
     all_gt      = []
+    
+    time_start = time.time()
 
     with torch.no_grad():
         for batch in tqdm(test_loader, desc="Forecasting"):
@@ -137,6 +139,8 @@ def forecast_ratd(config):
 
             all_samples.append(samples.cpu().numpy())
             all_gt.append(observed_data.cpu().numpy())
+            
+    time_elapsed = time_start -  time.time()
 
     samples_out = np.concatenate(all_samples, axis=0)    # (N, n_samples, 1, L+H)
     gt_out      = np.concatenate(all_gt,      axis=0)    # (N, 1, L+H)
@@ -161,20 +165,21 @@ def forecast_ratd(config):
 
     np.savez(
         config['forecast']['out_path'],
-        samples           = samples_out,              # (N, H, n_samples)
-        ground_truth      = gt_forecast,               # (N, H)
-        contexts          = contexts,                  # (N, L)
-        ci90_lower        = ci90_lower,                # (N, H)
-        ci90_upper        = ci90_upper,
-        ci50_lower        = ci50_lower,
-        ci50_upper        = ci50_upper,
+        samples = samples_out,              # (N, H, n_samples)
+        ground_truth = gt_forecast,               # (N, H)
+        contexts = contexts,                  # (N, L)
+        ci90_lower= ci90_lower,                # (N, H)
+        ci90_upper = ci90_upper,
+        ci50_lower = ci50_lower,
+        ci50_upper = ci50_upper,
         full_trajectories = positions_test[:N_test],   # (N, 1000)
-        time              = time,                      # (1000,)
-        train_test_split  = 900,   # forecast starts at step 900 of time array
+        time = time,                      # (1000,)
+        train_test_split = config["train_test_split"],   # forecast starts at step 900 of time array
         prediction_length = H,
-        num_of_samples    = n_samples,
-        L                 = L,
-        H                 = H,
+        num_of_samples  = n_samples,
+        L = L,
+        H = H,
+        time_elapsed = time_elapsed
     )
     print(f"Saved: {config['forecast']['out_path']}")
 

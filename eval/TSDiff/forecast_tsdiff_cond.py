@@ -224,7 +224,6 @@ def main():
                         default="cuda" if torch.cuda.is_available() else "cpu")
     args = parser.parse_args()
 
-    # ── Config ────────────────────────────────────────────────────────────
     with open(args.config, "r") as f:
         config = yaml.safe_load(f)
     if config.get("ckpt") is None:
@@ -239,7 +238,6 @@ def main():
     logger.info(f"prediction_length: {H}")
     logger.info(f"ckpt             : {config['ckpt']}")
 
-    # ── Load dataset metadata and time array ──────────────────────────────
     dataset_path = Path(args.dataset_path)
     with open(dataset_path / "metadata.json", "r") as f:
         meta_json = yaml.safe_load(f)
@@ -296,32 +294,35 @@ def main():
     )
 
     logger.info("Running forecast...")
+    
+    time_start = time.time()
     results = forecast(
-        config            = config,
-        model             = model,
+        config= config,
+        model = model,
         windowed_dataset  = windowed_ds,
-        transformation    = transformation,
-        time              = time,
+        transformation = transformation,
+        time = time,
         train_test_split  = train_test_split,
-        full_trajectories = full_trajectories,
+        full_trajectories = test_trajectories,
     )
+    
+    time_elapsed = time_start - time.time()
 
     logger.info("Verifying ground truth alignment...")
     gt_check = results["ground_truth"]
-    ft_check = full_trajectories[:len(gt_check),
+    ft_check = test_trajectories[:len(gt_check),
                                   train_test_split:train_test_split + H]
     assert np.allclose(gt_check, ft_check, atol=1e-4), \
         "Ground truth mismatch — check train_test_split and prediction_length"
     logger.info("Ground truth alignment verified ✓")
 
     ctx_check = results["contexts"]
-    ctx_expected = full_trajectories[:len(ctx_check),
+    ctx_expected = test_trajectories[:len(ctx_check),
                                       train_test_split-L:train_test_split]
     assert np.allclose(ctx_check, ctx_expected, atol=1e-4), \
         "Context mismatch — check train_test_split and context_length"
     logger.info("Context alignment verified ✓")
 
-    # ── Save ──────────────────────────────────────────────────────────────
     out_path = Path(args.out)
     if out_path.suffix != ".npz":
         out_path.mkdir(parents=True, exist_ok=True)
@@ -331,21 +332,22 @@ def main():
 
     np.savez_compressed(
         out_path,
-        samples           = results["samples"],           # (N, H, S)
-        ground_truth      = results["ground_truth"],      # (N, H)
-        contexts          = results["contexts"],           # (N, L)
+        samples = results["samples"],           # (N, H, S)
+        ground_truth = results["ground_truth"],      # (N, H)
+        contexts = results["contexts"],           # (N, L)
         full_trajectories = results["full_trajectories"], # (N, T)
-        ci90_lower        = results["ci90_lower"],
-        ci90_upper        = results["ci90_upper"],
-        ci50_lower        = results["ci50_lower"],
-        ci50_upper        = results["ci50_upper"],
-        time_test         = results["time_test"],
-        time_train        = results["time_train"],
-        time              = results["time"],
-        train_test_split  = results["train_test_split"],
+        ci90_lower = results["ci90_lower"],
+        ci90_upper = results["ci90_upper"],
+        ci50_lower = results["ci50_lower"],
+        ci50_upper = results["ci50_upper"],
+        time_test = results["time_test"],
+        time_train = results["time_train"],
+        time = results["time"],
+        train_test_split = results["train_test_split"],
         prediction_length = results["prediction_length"],
-        context_length    = results["context_length"],
-        item_ids          = results["item_ids"],
+        context_length = results["context_length"],
+        item_ids = results["item_ids"],
+        time_elapsed =  time_elapsed
     )
 
     logger.info(f"Saved: {out_path}")

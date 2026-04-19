@@ -93,10 +93,15 @@ def main():
     model.load_state_dict(torch.load(args.ckpt, map_location=args.device, weights_only=False))
     print(f"Loaded: {args.ckpt}")
 
+
+    time_start = time.time()
+    
     samples, gt = evaluate_csdi(
         model, test_loader, num_of_samples,
         args.device, prediction_length,
     )
+    
+    time_elapsed = time_start - time.time()
 
     data = np.load(args.input)
     positions = data["positions"]
@@ -118,20 +123,21 @@ def main():
 
     np.savez(
         args.out,
-        samples           = samples,
-        ground_truth      = gt,
-        ci90_lower        = ci90_lower,
-        ci90_upper        = ci90_upper,
-        ci50_lower        = ci50_lower,
-        ci50_upper        = ci50_upper,
+        samples = samples,
+        ground_truth = gt,
+        ci90_lower = ci90_lower,
+        ci90_upper = ci90_upper,
+        ci50_lower = ci50_lower,
+        ci50_upper = ci50_upper,
         full_trajectories = positions[:N],
-        time              = time,
-        time_train        = time[:train_test_split],
-        time_test         = time[train_test_split: train_test_split + prediction_length],
-        train_test_split  = train_test_split,
-        prediction_length = prediction_length,
-        num_of_samples    = num_of_samples,
-        context_length    = context_length,
+        time = time,
+        time_train = time[:train_test_split],
+        time_test = time[train_test_split: train_test_split + prediction_length],
+        train_test_split= train_test_split,
+        prediction_length= prediction_length,
+        num_of_samples = num_of_samples,
+        context_length = context_length,
+        time_elapsed = time_elapsed 
     )
     print(f"Saved: {args.out}")
 

@@ -151,12 +151,15 @@ def main():
         torch.load(args.ckpt, map_location=device, weights_only=False))
     print(f"Loaded checkpoint : {args.ckpt}")
 
-
+    #start time tracking
+    time_start = time.time()
     # Forecast
     samples, gt, contexts = forecast_ccdm(
         denoiser, diffusion, test_loader,
         n_samples, device, prediction_length, D,
     )
+    
+    time_elapsed = time_start - time.time()
 
     ci90_lower = np.percentile(samples,  5, axis=1)   # (N, H, D)
     ci90_upper = np.percentile(samples, 95, axis=1)
@@ -185,27 +188,27 @@ def main():
 
     ####fixes shape
     samples=samples.transpose(0,2,1) # (N, H, S, D)
-    #print(samples.shape)
-    #samples shape is (N, prediction_length, samples)
         
     np.savez(
         args.out,
-        samples           = samples,
-        ground_truth      = gt,
-        contexts          = contexts,
-        median            = median,
-        ci90_lower        = ci90_lower,
-        ci90_upper        = ci90_upper,
-        ci50_lower        = ci50_lower,
-        ci50_upper        = ci50_upper,
+        samples = samples,
+        ground_truth = gt,
+        contexts = contexts,
+        median = median,
+        ci90_lower = ci90_lower,
+        ci90_upper = ci90_upper,
+        ci50_lower = ci50_lower,
+        ci50_upper = ci50_upper,
         full_trajectories = positions,
-        time              = time,
-        time_train        = time[:train_test_split],
-        time_test         = time[train_test_split:train_test_split + prediction_length],
-        train_test_split  = train_test_split,
+        time = time,
+        time_train = time[:train_test_split],
+        time_test = time[train_test_split:train_test_split + prediction_length],
+        train_test_split = train_test_split,
         prediction_length = prediction_length,
-        context_length    = context_length,
-        n_samples         = n_samples,
+        context_length = context_length,
+        n_samples = n_samples,
+        time_elapse = time_elapsed
+        
     )
     print(f"Saved: {args.out}")
 
