@@ -71,6 +71,7 @@ def main(config, log_dir, dataset_path,running_tests):
     context_length = config["context_length"]
     prediction_length = config["prediction_length"]
     last_window = context_length + prediction_length
+    T = config["total_time_steps"]
 
     # Create model
     model = create_model(config)
@@ -141,7 +142,7 @@ def main(config, log_dir, dataset_path,running_tests):
     callbacks = []
     if config["use_validation_set"]:
         
-        train_val_splitter = OffsetSplitter(offset=-config["prediction_length"] * num_rolling_evals)
+        train_val_splitter = OffsetSplitter(offset=-int(0.1*T) * num_rolling_evals)
         train_data_post, val_gen = train_val_splitter.split(training_data)
         
         print(f'train_val_splitter: {type(train_val_splitter)}')

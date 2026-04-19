@@ -118,7 +118,7 @@ def main(config, log_dir,dataset_path):
     prediction_length = config["prediction_length"]
 #    train_test_split = config["train_test_split"]
     total_length = context_length + prediction_length
-    train_val_split=config["train_val_split"]
+    T=config["total_time_steps"]
 
     # Create model
     model = create_model(config)
@@ -203,7 +203,7 @@ def main(config, log_dir,dataset_path):
         val_por=0.1
         train_val_splitter = OffsetSplitter(
             #offset=-config["prediction_length"] * num_rolling_evals
-            offset=-int(train_val_split* val_por) * num_rolling_evals
+            offset=-int(T * val_por) * num_rolling_evals
         )
         train_data_post, val_gen = train_val_splitter.split(training_data)
         transformed_data = transformation.apply(train_data_post, is_train=True)
