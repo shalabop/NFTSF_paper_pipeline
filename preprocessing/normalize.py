@@ -28,8 +28,11 @@ def normalize_all(datatype, out, data_path, train_test_split=None, train_val_spl
     print(f'saving raw data to {out_dir_unnorm}')
     
     
-    mean = np.mean(train_val_data)
-    std = np.std(train_val_data)
+    print(f"train_val_split : {train_val_split}" )
+    print(f"train_test_split : {train_test_split}" )
+    
+    mean = np.mean(train_val_data[:,:train_val_split])
+    std = np.std(train_val_data[:,:train_val_split])
     print(f"Mean: {mean}, Std: {std}")
     
     time = np.arange(train_val_data.shape[1]) ##time is the same for train and val, and test
