@@ -23,37 +23,37 @@ def build_configs(cfg, num_feat, device):
     class Configs: pass
     c = Configs()
 
-    c.data_name        = cfg["data"]["data_name"]
-    c.cont_len         = cfg["data"]["context_length"]
-    c.pred_len         = cfg["data"]["prediction_length"]
+    c.data_name = cfg["data"]["data_name"]
+    c.cont_len = cfg["data"]["context_length"]
+    c.pred_len = cfg["data"]["prediction_length"]
     c.use_window_norm  = cfg["data"]["use_window_norm"]
-    c.num_feat         = num_feat
+    c.num_feat = num_feat
 
-    c.n_emb            = cfg["model"]["n_emb"]
-    c.cont_hidden_dim  = cfg["model"]["cont_hidden_dim"]
-    c.pred_hidden_dim  = cfg["model"]["pred_hidden_dim"]
-    c.step_hidden_dim  = cfg["model"]["step_hidden_dim"]
-    c.time_hidden_dim  = cfg["model"]["time_hidden_dim"]
-    c.n_depth          = cfg["model"]["n_depth"]
-    c.n_heads          = cfg["model"]["n_heads"]
-    c.attn_dropout     = cfg["model"]["attn_dropout"]
-    c.mlp_ratio        = cfg["model"]["mlp_ratio"]
-    c.non_attn         = cfg["model"]["non_attn"]
+    c.n_emb = cfg["model"]["n_emb"]
+    c.cont_hidden_dim = cfg["model"]["cont_hidden_dim"]
+    c.pred_hidden_dim = cfg["model"]["pred_hidden_dim"]
+    c.step_hidden_dim = cfg["model"]["step_hidden_dim"]
+    c.time_hidden_dim = cfg["model"]["time_hidden_dim"]
+    c.n_depth = cfg["model"]["n_depth"]
+    c.n_heads = cfg["model"]["n_heads"]
+    c.attn_dropout = cfg["model"]["attn_dropout"]
+    c.mlp_ratio = cfg["model"]["mlp_ratio"]
+    c.non_attn = cfg["model"]["non_attn"]
 
-    c.n_steps          = cfg["diffusion"]["n_steps"]
-    c.beta_start       = cfg["diffusion"]["beta_start"]
-    c.beta_end         = cfg["diffusion"]["beta_end"]
-    c.beta_schedule    = cfg["diffusion"]["beta_schedule"]
+    c.n_steps = cfg["diffusion"]["n_steps"]
+    c.beta_start = cfg["diffusion"]["beta_start"]
+    c.beta_end = cfg["diffusion"]["beta_end"]
+    c.beta_schedule = cfg["diffusion"]["beta_schedule"]
     c.parameterization = cfg["diffusion"]["parameterization"]
-    c.step_dist        = cfg["diffusion"]["step_dist"]
+    c.step_dist = cfg["diffusion"]["step_dist"]
 
-    c.use_contrast     = cfg["contrastive"]["use_contrast"]
+    c.use_contrast = cfg["contrastive"]["use_contrast"]
     c.contrast_weight  = cfg["contrastive"]["contrast_weight"]
-    c.n_negatives      = cfg["contrastive"]["n_negatives"]
-    c.temperature      = cfg["contrastive"]["temperature"]
+    c.n_negatives = cfg["contrastive"]["n_negatives"]
+    c.temperature = cfg["contrastive"]["temperature"]
 
-    c.n_epochs         = cfg["train"]["epochs"]
-    c.init_lr          = cfg["train"]["lr"]
+    c.n_epochs = cfg["train"]["epochs"]
+    c.init_lr = cfg["train"]["lr"]
 
     c.device = device
     return c
@@ -87,24 +87,28 @@ def main():
     device = torch.device(args.device if torch.cuda.is_available() else "cpu")
     print(f"Device: {device}")
 
+    with open(args.config, "r") as f:
+        config = yaml.safe_load(f)
+        
+    context_length = config["data"]["context_length"]
+    prediction_length = config["data"]["prediction_length"]
+    batch_size = config["train"]["batch_size"]
+    val_size = config["train"]["val_size"]
+    test_size = config["train"]["test_size"]
+    stride = config["train"]["stride"]
+
     # Data
-    train_loader, val_loader, test_loader, mean, std = get_dataloader_md(
+    train_loader, val_loader = get_dataloader_md(
+        flag="train",
         npz_path = args.input,
-        context_length = cfg["data"]["context_length"],
-        prediction_length = cfg["data"]["prediction_length"],
-        batch_size = cfg["train"]["batch_size"],
-        stride=cfg["train"]["stride"],
-        val_size = cfg["train"]["val_size"],
-        test_size = cfg["train"]["test_size"],
+        context_length = context_length,
+        prediction_length = prediction_length,
+        batch_size = batch_size,
+        val_size = val_size,
+        test_size = test_size,
+        stride = stride,
     )
 
-    print(f"mean={mean:.4f}  std={std:.4f}  "
-          f"train={len(train_loader)}  "
-          f"val={len(val_loader)}  "
-          f"test={len(test_loader)}")
-
-    np.save(os.path.join(args.out, "mean.npy"), np.array([mean]))
-    np.save(os.path.join(args.out, "std.npy"), np.array([std]))
     np.save(os.path.join(args.out, "context_length.npy"), np.array([cfg["data"]["context_length"]]))
     np.save(os.path.join(args.out, "prediction_length.npy"),np.array([cfg["data"]["prediction_length"]]))
 
@@ -112,18 +116,18 @@ def main():
     D = batch_x.shape[-1]
     print(f"num_feat (D) = {D}")
     configs  = build_configs(cfg, D, device)
-    configs.valid_epoch_interval = cfg["train"].get("valid_epoch_interval", 50)
-    configs.save_epoch_interval  = cfg["train"].get("save_epoch_interval", 100)
+    configs.valid_epoch_interval = cfg["train"]["valid_epoch_interval"]
+    configs.save_epoch_interval  = cfg["train"]["save_epoch_interval"]
 
     from network import Denoiser
     n_params = sum(p.numel() for p in Denoiser(configs).parameters())
     print(f"Parameters: {n_params:,}")
 
-    model = DiffMTS(configs, train_loader, val_loader, test_loader, out_dir=args.out)
+    model = DiffMTS(configs, train_loader, val_loader, None, out_dir=args.out)
 
     model.train(
         is_refine = args.two_stage,
-        model_path = cfg["train"]["model_path"],
+        model_path = args.out, #path to checkp
         refine_epochs  = args.refine_epochs,
         loss_path = cfg["train"]["training_curv"]
     )

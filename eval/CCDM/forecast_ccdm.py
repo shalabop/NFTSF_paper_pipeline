@@ -118,14 +118,15 @@ def main():
     print(f"Device : {device}")
 
     # Data
-    _, _, test_loader, mean, std = get_dataloader_md(
-        npz_path = args.input,
+    test_loader= get_dataloader_md(
+        npz_path = args.input, ##path to data test
         context_length = context_length,
         prediction_length = prediction_length,
         batch_size = batch_size,
         test_size = test_size,
         val_size = val_size,
         stride = stride,
+        flag="test"
     )
 
     # Infer D

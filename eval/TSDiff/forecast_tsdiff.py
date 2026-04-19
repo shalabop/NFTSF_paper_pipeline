@@ -14,7 +14,7 @@ logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-###run forecastg and save as .npz
+import pandas as pd
 import argparse
 import logging
 import yaml
@@ -24,7 +24,7 @@ from pathlib import Path
 from tqdm.auto import tqdm
 import matplotlib.pyplot as plt
 from gluonts.dataset.field_names import FieldName
-from gluonts.dataset.common import MetaData, TrainDatasets, FileDataset
+from gluonts.dataset.common import MetaData, TrainDatasets, FileDataset, ListDataset
 from gluonts.evaluation import make_evaluation_predictions
 
 from uncond_ts_diff.utils import (
@@ -44,6 +44,69 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 guidance_map = {"ddpm": DDPMGuidance, "ddim": DDIMGuidance}
+
+def make_windowed_dataset(
+    full_trajectories: np.ndarray,
+    train_test_split: int,
+    context_length: int,
+    prediction_length: int,
+    freq: str,
+) -> ListDataset:
+    """
+    Build an in-memory GluonTS ListDataset where each series is truncated to
+    exactly [train_test_split - context_length : train_test_split + prediction_length].
+
+    This forces GluonTS test-mode splitter to pick exactly:
+        context  = [train_test_split - context_length : train_test_split]
+        forecast = [train_test_split                  : train_test_split + prediction_length]
+
+    Why this works
+    --------------
+    GluonTS create_splitter in "test" mode uses the LAST
+    (past_length + future_length) steps of each series.
+    By truncating each series to exactly that window, we guarantee
+    the splitter always picks the window we want — regardless of what
+    prediction_length was used when the FileDataset was originally created.
+
+    No files are written; this is purely in-memory.
+
+    Parameters
+    ----------
+    full_trajectories : (N, T)  full test trajectories
+    train_test_split  : int     step index where forecast starts (e.g. 900)
+    context_length    : int     L (e.g. 25)
+    prediction_length : int     H (e.g. 25)
+    freq              : str     GluonTS frequency string (e.g. "H")
+
+    Returns
+    -------
+    ListDataset with N entries, each of length context_length + prediction_length
+    """
+    start_idx = train_test_split - context_length   # e.g. 875 for 25/25
+    end_idx   = train_test_split + prediction_length # e.g. 925 for 25/25
+
+    assert start_idx >= 0, \
+        f"train_test_split ({train_test_split}) < context_length ({context_length})"
+    assert end_idx <= full_trajectories.shape[1], \
+        (f"train_test_split ({train_test_split}) + prediction_length ({prediction_length})"
+         f" = {end_idx} > T ({full_trajectories.shape[1]})")
+
+    entries = [
+        {
+            FieldName.TARGET:  traj[start_idx:end_idx].astype(np.float32),
+            FieldName.START:   pd.Timestamp("2000-01-01"), 
+            FieldName.ITEM_ID: str(i),
+        }
+        for i, traj in enumerate(full_trajectories)
+    ]
+
+    logger.info(
+        f"Built ListDataset: {len(entries)} series "
+        f"of length {context_length + prediction_length}  "
+        f"(steps {start_idx}–{end_idx-1})"
+    )
+    return ListDataset(entries, freq=freq)
+
 
 def evaluate_guidance(
     config, model, test_dataset, transformation, num_samples=100
@@ -187,7 +250,7 @@ def load_model(config: dict) -> TSDiff:
 def forecast(
     config      : dict,
     model       : TSDiff,
-    test_dataset,
+    windowed_dataset,
     transformation,
     time        : np.ndarray,
     train_test_split: int,
@@ -226,7 +289,7 @@ def forecast(
         **config["sampler_params"],
     )
 
-    transformed_testdata = transformation.apply(test_dataset, is_train=False)
+    transformed_testdata = transformation.apply(windowed_dataset, is_train=False)
 
     test_splitter = create_splitter(
         past_length   = config["context_length"] + max(model.lags_seq),
@@ -398,28 +461,53 @@ def main():
         args.out=f"results/uncond_tsfdiff/{config['dataset']}"
         print(args.out)
 
-    # ---- 2. Load data ---------------------------------------------------
     dataset_path = Path(args.dataset_path)
     with open(dataset_path / "metadata.json", "r") as f:
         meta_json = yaml.safe_load(f)
 
+    freq = meta_json["freq"]
+
+    with open(args.config, "r") as f:
+        config = yaml.safe_load(f)
+    if config.get("ckpt") is None:
+        config["ckpt"] = args.checkpoint
+    config["device"] = args.device
+
+    L = config["context_length"]
+    H = config["prediction_length"]
     metadata = MetaData(
-        freq              = meta_json["freq"],
-        prediction_length = meta_json["prediction_length"],
+        freq              = freq,
+        prediction_length = H,  
     )
-    train_ds = FileDataset(dataset_path / "train", freq=metadata.freq)
-    test_ds  = FileDataset(dataset_path / "test",  freq=metadata.freq)
+    test_ds  = FileDataset(dataset_path / "test",  freq=freq)
+    train_ds = FileDataset(dataset_path / "train", freq=freq)
     dataset  = TrainDatasets(metadata=metadata, train=train_ds, test=test_ds)
 
-    # ----- get the full trajectories
-    full_trajectories = np.array([entry["target"] for entry in dataset.test])
+    test_trajectories = np.array([entry["target"] for entry in dataset.test])
+    N, T = test_trajectories.shape
+    logger.info(f"Full trajectories: {test_trajectories.shape}")
 
-    # ------ load time from time.npz
-    time_npz=np.load(dataset_path/"time.npz")
-    time=time_npz["time"]
-    train_test_split=time_npz["train_test_split"]
-    test_time=time_npz["time_test"]
-    train_time=time_npz["time_train"]
+    time_npz = np.load(dataset_path / "time.npz")
+    time = time_npz["time"]
+    train_test_split = int(time_npz["train_test_split"])
+
+    logger.info(f"train_test_split : {train_test_split}")
+    logger.info(f"Context window   : steps {train_test_split-L}–{train_test_split-1}")
+    logger.info(f"Forecast window  : steps {train_test_split}–{train_test_split+H-1}")
+
+    # Verify the requested window fits within the data
+    assert train_test_split - L >= 0, \
+        f"Context window starts at {train_test_split-L} which is before the start of data"
+    assert train_test_split + H <= T, \
+        f"Forecast window ends at {train_test_split+H} which exceeds T={T}"
+
+    windowed_ds = make_windowed_dataset(
+        full_trajectories = test_trajectories,
+        train_test_split  = train_test_split,
+        context_length    = L,
+        prediction_length = H,
+        freq              = freq,
+    )
     
     #TEST4: plot full trajectories and time
     '''plt.figure(figsize=(10,4))
@@ -443,8 +531,6 @@ def main():
     logger.info("Loading model...")
     model = load_model(config)
     
-    #must be ==0       
-    #print(model.lags_seq)
 
     # ---- 4. Setup transformation ----------------------------------------
     transformation = create_transforms(
@@ -460,7 +546,7 @@ def main():
     results = forecast(
         config           = config,
         model            = model,
-        test_dataset     = dataset.test,
+        windowed_ds     = windowed_ds,
         transformation   = transformation,
         time             = time,
         train_test_split = train_test_split,

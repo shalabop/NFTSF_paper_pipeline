@@ -108,24 +108,6 @@ class DiffMTS:
             self.optimizer, milestones=[p1, p2], gamma=0.1
         )
 
-
-    def instance_normalization(self, x, y0):
-        x_mean = x.mean(dim=1, keepdim=True)                                   # (B,1,D)
-        x_std  = torch.sqrt(torch.var(x, dim=1, keepdim=True, unbiased=False)
-                            + 1e-5)                                             # (B,1,D)
-        x_norm  = (x  - x_mean) / x_std
-        y0_norm = (y0 - x_mean) / x_std
-        return x_norm, y0_norm, x_mean, x_std
-
-    def instance_denormalization(self, y0, mean, std):
-        """y0: (B*n_samples, pred_len, D)."""
-        B        = mean.shape[0]
-        n_samples = y0.shape[0] // B
-        std  = torch.repeat_interleave(std,  n_samples, dim=0).repeat(1, self.pred_len, 1)
-        mean = torch.repeat_interleave(mean, n_samples, dim=0).repeat(1, self.pred_len, 1)
-        return y0 * std + mean
-
-
     def step_sampling(self, batch_size):
         if self.step_dist == "uniform":
             k_half0 = torch.randint(0, self.n_steps, (batch_size // 2,))
@@ -261,10 +243,8 @@ class DiffMTS:
         neg_variation_samples = self.negative_sampling(y0, mode="variation")
         neg_scale_samples     = self.negative_sampling(y0, mode="scaling")
 
-        neg_variation_loss = self.cal_contrastive_loss(
-            neg_variation_samples, x, k, noise=None, loss_type=loss_type)
-        neg_scale_loss     = self.cal_contrastive_loss(
-            neg_scale_samples,     x, k, noise=None, loss_type=loss_type)
+        neg_variation_loss = self.cal_contrastive_loss(neg_variation_samples, x, k, noise=None, loss_type=loss_type)
+        neg_scale_loss     = self.cal_contrastive_loss(neg_scale_samples,     x, k, noise=None, loss_type=loss_type)
 
         if loss_type == "regression":
             pos_loss      = denoise_loss.view(B, 1)

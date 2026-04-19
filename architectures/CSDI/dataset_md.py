@@ -5,21 +5,6 @@ from torch.utils.data import DataLoader, Dataset
 class MDTrajectoryDataset(Dataset):
     def __init__(self, positions, context_length, prediction_length,
                  normalization):
-        
-        """
-        positions     : (N, seq_len) — raw un-normalized windows
-        mean          : scalar — global training mean
-        std           : scalar — global training std
-        normalization : "zscore" | "std" | "local" | "none"
-
-        For "local": no global normalization applied here.
-                     Per-sample scaler computed in __getitem__ from context.
-                     Scaler returned in batch as "local_scaler" (B, 1).
-        """
-        assert normalization in ("zscore", "std", "local", "none"), \
-            f"normalization must be 'zscore', 'std', 'local', or 'none', " \
-            f"got '{normalization}'"
-
         self.context_length    = context_length
         self.prediction_length = prediction_length
         self.seq_len           = context_length + prediction_length
@@ -27,17 +12,10 @@ class MDTrajectoryDataset(Dataset):
         N                      = len(positions)
 
         pos = positions.astype(np.float32)
-        '''if normalization == "zscore":
-            pos = (pos - mean) / std
-        elif normalization == "std":
-            pos = pos / std'''
-
         self.positions = pos
 
-        self.observed_mask = np.ones(
-            (N, self.seq_len, 1), dtype=np.float32)
-        self.gt_mask = np.ones(
-            (N, self.seq_len, 1), dtype=np.float32)
+        self.observed_mask = np.ones((N, self.seq_len, 1), dtype=np.float32)
+        self.gt_mask = np.ones((N, self.seq_len, 1), dtype=np.float32)
         self.gt_mask[:, -self.prediction_length:, :] = 0.0
 
     def __len__(self):
@@ -46,14 +24,6 @@ class MDTrajectoryDataset(Dataset):
     def __getitem__(self, index):
         seq = self.positions[index, :self.seq_len][:, None]  # (L, 1)
 
-        '''if self.normalization == "local":
-            ctx    = seq[:self.context_length, 0]          
-            scaler = float(np.abs(ctx).mean())
-            scaler = max(scaler, 1e-8)                     
-            seq    = (seq / scaler).astype(np.float32)
-            local_scaler = np.array([scaler], dtype=np.float32)
-        else:
-            local_scaler = np.array([1.0], dtype=np.float32)  '''
         local_scaler = np.array([1.0], dtype=np.float32)
         return {
             "observed_data" : seq,
@@ -82,15 +52,6 @@ def get_dataloader_md(npz_path, context_length, prediction_length,
 
     print(f"Number of trajectories: {positions.shape[0]}")
     print(f"Number of time steps: {positions.shape[1]}")
-
-
-    '''mean = float(positions[:, :train_end].mean())
-    std  = float(positions[:, :train_end].std())
-
-    print(f"normalization : {normalization}")
-    print(f"mean          : {mean:.4f}  std: {std:.4f}")
-    if normalization == "local":
-        print("  (local: per-sample scaler = mean(|context|), ""stored in batch as 'local_scaler')")'''
 
     if flag == "train":
         train_val_split = int(data["train_val_split"])

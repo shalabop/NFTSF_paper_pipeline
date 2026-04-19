@@ -102,7 +102,7 @@ def make_windowed_dataset(
     entries = [
         {
             FieldName.TARGET:  traj[start_idx:end_idx].astype(np.float32),
-            FieldName.START:   pd.Timestamp("2000-01-01"),  # dummy — not used
+            FieldName.START:   pd.Timestamp("2000-01-01"), 
             FieldName.ITEM_ID: str(i),
         }
         for i, traj in enumerate(full_trajectories)
@@ -138,7 +138,6 @@ def forecast(
 
     transformed_testdata = transformation.apply(windowed_dataset, is_train=False)
 
-    # past_length = context_length + lags (lags=0 since use_lags=False)
     test_splitter = create_splitter(
         past_length   = context_length + max(model.lags_seq),
         future_length = prediction_length,
@@ -259,9 +258,9 @@ def main():
     dataset  = TrainDatasets(metadata=metadata, train=train_ds, test=test_ds)
 
     # Full trajectories — shape (N, T), T=1000
-    full_trajectories = np.array([entry["target"] for entry in dataset.test])
-    N, T = full_trajectories.shape
-    logger.info(f"Full trajectories: {full_trajectories.shape}")
+    test_trajectories = np.array([entry["target"] for entry in dataset.test])
+    N, T = test_trajectories.shape
+    logger.info(f"Full trajectories: {test_trajectories.shape}")
 
     # Time array and train_test_split
     time_npz         = np.load(dataset_path / "time.npz")
@@ -279,7 +278,7 @@ def main():
         f"Forecast window ends at {train_test_split+H} which exceeds T={T}"
 
     windowed_ds = make_windowed_dataset(
-        full_trajectories = full_trajectories,
+        full_trajectories = test_trajectories,
         train_test_split  = train_test_split,
         context_length    = L,
         prediction_length = H,
@@ -296,7 +295,6 @@ def main():
         prediction_length     = H,
     )
 
-    # ── Forecast ──────────────────────────────────────────────────────────
     logger.info("Running forecast...")
     results = forecast(
         config            = config,
@@ -308,7 +306,6 @@ def main():
         full_trajectories = full_trajectories,
     )
 
-    # ── Verify ground truth alignment ─────────────────────────────────────
     logger.info("Verifying ground truth alignment...")
     gt_check = results["ground_truth"]
     ft_check = full_trajectories[:len(gt_check),
