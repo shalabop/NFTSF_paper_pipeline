@@ -71,6 +71,12 @@ def main():
     stride            = config["train"]["stride"]
     val_size         = config["train"]["val_size"]
     
+    
+    data = np.load(args.input)
+    positions = data["positions"]
+    time = data["time"]
+    
+    
     if args.train_test_split is not None:
         train_test_split =args.train_test_split
         print(f'using train_test_split {train_test_split}')
@@ -112,10 +118,6 @@ def main():
     
     time_elapsed = time_start - timelib.time()
 
-    data = np.load(args.input)
-    positions = data["positions"]
-    time = data["time"]
-    
     
     N = len(samples)
 
