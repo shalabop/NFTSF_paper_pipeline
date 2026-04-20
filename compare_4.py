@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
-combined_table.py – Generate table with MAE metrics, CRPS, Q50 and Q90 coverage.
-Best values: MAE metrics and CRPS – lowest; Q50 – closest to 0.5; Q90 – closest to 0.9.
+generate_tables_only.py – Same CLI as compare.py, outputs tables with best values shaded.
 """
 
 import argparse
@@ -11,6 +10,7 @@ import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from matplotlib.colors import to_rgba
 
 # ---------------------------------------------------------------------------
 # Model registry
@@ -28,13 +28,15 @@ MODEL_REGISTRY: dict[str, dict] = {
 }
 
 # ---------------------------------------------------------------------------
-# Argument parsing
+# Argument parsing (identical to compare.py)
 # ---------------------------------------------------------------------------
 def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="Generate combined metrics table")
+    p = argparse.ArgumentParser(description="Generate summary tables with best values highlighted")
     p.add_argument("--results", nargs="+", required=True,
                    metavar="LANDSCAPE:MODEL:NPZ_PATH")
     p.add_argument("--output_dir", default="./comparison_figures")
+    p.add_argument("--n_traj_show", type=int, default=3)   # ignored
+    p.add_argument("--seed", type=int, default=42)         # ignored
     p.add_argument("--context_length", "-cl", type=int, default=0)
     p.add_argument("--data_npz", nargs="+", default=None,
                    metavar="LANDSCAPE:PATH")
@@ -102,46 +104,38 @@ def load_npz_result(npz_path: str, context_length: int) -> dict:
     }
 
 # ---------------------------------------------------------------------------
-# Metrics
+# Metric functions
 # ---------------------------------------------------------------------------
-def _mae_median(gt_future: np.ndarray, samples: np.ndarray) -> float:
+def _mae_median(gt_future: np.ndarray, samples: np.ndarray) -> np.ndarray:
     median = np.median(samples, axis=1)
-    return float(np.abs(gt_future - median).mean())
+    return np.abs(gt_future - median).mean(axis=0)
 
-def _mae_mean(gt_future: np.ndarray, samples: np.ndarray) -> float:
+def _mae_mean(gt_future: np.ndarray, samples: np.ndarray) -> np.ndarray:
     mean = np.mean(samples, axis=1)
-    return float(np.abs(gt_future - mean).mean())
+    return np.abs(gt_future - mean).mean(axis=0)
 
-def _mae_sample(gt_future: np.ndarray, samples: np.ndarray) -> float:
-    return float(np.abs(samples - gt_future[:, np.newaxis, :]).mean())
+def _mae_sample(gt_future: np.ndarray, samples: np.ndarray) -> np.ndarray:
+    return np.abs(samples - gt_future[:, np.newaxis, :]).mean(axis=(0, 1))
 
-def _isce(gt_future: np.ndarray, samples: np.ndarray) -> float:
-    """
-    One‑sided lower‑tail calibration error: for each nominal coverage pct in 10,20,...,90,
-    compute the pct‑th quantile of the samples and the fraction of ground truth below that quantile.
-    Return the mean squared error between empirical and nominal coverage, averaged over steps.
-    """
+def _crps_coverage(gt_future: np.ndarray, samples: np.ndarray) -> np.ndarray:
     N, H = gt_future.shape
-    coverage_levels = np.arange(10, 100, 10)   # 10,20,...,90
+    coverage_intervals = np.arange(10, 100, 10)
     crps_t = np.zeros(H)
     for t in range(H):
         gt_t = gt_future[:, t]
         samp_t = samples[:, :, t]
         mse_vals = []
-        for pct in coverage_levels:
-            q = pct / 100.0                      # quantile level
-            q_val = np.quantile(samp_t, q, axis=1)   # (N,)
-            empirical = np.mean(gt_t < q_val)        # fraction below q-th quantile
-            expected = q                            # nominal coverage = q
+        for pct in coverage_intervals:
+            lo_pct = (100 - pct) / 2.0
+            hi_pct = 100 - lo_pct
+            lo = np.percentile(samp_t, lo_pct, axis=1)
+            hi = np.percentile(samp_t, hi_pct, axis=1)
+            covered = (gt_t >= lo) & (gt_t <= hi)
+            empirical = np.mean(covered)
+            expected = pct / 100.0
             mse_vals.append((empirical - expected) ** 2)
         crps_t[t] = np.mean(mse_vals)
-    return float(np.mean(crps_t))
-
-def _quantile_coverage(gt_future: np.ndarray, samples: np.ndarray, q: float) -> float:
-    """Fraction of ground truth values below the q‑quantile of the samples."""
-    q_quantile = np.quantile(samples, q, axis=1)
-    below = (gt_future < q_quantile)
-    return float(np.mean(below))
+    return crps_t
 
 def compute_metrics(ground_truths: np.ndarray, samples: np.ndarray, n_past: int) -> dict:
     gt_future = ground_truths[:, n_past:]
@@ -149,54 +143,17 @@ def compute_metrics(ground_truths: np.ndarray, samples: np.ndarray, n_past: int)
         "mae_median": _mae_median(gt_future, samples),
         "mae_mean":   _mae_mean(gt_future, samples),
         "mae_sample": _mae_sample(gt_future, samples),
-        "crps":       _isce(gt_future, samples),
-        "q50_cov":    _quantile_coverage(gt_future, samples, 0.5),
-        "q90_cov":    _quantile_coverage(gt_future, samples, 0.9),
+        "crps":       _crps_coverage(gt_future, samples),
     }
 
 # ---------------------------------------------------------------------------
-# Table generation
+# Table generation with best value shading
 # ---------------------------------------------------------------------------
-def _land_display(landscape: str) -> str:
-    return landscape.replace("_", " ").title()
-
-def save_table(rows, col_labels, title, output_path, best_funcs):
-    fig, ax = plt.subplots(figsize=(10, 2 + len(rows)))
-    ax.axis("off")
-    table = ax.table(cellText=rows, colLabels=col_labels, loc="center", cellLoc="center")
-    table.auto_set_font_size(False)
-    table.set_fontsize(10)
-    table.scale(1.2, 1.8)
-
-    best_indices = {}
-    num_cols = len(rows[0]) - 1
-    for col in range(num_cols):
-        func = best_funcs[col]
-        col_vals = [float(row[col+1]) for row in rows]
-        best_idx = func(col_vals)
-        best_indices[col] = best_idx
-
-    for (r, c), cell in table.get_celld().items():
-        if r == 0:
-            cell.set_facecolor("#D0D8E8")
-            cell.set_text_props(weight="bold")
-        else:
-            cell.set_facecolor("#F7F9FC")
-            if c >= 1 and (c-1) in best_indices and best_indices[c-1] == r-1:
-                cell.set_facecolor("#90EE90")
-                cell.set_text_props(weight="bold")
-
-    ax.set_title(title, fontsize=13, pad=14)
-    fig.savefig(output_path, dpi=150, bbox_inches="tight")
-    plt.close(fig)
-    print(f"Saved: {output_path}")
-
 def generate_tables(landscapes, model_names, all_metrics, output_dir):
-    # CSV
-    csv_path = output_dir / "table_combined.csv"
-    headers = ["landscape", "model", "mae_median", "mae_mean", "mae_sample", "crps", "q50_cov", "q90_cov"]
+    # CSV (no shading, just raw values)
+    csv_path = output_dir / "table_all.csv"
     with open(csv_path, "w") as f:
-        f.write(",".join(headers) + "\n")
+        f.write("landscape,model,mae_median,mae_mean,mae_sample,crps\n")
         for land in landscapes:
             for model_name in model_names:
                 if model_name not in all_metrics[land]:
@@ -204,51 +161,82 @@ def generate_tables(landscapes, model_names, all_metrics, output_dir):
                 mets = all_metrics[land][model_name]
                 label = MODEL_REGISTRY.get(model_name, {"label": model_name})["label"]
                 row = [
-                    land, label,
-                    f"{mets['mae_median']:.4f}",
-                    f"{mets['mae_mean']:.4f}",
-                    f"{mets['mae_sample']:.4f}",
-                    f"{mets['crps']:.4f}",
-                    f"{mets['q50_cov']:.4f}",
-                    f"{mets['q90_cov']:.4f}",
+                    land,
+                    label,
+                    f"{mets['mae_median'].mean():.4f}",
+                    f"{mets['mae_mean'].mean():.4f}",
+                    f"{mets['mae_sample'].mean():.4f}",
+                    f"{mets['crps'].mean():.4f}",
                 ]
                 f.write(",".join(row) + "\n")
     print(f"CSV saved: {csv_path}")
 
-    # PNG table per landscape
+    # PNG tables per landscape with best values highlighted
     for land in landscapes:
-        rows = []
+        # Collect rows and numeric values
+        rows = []       # list of [label, mae_median, mae_mean, mae_sample, crps] as strings
+        values = []     # list of [mae_median, mae_mean, mae_sample, crps] as floats
+        model_labels = []
         for model_name in model_names:
             if model_name not in all_metrics[land]:
                 continue
             mets = all_metrics[land][model_name]
             label = MODEL_REGISTRY.get(model_name, {"label": model_name})["label"]
-            rows.append([
-                label,
-                f"{mets['mae_median']:.4f}",
-                f"{mets['mae_mean']:.4f}",
-                f"{mets['mae_sample']:.4f}",
-                f"{mets['crps']:.4f}",
-                f"{mets['q50_cov']:.4f}",
-                f"{mets['q90_cov']:.4f}",
-            ])
-        if rows:
-            # best functions:
-            # columns: mae_median, mae_mean, mae_sample, crps, q50_cov, q90_cov
-            def best_lower(vals):
-                return int(np.argmin(vals))
-            def best_q50(vals):
-                return int(np.argmin(np.abs(np.array(vals) - 0.5)))
-            def best_q90(vals):
-                return int(np.argmin(np.abs(np.array(vals) - 0.9)))
-            best_funcs = [best_lower, best_lower, best_lower, best_lower, best_q50, best_q90]
-            save_table(
-                rows,
-                ["Model", "MAE (med)", "MAE (mean)", "MAE (sample)", "CRPS", "Q50 cov", "Q90 cov"],
-                f"{_land_display(land)} — Metrics Summary",
-                output_dir / f"table_combined_{land}.png",
-                best_funcs
-            )
+            model_labels.append(label)
+            vals = [
+                mets["mae_median"].mean(),
+                mets["mae_mean"].mean(),
+                mets["mae_sample"].mean(),
+                mets["crps"].mean(),
+            ]
+            values.append(vals)
+            rows.append([label] + [f"{v:.4f}" for v in vals])
+
+        if not rows:
+            continue
+
+        # Determine best indices per column (lower is better for all metrics)
+        best_indices = {}
+        num_cols = len(values[0])  # 4 metrics
+        for col in range(num_cols):
+            col_vals = [v[col] for v in values]
+            best_idx = int(np.argmin(col_vals))
+            best_indices[col] = best_idx
+
+        # Create table with highlighting
+        fig, ax = plt.subplots(figsize=(8, 2 + len(rows)))
+        ax.axis("off")
+
+        col_labels = ["Model", "MAE (median)", "MAE (mean)", "MAE (sample)", "CRPS"]
+        table = ax.table(cellText=rows, colLabels=col_labels, loc="center", cellLoc="center")
+
+        table.auto_set_font_size(False)
+        table.set_fontsize(10)
+        table.scale(1.2, 1.8)
+
+        # Apply shading: header row (row 0) already has default color; data rows start at row 1
+        for (r, c), cell in table.get_celld().items():
+            if r == 0:   # header row
+                cell.set_facecolor("#D0D8E8")
+                cell.set_text_props(weight="bold")
+            else:
+                cell.set_facecolor("#F7F9FC")
+                # c=0 is the model name column; metrics start at c=1
+                if c >= 1:
+                    metric_col = c - 1
+                    if metric_col in best_indices and best_indices[metric_col] == r - 1:
+                        cell.set_facecolor("#90EE90")   # light green
+                        cell.set_text_props(weight="bold")
+
+        ax.set_title(f"{_land_display(land)} — Metrics Summary (mean over forecast steps)", fontsize=13, pad=14)
+        png_path = output_dir / f"table_{land}.png"
+        fig.savefig(png_path, dpi=150, bbox_inches="tight")
+        plt.close(fig)
+        print(f"Table PNG saved: {png_path}")
+
+def _land_display(landscape: str) -> str:
+    """Simple display name for landscape."""
+    return landscape.replace("_", " ").title()
 
 # ---------------------------------------------------------------------------
 # Main
@@ -285,7 +273,7 @@ def main() -> None:
             all_data[land][model] = data
 
     print("\n=== Computing metrics (full testset) ===")
-    all_metrics: dict[str, dict[str, dict[str, float]]] = {}
+    all_metrics: dict[str, dict[str, dict[str, np.ndarray]]] = {}
     for land in landscapes:
         all_metrics[land] = {}
         for model, data in all_data[land].items():
@@ -293,9 +281,8 @@ def main() -> None:
             all_metrics[land][model] = mets
             label = MODEL_REGISTRY.get(model, {"label": model})["label"]
             print(f"  {label:15s} / {land:15s} (N={data['fullset_N']}) — "
-                  f"MAE_med={mets['mae_median']:.4f}  MAE_mean={mets['mae_mean']:.4f}  "
-                  f"MAE_sample={mets['mae_sample']:.4f}  CRPS={mets['crps']:.4f}  "
-                  f"Q50_cov={mets['q50_cov']:.4f}  Q90_cov={mets['q90_cov']:.4f}")
+                  f"MAE_med={mets['mae_median'].mean():.4f}  MAE_mean={mets['mae_mean'].mean():.4f}  "
+                  f"MAE_sample={mets['mae_sample'].mean():.4f}  CRPS={mets['crps'].mean():.4f}")
 
     print("\n=== Generating tables ===")
     model_order = list(next(iter(all_metrics.values())).keys())
