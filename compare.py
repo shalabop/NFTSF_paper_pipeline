@@ -160,7 +160,7 @@ def _mae_per_step(gt_future: np.ndarray, samples: np.ndarray) -> np.ndarray:
 def _crps_central(gt_future: np.ndarray, samples: np.ndarray) -> np.ndarray:
     """Coverage‑based CRPS for central intervals (10%–90%)."""
     N, H = gt_future.shape
-    coverage_intervals = np.arange(0, 100, 10)   # exclude 0 and 100
+    coverage_intervals = np.arange(10, 100, 10)   # exclude 0 and 100
     crps_t = np.zeros(H)
     for t in range(H):
         gt_t = gt_future[:, t]                     # (N,)
@@ -194,7 +194,7 @@ def _central_coverage(gt_future: np.ndarray, samples: np.ndarray, pct: int) -> n
 def _isce_central(gt_future: np.ndarray, samples: np.ndarray) -> float:
     """Integrated squared calibration error for central intervals (10%–90%)."""
     H = gt_future.shape[1]
-    pcts = np.arange(0, 100, 10)
+    pcts = np.arange(10, 100, 10)
     isce_t = np.zeros(H)
     for t in range(H):
         gt_t = gt_future[:, t]
@@ -218,23 +218,20 @@ def _lower_coverage(gt_future: np.ndarray, samples: np.ndarray, q: float) -> np.
         return np.zeros(gt_future.shape[1])
     if q == 1.0:
         return np.ones(gt_future.shape[1])
-    #q_quantile = np.quantile(samples, q, axis=2, method='lower')   # (N, H)
     q_quantile = np.quantile(samples, q, axis=2)
-    #below = (gt_future < q_quantile)
     below = (gt_future <= q_quantile)
     return np.mean(below, axis=0)
 
 def _isce_lower(gt_future: np.ndarray, samples: np.ndarray) -> float:
     """Integrated squared calibration error for lower quantiles (0.1–0.9)."""
     H = gt_future.shape[1]
-    qs = np.arange(0.0, 1.0, 0.1)
+    qs = np.arange(0.1, 1.0, 0.1)
     isce_t = np.zeros(H)
     for t in range(H):
         gt_t = gt_future[:, t]
         samp_t = samples[:, t, :]            
         err = 0.0
         for q in qs:
-            #q_val = np.quantile(samp_t, q, axis=1, method='lower')
             q_val = np.quantile(samp_t, q, axis=1)
             empirical = np.mean(gt_t < q_val)
             err += (empirical - q) ** 2
@@ -251,11 +248,11 @@ def compute_metrics(ground_truths: np.ndarray, samples: np.ndarray, n_past: int)
         "isce_central": _isce_central(gt_future, samples),
         "isce_lower":   _isce_lower(gt_future, samples),
     }
-    # Central coverages for pct = 0,10,20,...,100
-    for pct in range(0, 101, 10):
+    # Central coverages for pct = 10,20,...,90 (exclude 0 and 100)
+    for pct in range(10, 100, 10):
         metrics[f"ci{pct}"] = _central_coverage(gt_future, samples, pct)
-    # Lower quantile coverages for q = 0.0,0.1,...,1.0
-    for q in np.arange(0.0, 1.01, 0.1):
+    # Lower quantile coverages for q = 0.1,...,0.9 (exclude 0.0 and 1.0)
+    for q in np.arange(0.1, 1.0, 0.1):
         metrics[f"q{int(q*100)}"] = _lower_coverage(gt_future, samples, q)
     return metrics
 
@@ -620,10 +617,10 @@ def plot_error_metrics_grid(
 # Figure D: Two tables (central intervals + lower quantiles) in one PNG
 # ---------------------------------------------------------------------------
 def plot_two_tables(landscapes, model_names, all_metrics, output_dir):
-    """Generate side-by-side tables for central intervals (CI0-CI100 + ISCE_central)
-       and lower quantiles (Q0-Q100 + ISCE_lower)."""
+    """Generate side-by-side tables for central intervals (CI10-CI90 + ISCE_central)
+       and lower quantiles (Q10-Q90 + ISCE_lower). Excludes 0% and 100%."""
     for land in landscapes:
-        # Build central table rows: Model, ci0, ci10, ..., ci100, ISCE_central
+        # Build central table rows: Model, ci10, ci20, ..., ci90, ISCE_central
         central_rows = []
         for mn in model_names:
             if mn not in all_metrics[land]:
@@ -631,12 +628,12 @@ def plot_two_tables(landscapes, model_names, all_metrics, output_dir):
             mets = all_metrics[land][mn]
             label = MODEL_REGISTRY.get(mn, {"label": mn})["label"]
             row = [label]
-            for pct in range(0, 101, 10):
+            for pct in range(10, 100, 10):
                 row.append(f"{mets[f'ci{pct}'].mean():.4f}")
             row.append(f"{mets['isce_central']:.4f}")
             central_rows.append(row)
 
-        # Build lower table rows: Model, q0, q10, ..., q100, ISCE_lower
+        # Build lower table rows: Model, q10, q20, ..., q90, ISCE_lower
         lower_rows = []
         for mn in model_names:
             if mn not in all_metrics[land]:
@@ -644,7 +641,7 @@ def plot_two_tables(landscapes, model_names, all_metrics, output_dir):
             mets = all_metrics[land][mn]
             label = MODEL_REGISTRY.get(mn, {"label": mn})["label"]
             row = [label]
-            for q in np.arange(0.0, 1.01, 0.1):
+            for q in np.arange(0.1, 1.0, 0.1):
                 row.append(f"{mets[f'q{int(q*100)}'].mean():.4f}")
             row.append(f"{mets['isce_lower']:.4f}")
             lower_rows.append(row)
@@ -654,38 +651,38 @@ def plot_two_tables(landscapes, model_names, all_metrics, output_dir):
 
         # Determine best indices for central table
         best_central = {}
-        # Coverage columns (first 11 columns: 0% to 100%)
-        for col_idx, pct in enumerate(range(0, 101, 10)):
+        # Coverage columns (first 9 columns: 10% to 90%)
+        for col_idx, pct in enumerate(range(10, 100, 10)):
             nominal = pct / 100.0
             col_vals = [float(row[col_idx+1]) for row in central_rows]
             best_central[col_idx] = int(np.argmin(np.abs(np.array(col_vals) - nominal)))
         # ISCE column (last): lower is better
-        isce_col_idx = len(range(0, 101, 10))
+        isce_col_idx = len(range(10, 100, 10))
         col_vals = [float(row[isce_col_idx+1]) for row in central_rows]
         best_central[isce_col_idx] = int(np.argmin(col_vals))
 
         # Best indices for lower table
         best_lower = {}
-        for col_idx, q in enumerate(np.arange(0.0, 1.01, 0.1)):
+        for col_idx, q in enumerate(np.arange(0.1, 1.0, 0.1)):
             nominal = q
             col_vals = [float(row[col_idx+1]) for row in lower_rows]
             best_lower[col_idx] = int(np.argmin(np.abs(np.array(col_vals) - nominal)))
-        isce_col_idx2 = len(np.arange(0.0, 1.01, 0.1))
+        isce_col_idx2 = len(np.arange(0.1, 1.0, 0.1))
         col_vals = [float(row[isce_col_idx2+1]) for row in lower_rows]
         best_lower[isce_col_idx2] = int(np.argmin(col_vals))
 
         # Create figure with two subplots side by side
-        fig, (ax_left, ax_right) = plt.subplots(1, 2, figsize=(24, 2 + len(central_rows)))  # wider to fit many columns
+        fig, (ax_left, ax_right) = plt.subplots(1, 2, figsize=(20, 2 + len(central_rows)))
         ax_left.axis("off")
         ax_right.axis("off")
 
         # Left table: central intervals
-        col_labels_central = ["Model"] + [f"CI{pct}" for pct in range(0, 101, 10)] + ["ISCE_central"]
+        col_labels_central = ["Model"] + [f"CI{pct}" for pct in range(10, 100, 10)] + ["ISCE_central"]
         tbl_left = ax_left.table(cellText=central_rows, colLabels=col_labels_central,
                                  loc="center", cellLoc="center")
         tbl_left.auto_set_font_size(False)
-        tbl_left.set_fontsize(8)
-        tbl_left.scale(1.1, 1.6)
+        tbl_left.set_fontsize(9)
+        tbl_left.scale(1.2, 1.8)
         for (r, c), cell in tbl_left.get_celld().items():
             if r == 0:
                 cell.set_facecolor("#D0D8E8")
@@ -698,12 +695,12 @@ def plot_two_tables(landscapes, model_names, all_metrics, output_dir):
         ax_left.set_title(f"{_land_display(land)} — Central Intervals (symmetric)", fontsize=12, pad=10)
 
         # Right table: lower quantiles
-        col_labels_lower = ["Model"] + [f"Q{int(q*100)}" for q in np.arange(0.0, 1.01, 0.1)] + ["ISCE_lower"]
+        col_labels_lower = ["Model"] + [f"Q{int(q*100)}" for q in np.arange(0.1, 1.0, 0.1)] + ["ISCE_lower"]
         tbl_right = ax_right.table(cellText=lower_rows, colLabels=col_labels_lower,
                                    loc="center", cellLoc="center")
         tbl_right.auto_set_font_size(False)
-        tbl_right.set_fontsize(8)
-        tbl_right.scale(1.1, 1.6)
+        tbl_right.set_fontsize(9)
+        tbl_right.scale(1.2, 1.8)
         for (r, c), cell in tbl_right.get_celld().items():
             if r == 0:
                 cell.set_facecolor("#D0D8E8")
@@ -721,10 +718,10 @@ def plot_two_tables(landscapes, model_names, all_metrics, output_dir):
         plt.close(fig)
         print(f"[D] Saved: {out_png}")
 
-    # Also save a CSV with all metrics (including MAE, CRPS, ISCEs, coverages)
+    # Also save a CSV with all metrics (excluding 0% and 100% as well)
     all_metric_keys = ["mae", "crps", "isce_central", "isce_lower"] + \
-                      [f"ci{p}" for p in range(0, 101, 10)] + \
-                      [f"q{int(q*100)}" for q in np.arange(0.0, 1.01, 0.1)]
+                      [f"ci{p}" for p in range(10, 100, 10)] + \
+                      [f"q{int(q*100)}" for q in np.arange(0.1, 1.0, 0.1)]
     csv_path = output_dir / "metrics_all.csv"
     with open(csv_path, "w") as f:
         headers = ["landscape", "model"] + all_metric_keys
