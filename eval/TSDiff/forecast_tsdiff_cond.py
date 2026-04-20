@@ -7,6 +7,7 @@ import datetime
 from pathlib import Path
 from tqdm.auto import tqdm
 import matplotlib.pyplot as plt
+import time as timelib
 
 from gluonts.dataset.field_names import FieldName
 from gluonts.dataset.common import MetaData, TrainDatasets, FileDataset, ListDataset
@@ -222,6 +223,7 @@ def main():
     parser.add_argument("--out", "-o", default="results/cond_tsfdiff")
     parser.add_argument("--device",
                         default="cuda" if torch.cuda.is_available() else "cpu")
+    parser.add_argument("--train_test_split" , "-tts", type=int,default=None)
     args = parser.parse_args()
 
     with open(args.config, "r") as f:
@@ -263,8 +265,13 @@ def main():
     # Time array and train_test_split
     time_npz         = np.load(dataset_path / "time.npz")
     time             = time_npz["time"]
-    train_test_split = int(time_npz["train_test_split"])
-
+    
+    if args.train_test_split is not None:
+        train_test_split = int(args.train_test_split)    
+        print(f'using custom train test split {train_test_split}')
+    else:
+        train_test_split = int(time_npz["train_test_split"])
+    
     logger.info(f"train_test_split : {train_test_split}")
     logger.info(f"Context window   : steps {train_test_split-L}–{train_test_split-1}")
     logger.info(f"Forecast window  : steps {train_test_split}–{train_test_split+H-1}")
@@ -295,7 +302,7 @@ def main():
 
     logger.info("Running forecast...")
     
-    time_start = time.time()
+    time_start = timelib.time()
     results = forecast(
         config= config,
         model = model,
@@ -306,7 +313,7 @@ def main():
         full_trajectories = test_trajectories,
     )
     
-    time_elapsed = time_start - time.time()
+    time_elapsed = time_start - timelib.time()
 
     logger.info("Verifying ground truth alignment...")
     gt_check = results["ground_truth"]

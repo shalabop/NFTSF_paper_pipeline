@@ -6,7 +6,7 @@ import argparse
 import numpy as np
 import torch
 from tqdm import tqdm
-
+import time as timelib 
 
 ROOT = os.path.dirname(os.path.abspath(__file__))                     # train/CSDI
 PROJECT_ROOT = os.path.abspath(os.path.join(ROOT, "..", ".."))        # project root
@@ -119,7 +119,7 @@ def run_forecast(model, positions, context_length, prediction_length, n_samples,
     
     test_size = min(test_size, positions.shape[0]) 
     positions = positions[:test_size]
-    ...
+    
     # Limit to test_size trajectories
     positions = positions[:test_size]
     N = positions.shape[0]
@@ -186,7 +186,7 @@ def main():
     )
 
     #start time measurment
-    time_start = time.time()
+    time_start = timelib.time()
     
     samples, ground_truth, contexts = run_forecast(
         model, positions,
@@ -198,7 +198,7 @@ def main():
         train_test_split=train_test_split,
     )
     
-    time_elapsed = time_start - time.time()
+    time_elapsed = time_start - timelib.time()
     
     ci90_lower = np.percentile(samples, 5,  axis=2)   # (N, H)
     ci90_upper = np.percentile(samples, 95, axis=2)

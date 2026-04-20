@@ -6,6 +6,7 @@ import yaml
 import numpy as np
 import torch
 from tqdm import tqdm
+import time as timelib
 
 ROOT = os.path.dirname(os.path.abspath(__file__))                     # train/CSDI
 PROJECT_ROOT = os.path.abspath(os.path.join(ROOT, "..", ".."))        # project root
@@ -55,6 +56,7 @@ def main():
     parser.add_argument("--ckpt",   "-k", required=True)
     parser.add_argument("--out",    "-o", required=True)
     parser.add_argument("--device", "-d", default="cuda:0")
+    parser.add_argument("--train_test_split", "-tts",type=int, default=None)
     args = parser.parse_args()
 
     with open(args.config, "r") as f:
@@ -68,6 +70,12 @@ def main():
     test_size         = config["train"]["test_size"]
     stride            = config["train"]["stride"]
     val_size         = config["train"]["val_size"]
+    
+    if args.train_test_split is not None:
+        train_test_split =args.train_test_split
+        print(f'using train_test_split {train_test_split}')
+    else:
+        train_test_split = int(data["train_test_split"])
 
     print(f"prediction_length : {prediction_length}")
     print(f"context_length    : {context_length}")
@@ -83,7 +91,8 @@ def main():
         batch_size        = batch_size,
         test_size         = test_size,
         stride            = stride,
-        val_size=val_size
+        val_size=val_size,
+        train_test_split = train_test_split
     )
 
     batch = next(iter(test_loader))
@@ -94,19 +103,20 @@ def main():
     print(f"Loaded: {args.ckpt}")
 
 
-    time_start = time.time()
+    time_start = timelib.time()
     
     samples, gt = evaluate_csdi(
         model, test_loader, num_of_samples,
         args.device, prediction_length,
     )
     
-    time_elapsed = time_start - time.time()
+    time_elapsed = time_start - timelib.time()
 
     data = np.load(args.input)
     positions = data["positions"]
     time = data["time"]
-    train_test_split = int(data["train_test_split"])
+    
+    
     N = len(samples)
 
     ci90_lower = np.percentile(samples,  5, axis=2)
