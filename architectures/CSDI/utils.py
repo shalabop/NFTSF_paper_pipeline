@@ -86,6 +86,8 @@ def train(
                 ##saving loss    
                 last_val_loss = avg_valid
                 val_loss.append(avg_valid)
+                print(f"\n best loss updated to {avg_loss_valid:.6f} at epoch {epoch_no}")
+                torch.save(model.state_dict(), output_path)
             else:
                 val_loss.append(last_val_loss if last_val_loss is not None else np.nan)
         
@@ -115,8 +117,8 @@ def train(
     plt.savefig(f"{config['training_curv']}/loss_curves.png", dpi=150)
 
 
-    if foldername != "":
-        torch.save(model.state_dict(), output_path)
+    '''if foldername != "":
+        torch.save(model.state_dict(), output_path)'''
 
 
 def quantile_loss(target, forecast, q: float, eval_points) -> float:

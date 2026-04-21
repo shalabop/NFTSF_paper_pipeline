@@ -65,7 +65,7 @@ def get_dataloader_md(npz_path, context_length, prediction_length,
         
         print(positions[:val_size, val_start:].shape[0])
         print(positions[:val_size, val_start:].shape[1])
-        val_dataset = MDTrajectoryDataset(positions[:val_size, val_start:],context_length, prediction_length, normalization=normalization,
+        val_dataset = MDTrajectoryDataset(positions[:val_size, val_start:],context_length, prediction_length,
         )
         
         train_loader = DataLoader(train_dataset, batch_size=batch_size,shuffle=True,  num_workers=1)
