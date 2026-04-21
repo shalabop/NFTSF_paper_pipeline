@@ -1,22 +1,22 @@
 #!/usr/bin/env bash
 #SBATCH --job-name=ApsiCSDI
-#SBATCH --time=1-00:00:00
+#SBATCH --time=04:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
-#SBATCH --partition=general
-#SBATCH --qos=grp_spresse
+#SBATCH --partition=htc
+#SBATCH --qos=public
 #SBATCH --gres=gpu:1
 #SBATCH --mem=16G
-#SBATCH --output=logs/csdi/alanine_psi.%j.out
-#SBATCH --error=logs/csdi/alanine_psi.%j.err
+#SBATCH --output=logs/csdi/alanine_psi_25_25.%j.out
+#SBATCH --error=logs/csdi/alanine_psi_25_25.%j.err
 
 mkdir -p results/csdi/
 mkdir -p results/csdi/alanine_psi_25_25
 #mkdir -p logs/csdi/alanine_psi
-mkdir -p checkpoints/csdi/
-mkdir -p checkpoints/csdi/alanine_psi
+mkdir -p checkpoints_25_25/csdi/
+mkdir -p checkpoints_25_25/csdi/alanine_psi
 
 source venv310/bin/activate
 module purge
@@ -42,12 +42,4 @@ python train/CSDI/train_csdi.py \
     --config configs/csdi_train/alanine_psi_25_25.yaml \
     --input  DATA/alanine_psi_train.npz \
     --out    checkpoints_25_25/csdi/alanine_psi \
-    --device cuda:0
-
-echo "=== Forecasting CSDI: alanine_psi ==="
-python eval/CSDI/forecast_csdi.py \
-    --config configs/csdi_train/alanine_psi_25_25.yaml \
-    --input  DATA/alanine_psi_test.npz \
-    --ckpt   checkpoints_25_25/csdi/alanine_psi/model.pth \
-    --out    results/csdi/alanine_psi_25_25.npz \
     --device cuda:0

@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 #SBATCH --job-name=DWCSDI25_25
-#SBATCH --time=1-00:00:00
+#SBATCH --time=20:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
-#SBATCH --partition=public
-#SBATCH --qos=public
+#SBATCH --partition=general
+#SBATCH --qos=general
 #SBATCH --gres=gpu:1
 #SBATCH --mem=16G
 #SBATCH --output=logs/csdi/double_well_25_25.%j.out
@@ -16,7 +16,8 @@ mkdir -p results/csdi/double_well
 #mkdir -p logs/csdi/double_well
 mkdir -p checkpoints_25_25/csdi/double_well
 
-source venv310/bin/activate
+conda activate venv310
+
 module purge
 module load cuda-12.8.1-gcc-12.1.0
 

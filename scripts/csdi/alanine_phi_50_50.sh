@@ -1,22 +1,22 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=ApsiCSDI
-#SBATCH --time=2-00:00:00
+#SBATCH --job-name=AphiCSDI
+#SBATCH --time=04:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
-#SBATCH --partition=public
+#SBATCH --partition=htc
 #SBATCH --qos=public
 #SBATCH --gres=gpu:1
-#SBATCH --mem=32G
-#SBATCH --output=logs/csdi/alanine_psi.%j.out
-#SBATCH --error=logs/csdi/alanine_psi.%j.err
+#SBATCH --mem=16G
+#SBATCH --output=logs/csdi/alanine_phi_50_50.%j.out
+#SBATCH --error=logs/csdi/alanine_phi_50_50.%j.err
 
-mkdir -p results/csdi/
-mkdir -p results/csdi/alanine_psi
-#mkdir -p logs/csdi/alanine_psi
-mkdir -p checkpoints/csdi/
-mkdir -p checkpoints/csdi/alanine_psi
+mkdir -p results/csdi
+mkdir -p results/csdi/alanine_phi_50_50
+#mkdir -p logs/csdi/alanine_phi
+mkdir -p checkpoints_50_50/csdi/
+mkdir -p checkpoints_50_50/csdi/alanine_phi
 
 source venv310/bin/activate
 module purge
@@ -37,17 +37,9 @@ ls $CUDA_PATH/include/nvrtc.h     || echo "nvrtc.h not found"
 ls $CUDA_PATH/lib64/libnvrtc.so*  || echo "libnvrtc.so not found in lib64"
 ls $CUDA_PATH/targets/x86_64-linux/lib/libnvrtc.so* || echo "libnvrtc.so not found in targets/x86_64-linux/lib"
 
-echo "=== Training CSDI: alanine_psi ==="
+echo "=== Training CSDI: double_well ==="
 python train/CSDI/train_csdi.py \
-    --config configs/csdi_train/alanine_psi.yaml \
-    --input  DATA/alanine_psi_train.npz \
-    --out    checkpoints/csdi/alanine_psi \
-    --device cuda:0
-
-echo "=== Forecasting CSDI: alanine_psi ==="
-python eval/CSDI/forecast_csdi.py \
-    --config configs/csdi_train/double_well.yaml \
-    --input  DATA/alanine_psi_test.npz \
-    --ckpt   checkpoints/csdi/alanine_psi/model.pth \
-    --out    results/csdi/alanine_psi.npz \
+    --config configs/csdi_train/alanine_phi_50_50.yaml \
+    --input  DATA/alanine_phi_train.npz \
+    --out    checkpoints_50_50/csdi/alanine_phi \
     --device cuda:0

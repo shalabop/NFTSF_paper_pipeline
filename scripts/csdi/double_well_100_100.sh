@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 #SBATCH --job-name=DWCSDI100_100
-#SBATCH --time=1-00:00:00
+#SBATCH --time=04:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
-#SBATCH --partition=public
+#SBATCH --partition=htc
 #SBATCH --qos=public
 #SBATCH --gres=gpu:1
 #SBATCH --mem=16G
@@ -17,6 +17,8 @@ mkdir -p results/csdi/double_well
 mkdir -p checkpoints_100_100/csdi/double_well
 
 source venv310/bin/activate
+
+
 module purge
 module load cuda-12.8.1-gcc-12.1.0
 
