@@ -1,19 +1,26 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=SWTSFdiffcondforecast
+#SBATCH --job-name=SW2525TSFdiff
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
-#SBATCH --time=1-06:00:00
+#SBATCH --time=20:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --partition=public
 #SBATCH --qos=public
-#SBATCH --gres=gpu:2
-#SBATCH --mem=32G
-#SBATCH --output=logs/tsdiff_cond/single_well_forecast.%j.out
-#SBATCH --error=logs/tsdiff_cond/single_well_forecast.%j.err
+#SBATCH --gres=gpu:1
+#SBATCH --mem=16G
+#SBATCH --output=logs/tsdiff_cond/single_well_25_25.%j.out
+#SBATCH --error=logs/tsdiff_cond/single_well_25_25.%j.err
 
 
-source venv310/bin/activate
+source /packages/apps/mamba/2.0.8/etc/profile.d/conda.sh
+conda activate /home/meahmed/.conda/envs/venv310
+
+which python
+
+mkdir -p results/tsdiff_cond
+mkdir -p checkpoints_25_25/tsdiff_cond
+mkdir -p results/tsdiff_cond/checkpoints_25_25
 which python
 
 PROJECT_ROOT=$(pwd) 
@@ -53,8 +60,7 @@ ls $CUDA_PATH/include/cuda.h || echo "WARNING: cuda.h not found"
 ls $CUDA_PATH/include/nvrtc.h || echo "WARNING: nvrtc.h not found"
 ls $CUDA_PATH/lib64/libnvrtc.so* || ls $CUDA_PATH/targets/x86_64-linux/lib/libnvrtc.so* || echo "WARNING: libnvrtc.so not found"
 
-
-python eval/TSDiff/forecast_tsdiff_cond.py   \
-        --config configs/tsdiff_forecast/single_well_cond.yaml  \
+python train/TSDiff/train_cond_tsdiff.py \
         --dataset_path gluonts_datasets/single_well \
-        --out results/tsdiff_cond/single_well.npz
+        --config configs/tsdiff_cond_train/single_well_25_25.yaml \
+        --out_dir checkpoints_25_25/tsdiff_cond/single_well
