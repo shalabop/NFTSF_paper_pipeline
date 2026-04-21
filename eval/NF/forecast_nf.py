@@ -132,6 +132,8 @@ def run_forecast(model, positions, context_length, prediction_length, n_samples,
 
     samples_out = np.zeros((N, prediction_length, n_samples), dtype=np.float32)
 
+    
+    
     for i in tqdm(range(N), desc="Forecasting"):
         past_norm = torch.tensor(ctx_norm[i], dtype=torch.float32, device=device).unsqueeze(0)  # (1, L)
         past_repeat = past_norm.repeat(n_samples, 1)  # (S, L)
@@ -186,7 +188,8 @@ def main():
     )
 
     #start time measurment
-    time_start = timelib.time()
+    
+    start_time = timelib.time()
     
     samples, ground_truth, contexts = run_forecast(
         model, positions,
@@ -198,7 +201,10 @@ def main():
         train_test_split=train_test_split,
     )
     
-    time_elapsed = time_start - timelib.time()
+    time_elapsed =  timelib.time() - start_time
+    print(f"time_elapsed {time_elapsed}")
+    
+    
     
     ci90_lower = np.percentile(samples, 5,  axis=2)   # (N, H)
     ci90_upper = np.percentile(samples, 95, axis=2)
