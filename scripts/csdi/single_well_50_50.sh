@@ -16,8 +16,9 @@ mkdir -p results/csdi/single_well
 #mkdir -p logs/csdi/double_well
 mkdir -p checkpoints_50_50/csdi/single_well
 
-conda activate venv310
 
+source /packages/apps/mamba/2.0.8/etc/profile.d/conda.sh
+conda activate /home/meahmed/.conda/envs/venv310
 module purge
 module load cuda-12.8.1-gcc-12.1.0
 
