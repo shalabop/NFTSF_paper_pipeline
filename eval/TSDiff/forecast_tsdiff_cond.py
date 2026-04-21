@@ -160,13 +160,20 @@ def forecast(
         device     = config["device"],
     )
 
+    time_start = timelib.time()
+    
+    
     forecast_it, ts_it = make_evaluation_predictions(
         dataset     = transformed_testdata,
         predictor   = predictor,
         num_samples = num_samples,
     )
-
     results = list(tqdm(forecast_it, total=len(list(windowed_dataset))))
+    
+    time_elapsed = timelib.time() - time_start
+    print(f'time_elapsed : {time_elapsed}')
+
+    
     logger.info(f"samples per forecast: {results[0].samples.shape}")
 
     forecast_samples = np.array([f.samples for f in results])
@@ -209,6 +216,7 @@ def forecast(
         "prediction_length" : prediction_length,
         "context_length"    : context_length,
         "item_ids"          : np.arange(len(results)),
+        "time_elapsed" : time_elapsed
     }
 
 
@@ -302,7 +310,6 @@ def main():
 
     logger.info("Running forecast...")
     
-    time_start = timelib.time()
     results = forecast(
         config= config,
         model = model,
@@ -313,8 +320,7 @@ def main():
         full_trajectories = test_trajectories,
     )
     
-    time_elapsed = timelib.time() - time_start
-    print(f'time_elapsed : {time_elapsed}')
+
 
     logger.info("Verifying ground truth alignment...")
     gt_check = results["ground_truth"]
@@ -355,7 +361,7 @@ def main():
         prediction_length = results["prediction_length"],
         context_length = results["context_length"],
         item_ids = results["item_ids"],
-        time_elapsed =  time_elapsed
+        time_elapsed =  results["time_elapsed"]
     )
 
     logger.info(f"Saved: {out_path}")
