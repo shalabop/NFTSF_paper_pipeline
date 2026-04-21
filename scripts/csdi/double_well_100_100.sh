@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=DWCSDI
-#SBATCH --time=3-00:00:00
+#SBATCH --job-name=DWCSDI100_100
+#SBATCH --time=1-00:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --mail-user=meahmed@asu.edu
@@ -9,12 +9,12 @@
 #SBATCH --qos=public
 #SBATCH --gres=gpu:1
 #SBATCH --mem=32G
-#SBATCH --output=logs/csdi/double_well.%j.out
-#SBATCH --error=logs/csdi/double_well.%j.err
+#SBATCH --output=logs/csdi/double_well_100_100.%j.out
+#SBATCH --error=logs/csdi/double_well_100_100.%j.err
 
 mkdir -p results/csdi/double_well
 #mkdir -p logs/csdi/double_well
-mkdir -p checkpoints/csdi/double_well
+mkdir -p checkpoints_100_100/csdi/double_well
 
 source venv310/bin/activate
 module purge
@@ -36,14 +36,7 @@ ls $CUDA_PATH/lib64/libnvrtc.so*  || echo "libnvrtc.so not found in lib64"
 ls $CUDA_PATH/targets/x86_64-linux/lib/libnvrtc.so* || echo "libnvrtc.so not found in targets/x86_64-linux/lib"
 
 python train/CSDI/train_csdi.py \
-    --config configs/csdi_train/double_well.yaml \
+    --config configs/csdi_train/double_well_100_100.yaml \
     --input  DATA/double_well_train.npz \
-    --out    checkpoints/csdi/double_well \
-    --device cuda:0
-
-python eval/CSDI/forecast_csdi.py \
-    --config configs/csdi_train/double_well.yaml \
-    --input  DATA/double_well_test.npz \
-    --ckpt   checkpoints/csdi/double_well/model.pth \
-    --out    results/csdi/double_well.npz \
+    --out    checkpoints_100_100/csdi/double_well \
     --device cuda:0
