@@ -10,7 +10,7 @@ train:
   test_size: 3000
   valid_epoch_interval: 10
   stride: 5
-  training_curv: "checkpoints_100_100/csdi/single_well_with_memory"
+  training_curv: "checkpoints_50_50/csdi/single_well_with_memory"
   normalization: "none"
   
 diffusion:
