@@ -45,7 +45,8 @@ def evaluate_csdi(model, test_loader, n_samples, device,
 
     samples_out = np.concatenate(all_samples, axis=0)  
     gt_out      = np.concatenate(all_gt,      axis=0)  
-
+    
+    
     return samples_out, gt_out
 
 
@@ -116,7 +117,8 @@ def main():
         args.device, prediction_length,
     )
     
-    time_elapsed = time_start - timelib.time()
+    time_elapsed =  timelib.time() - time_start
+    
 
     
     N = len(samples)

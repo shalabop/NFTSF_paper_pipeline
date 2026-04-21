@@ -36,6 +36,7 @@ def train(
         avg_loss = 0
         model.train()
         with tqdm(train_loader, mininterval=5.0, maxinterval=50.0) as it:
+            
             for batch_no, train_batch in enumerate(it, start=1):
                 optimizer.zero_grad()
 

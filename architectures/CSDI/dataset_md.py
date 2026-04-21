@@ -68,9 +68,11 @@ def get_dataloader_md(npz_path, context_length, prediction_length,
         val_dataset = MDTrajectoryDataset(positions[:val_size, val_start:],context_length, prediction_length,
         )
         
-        train_loader = DataLoader(train_dataset, batch_size=batch_size,shuffle=True,  num_workers=1)
+        #train_loader = DataLoader(train_dataset, batch_size=batch_size,shuffle=True,  num_workers=1)
+        #val_loader = DataLoader(val_dataset,batch_size=batch_size,shuffle=False, num_workers=1)
         
-        val_loader = DataLoader(val_dataset,batch_size=batch_size,shuffle=False, num_workers=1)
+        train_loader = DataLoader(train_dataset, batch_size=batch_size,shuffle=True,  num_workers=0)
+        val_loader = DataLoader(val_dataset,batch_size=batch_size,shuffle=False, num_workers=0)
     
         return train_loader, val_loader
     
