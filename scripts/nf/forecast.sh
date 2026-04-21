@@ -13,7 +13,9 @@
 #SBATCH --output=logs/nf/evaluation.%j.out
 #SBATCH --error=logs/nf/evaluation.%j.err
 
-source venv310/bin/activate
+
+source /packages/apps/mamba/2.0.8/etc/profile.d/conda.sh
+conda activate /home/meahmed/.conda/envs/venv310
 which python
 
 mkdir -p results/nf
@@ -26,7 +28,7 @@ module purge
 module load cuda-12.8.1-gcc-12.1.0
 
 export NO_AI_TRACKING=false
-PPexport CUDA_HOME=$(dirname $(dirname $(which nvcc)))
+Pexport CUDA_HOME=$(dirname $(dirname $(which nvcc)))
 export CUDA_PATH="$CUDA_HOME"
 export PATH="$CUDA_PATH/bin:$PATH"
 

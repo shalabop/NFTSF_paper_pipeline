@@ -13,7 +13,9 @@
 #SBATCH --error=logs/tsdiff_cond/alanine_phi_50_50.%j.err
 
 
-source venv310/bin/activate
+
+source /packages/apps/mamba/2.0.8/etc/profile.d/conda.sh
+conda activate /home/meahmed/.conda/envs/venv310
 which python
 
 mkdir -p results/tsdiff_cond
