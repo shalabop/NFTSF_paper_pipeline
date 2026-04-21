@@ -8,7 +8,7 @@
 #SBATCH --partition=public
 #SBATCH --qos=public
 #SBATCH --gres=gpu:1
-#SBATCH --mem=32G
+#SBATCH --mem=16G
 #SBATCH --output=logs/csdi/double_well_100_100.%j.out
 #SBATCH --error=logs/csdi/double_well_100_100.%j.err
 
