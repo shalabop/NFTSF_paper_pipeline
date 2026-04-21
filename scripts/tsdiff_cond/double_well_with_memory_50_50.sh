@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=DWm2525TSFdiff
+#SBATCH --job-name=DWm50TSFdiff
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
 #SBATCH --time=20:00:00
