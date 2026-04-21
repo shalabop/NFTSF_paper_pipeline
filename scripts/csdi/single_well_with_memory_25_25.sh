@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=SWCSDI
-#SBATCH --time=1-00:00:00
+#SBATCH --job-name=SWCSDmemory2525
+#SBATCH --time=20:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --mail-user=meahmed@asu.edu
@@ -8,15 +8,16 @@
 #SBATCH --partition=public
 #SBATCH --qos=public
 #SBATCH --gres=gpu:1
-#SBATCH --mem=32G
-#SBATCH --output=logs/csdi/single_well.%j.out
-#SBATCH --error=logs/csdi/single_well.%j.err
+#SBATCH --mem=16G
+#SBATCH --output=logs/csdi/single_well_with_memory_25_25.%j.out
+#SBATCH --error=logs/csdi/single_well_with_memory_25_25.%j.err
 
 mkdir -p results/csdi/single_well
-mkdir -p logs/csdi/single_well
-mkdir -p checkpoints/csdi/single_well
+#mkdir -p logs/csdi/double_well
+mkdir -p checkpoints_25_25/csdi/single_well_with_memory
 
 source venv310/bin/activate
+
 module purge
 module load cuda-12.8.1-gcc-12.1.0
 
@@ -35,17 +36,8 @@ ls $CUDA_PATH/include/nvrtc.h     || echo "nvrtc.h not found"
 ls $CUDA_PATH/lib64/libnvrtc.so*  || echo "libnvrtc.so not found in lib64"
 ls $CUDA_PATH/targets/x86_64-linux/lib/libnvrtc.so* || echo "libnvrtc.so not found in targets/x86_64-linux/lib"
 
-echo "=== Training CSDI: single_well ==="
 python train/CSDI/train_csdi.py \
-    --config configs/csdi_train/single_well.yaml \
-    --input  DATA/single_well_train.npz \
-    --out    checkpoints/csdi/single_well \
-    --device cuda:0
-
-echo "=== Forecasting CSDI: single_well ==="
-python eval/CSDI/forecast_csdi.py \
-    --config configs/csdi_train/single_well.yaml \
-    --input  DATA/single_well_test.npz \
-    --ckpt   checkpoints/csdi/single_well/model.pth \
-    --out    results/csdi/single_well.npz \
+    --config configs/csdi_train/single_well_with_memory_25_25.yaml \
+    --input  DATA/single_well_with_memory_train.npz \
+    --out    checkpoints_25_25/csdi/single_well_with_memory \
     --device cuda:0
