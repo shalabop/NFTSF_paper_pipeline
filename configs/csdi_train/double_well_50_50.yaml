@@ -2,7 +2,7 @@ train:
   epochs: 1000
   batch_size: 64
   lr: 0.001
-  itr_per_epoch: 128
+  itr_per_epoch: 1.0e+4
   prediction_length: 50
   context_length: 50
   num_of_samples: 1000
