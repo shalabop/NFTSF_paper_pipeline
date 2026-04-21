@@ -6,7 +6,7 @@
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
 #SBATCH --partition=general
-#SBATCH --qos=general
+#SBATCH --qos=public
 #SBATCH --gres=gpu:1
 #SBATCH --mem=16G
 #SBATCH --output=logs/csdi/double_well_25_25.%j.out
