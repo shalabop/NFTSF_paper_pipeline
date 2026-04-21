@@ -21,7 +21,6 @@ charset-normalizer==3.4.4
 click==8.3.1
 CoLT5-attention==0.11.1
 comm==0.2.3
-setuptools<82
 contourpy==1.3.2
 cuda-bindings==12.9.4
 cuda-pathfinder==1.4.2
@@ -35,6 +34,7 @@ einops==0.8.2
 ema-pytorch==0.7.9
 exceptiongroup==1.3.1
 executing==2.2.1
+faiss-cpu==1.13.2
 fastjsonschema==2.21.2
 filelock==3.20.3
 fire==0.7.1
@@ -145,7 +145,7 @@ pyarrow==8.0.0
 pybind11==3.0.1
 pycparser==3.0
 pydantic==1.10.26
-Pygments==2.19.2
+Pygments==2.20.0
 pykeops==2.1.1
 pyparsing==3.3.2
 python-dateutil==2.9.0.post0
@@ -196,7 +196,7 @@ tueplots==0.2.3
 typer==0.24.1
 typing_extensions==4.15.0
 tzdata==2025.3
--e git+https://12Mahmud99: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@github.com/shalabop/NFTSF_paper_pipeline.git@4391e71eec28c04d413b3da1c43369dcfc47f8fc#egg=uncond_ts_diff&subdirectory=architectures/unconditional_time_series_diffusion
+-e git+https://github.com/shalabop/NFTSF_paper_pipeline@aa99d4630c05e0d3d34ac7135d9759fc1c665dd5#egg=uncond_ts_diff&subdirectory=architectures/unconditional_time_series_diffusion
 uri-template==1.3.0
 urllib3==2.6.3
 wcwidth==0.6.0
