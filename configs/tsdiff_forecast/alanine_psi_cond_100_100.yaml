@@ -1,4 +1,4 @@
-ckpt: checkpoints/tsdiff_cond/alanine_phi/lightning_logs/version_0/checkpoints/last.ckpt
+ckpt: checkpoints_100_100/tsdiff_cond/alanine_psi/lightning_logs/version_0/checkpoints/last.ckpt
 model: conditional
 freq: H
 context_length: 100
@@ -11,8 +11,8 @@ batch_size: 64
 normalization: none
 device: cuda:0
 setup: forecasting
-dataset: alanine_phi
-num_samples: 500
+dataset: alanine_psi
+num_samples: 1000
 eval_every: 50
 do_final_eval: true
 noise_observed: true

@@ -313,7 +313,8 @@ def main():
         full_trajectories = test_trajectories,
     )
     
-    time_elapsed = time_start - timelib.time()
+    time_elapsed = timelib.time() - time_start
+    print(f'time_elapsed : {time_elapsed}')
 
     logger.info("Verifying ground truth alignment...")
     gt_check = results["ground_truth"]
