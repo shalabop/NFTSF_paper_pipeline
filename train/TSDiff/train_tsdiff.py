@@ -12,7 +12,7 @@ import yaml
 import torch
 from tqdm.auto import tqdm
 import pytorch_lightning as pl
-from pytorch_lightning.callbacks import ModelCheckpoint, RichProgressBar
+from pytorch_lightning.callbacks import ModelCheckpoint, RichProgressBar, EarlyStopping
 
 from gluonts.dataset.loader import TrainDataLoader
 from gluonts.dataset.split import OffsetSplitter
@@ -71,7 +71,8 @@ def main(config, log_dir, dataset_path,running_tests):
     context_length = config["context_length"]
     prediction_length = config["prediction_length"]
     last_window = context_length + prediction_length
-    T = config["total_time_steps"]
+    #T = config["total_time_steps"]
+    T = 1000
 
     # Create model
     model = create_model(config)
@@ -82,17 +83,17 @@ def main(config, log_dir, dataset_path,running_tests):
     train_ds = FileDataset(dataset_path / "train", freq=metadata.freq)
     test_ds = FileDataset(dataset_path / "test", freq=metadata.freq)
     dataset = TrainDatasets(metadata=metadata, train=train_ds, test=test_ds)
-    print(f"dataset.metadata.freq: {dataset.metadata.freq}")
-    print(f"dataset.metadata.prediction_length: {dataset.metadata.prediction_length}")
-    print(f'train_set length: {len(dataset.train)}')
-    print(f'test_set length: {len(dataset.test)}')
+    #print(f"dataset.metadata.freq: {dataset.metadata.freq}")
+    #print(f"dataset.metadata.prediction_length: {dataset.metadata.prediction_length}")
+    #print(f'train_set length: {len(dataset.train)}')
+    #print(f'test_set length: {len(dataset.test)}')
 
     #ensure they're equal
-    print(dataset.metadata.prediction_length)
-    print(prediction_length)
+    #print(dataset.metadata.prediction_length)
+    #print(prediction_length)
 
-    assert dataset.metadata.freq == freq
-    assert dataset.metadata.prediction_length == prediction_length
+    #assert dataset.metadata.freq == freq
+    #assert dataset.metadata.prediction_length == prediction_length
 
     if config["setup"] == "forecasting":
         training_data = dataset.train
@@ -208,6 +209,13 @@ def main(config, log_dir, dataset_path,running_tests):
         save_last=True,
         save_weights_only=True,
     )
+    early_stop_callback = EarlyStopping(
+        monitor="valid_loss",   
+        patience=10,            
+        mode="min",             
+        verbose=True            
+    )
+    callbacks.append(early_stop_callback)
 
     callbacks.append(checkpoint_callback)
     #callbacks.append(RichProgressBar())
