@@ -118,7 +118,8 @@ def main(config, log_dir,dataset_path):
     prediction_length = config["prediction_length"]
 #    train_test_split = config["train_test_split"]
     total_length = context_length + prediction_length
-    T=config["total_time_steps"]
+    #T=config.get("total_time_steps",1000)
+    T=1000
 
     # Create model
     model = create_model(config)
