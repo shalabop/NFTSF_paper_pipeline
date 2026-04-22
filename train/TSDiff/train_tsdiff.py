@@ -190,7 +190,8 @@ def main(config, log_dir, dataset_path,running_tests):
     
     #raise SystemExit("ENDED------------------------------------------------------------------")
 
-    log_monitor = "train_loss"
+    #log_monitor = "train_loss"
+    log_monitor="valid_loss"
     filename = dataset_name + "-{epoch:03d}-{train_loss:.3f}"
 
     data_loader = TrainDataLoader(
@@ -209,13 +210,14 @@ def main(config, log_dir, dataset_path,running_tests):
         save_last=True,
         save_weights_only=True,
     )
-    early_stop_callback = EarlyStopping(
+    
+    '''early_stop_callback = EarlyStopping(
         monitor="valid_loss",   
         patience=10,            
         mode="min",             
         verbose=True            
-    )
-    callbacks.append(early_stop_callback)
+    )'''
+    #callbacks.append(early_stop_callback)
 
     callbacks.append(checkpoint_callback)
     #callbacks.append(RichProgressBar())
