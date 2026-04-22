@@ -7,7 +7,7 @@
 #SBATCH --ntasks=1
 #SBATCH --partition=lightwork
 #SBATCH --qos=public
-#SBATCH --gres=gpu:1
+#SBATCH --gres=gpu:0
 #SBATCH --mem=32G
 #SBATCH --output=logs/arima/alanine_phi.%j.out
 #SBATCH --error=logs/arima/alanine_phi.%j.err
@@ -46,20 +46,14 @@ ls $CUDA_PATH/targets/x86_64-linux/lib/libnvrtc.so* || echo "libnvrtc.so not fou
 
 python eval/ARIMA/run_auto_arima.py \
     --input DATA/alanine_phi_test.npz \
-    --out results/arima/alanine_phi.npz \
-    --num-samples 500 \
+    --out results/arima/alanine_phi_25_25.npz \
+    --num-samples 3000 \
     -c configs/arima/alanine_phi.yaml
 
 
 python eval/ARIMA/run_auto_arima.py \
     --input DATA/alanine_psi_test.npz \
     --out results/arima/alanine_psi_fh.npz \
-    --num-samples 500 \
+    --num-samples 3000 \
     -c configs/arima/alanine_psi.yaml
 
-
-python eval/ARIMA/run_auto_arima.py \
-    --input DATA/linear_guassian_test.npz \
-    --out results/arima/linear_guassian.npz \
-    --num-samples 500 \
-    -c configs/arima/linear_guassian.yaml
