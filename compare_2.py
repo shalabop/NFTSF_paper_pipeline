@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 compare_full.py – Generate all figures (trajectory comparison, histograms, error metrics grid)
-plus summary table (with best values highlighted). No time inference.
+plus summary table with MAE, CI50, CI90, ISCE, and CRPS decomposition.
 """
 
 import argparse
@@ -14,7 +14,10 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 from matplotlib.lines import Line2D
 
-DPI = 600  # you can reduce to 300 if file size is a concern
+# Import CRPS decomposition
+from metrics.crps_decomposition import crps_ensemble, crps_decomposition
+
+DPI = 600
 
 # ---------------------------------------------------------------------------
 # Model registry
@@ -127,7 +130,7 @@ def load_npz_result(npz_path: str, context_length_fallback: int, mean=None, std=
     }
 
 # ---------------------------------------------------------------------------
-# Metrics (all assume samples shape (N, H, S)) – return per-step arrays and scalars
+# Metrics (all assume samples shape (N, H, S))
 # ---------------------------------------------------------------------------
 def _mae_median_per_step(gt_future, samples):
     median = np.median(samples, axis=2)
@@ -147,7 +150,7 @@ def _ci_coverage_per_step(gt_future, samples, pct):
         return np.ones(gt_future.shape[1])
     lo = (100 - pct) / 2.0
     hi = 100 - lo
-    lo_q = np.percentile(samples, lo, axis=2)   # (N, H)
+    lo_q = np.percentile(samples, lo, axis=2)
     hi_q = np.percentile(samples, hi, axis=2)
     covered = (gt_future >= lo_q) & (gt_future <= hi_q)
     return np.mean(covered, axis=0)
@@ -177,6 +180,17 @@ def _isce_central_per_step(gt_future, samples):
 
 def compute_metrics(ground_truths, samples, n_past):
     gt_future = ground_truths[:, n_past:]   # (N, H)
+    # Flatten for CRPS decomposition: (N*H, S) and (N*H,)
+    N, H = gt_future.shape
+    samples_flat = samples.reshape(-1, samples.shape[2])  # (N*H, S)
+    obs_flat = gt_future.reshape(-1)                      # (N*H,)
+    # CRPS decomposition
+    crps_dict = crps_decomposition(samples_flat, obs_flat, sample_axis=-1, return_per_rank=False)
+    crps_val = crps_dict["crps"]
+    reliability = crps_dict["reliability"]
+    resolution = crps_dict["resolution"]
+    uncertainty = crps_dict["uncertainty"]
+
     metrics = {
         "mae_median_step": _mae_median_per_step(gt_future, samples),
         "mae_mean_step":   _mae_mean_per_step(gt_future, samples),
@@ -184,6 +198,10 @@ def compute_metrics(ground_truths, samples, n_past):
         "ci50_step": _ci_coverage_per_step(gt_future, samples, 50),
         "ci90_step": _ci_coverage_per_step(gt_future, samples, 90),
         "isce_step": _isce_central_per_step(gt_future, samples),
+        "crps": crps_val,
+        "reliability": reliability,
+        "resolution": resolution,
+        "uncertainty": uncertainty,
     }
     # Scalar means for table
     metrics["mae_median"] = np.mean(metrics["mae_median_step"])
@@ -195,7 +213,7 @@ def compute_metrics(ground_truths, samples, n_past):
     return metrics
 
 # ---------------------------------------------------------------------------
-# Figure E: Raw ground-truth trajectories (smaller canvas)
+# Figure E: Raw ground-truth trajectories
 # ---------------------------------------------------------------------------
 def plot_raw_trajectories(landscape, full_trajectories, n_past, n_future, output_dir, seed=42):
     rng = np.random.default_rng(seed)
@@ -218,7 +236,7 @@ def plot_raw_trajectories(landscape, full_trajectories, n_past, n_future, output
     y_lo -= margin
     y_hi += margin
 
-    fig, axes = plt.subplots(1, 3, figsize=(13.5, 3), sharey=True)  # reduced from (27,6)
+    fig, axes = plt.subplots(1, 3, figsize=(13.5, 3), sharey=True)
     SINGLE_COLOR = "#4C72B0"
     for ax, count in zip(axes, counts):
         n = min(count, N)
@@ -253,17 +271,14 @@ def plot_raw_trajectories(landscape, full_trajectories, n_past, n_future, output
     print(f"[E] Saved: {out_path}")
 
 # ---------------------------------------------------------------------------
-# Figure A: Trajectory comparison grid (smaller canvas)
+# Figure A: Trajectory comparison grid (CI bands + median)
 # ---------------------------------------------------------------------------
 def plot_trajectory_comparison_grid(landscape, display_labels, model_data, n_past, n_future, output_dir):
     n_models = len(model_data)
     n_traj = len(display_labels)
-    fig, axes = plt.subplots(n_models, n_traj,
-                             figsize=(5 * n_traj, 3.5 * n_models),  # reduced from (9*n_traj,6*n_models)
-                             squeeze=False)
+    fig, axes = plt.subplots(n_models, n_traj, figsize=(5*n_traj, 3.5*n_models), squeeze=False)
     future_steps = np.arange(n_past, n_past + n_future)
     all_steps = np.arange(0, n_past + n_future)
-    # Compute global y-limits from all displayed trajectories
     g_lo, g_hi = float("inf"), float("-inf")
     for mdata in model_data.values():
         for gt in mdata["ground_truths"]:
@@ -289,8 +304,8 @@ def plot_trajectory_comparison_grid(landscape, display_labels, model_data, n_pas
         reg = MODEL_REGISTRY.get(model_name, {"label": model_name, "color": "tab:orange"})
         color = reg["color"]
         mlabel = reg["label"]
-        samples_all = mdata["samples"]           # (n_traj, H, S)
-        ground_truths_all = mdata["ground_truths"]  # (n_traj, L+H)
+        samples_all = mdata["samples"]
+        ground_truths_all = mdata["ground_truths"]
         axes[row_idx, 0].set_ylabel(f"{mlabel}\n{_coord_label(landscape)}", fontsize=13)
         for col_idx in range(n_traj):
             ax = axes[row_idx, col_idx]
@@ -326,18 +341,15 @@ def plot_trajectory_comparison_grid(landscape, display_labels, model_data, n_pas
     print(f"[A] Saved: {out_path}")
 
 # ---------------------------------------------------------------------------
-# Figure B: 2-D histogram comparison grid (smaller canvas)
+# Figure B: 2-D histogram comparison grid
 # ---------------------------------------------------------------------------
 def plot_histogram2d_comparison_grid(landscape, display_labels, model_data, n_past, n_future, output_dir):
     with plt.style.context('dark_background'):
         n_models = len(model_data)
         n_traj = len(display_labels)
-        fig, axes = plt.subplots(n_models, n_traj,
-                                 figsize=(5 * n_traj, 3.5 * n_models),
-                                 squeeze=False)
+        fig, axes = plt.subplots(n_models, n_traj, figsize=(5*n_traj, 3.5*n_models), squeeze=False)
         future_steps = np.arange(n_past, n_past + n_future)
         all_steps = np.arange(0, n_past + n_future)
-        # Global y-limits
         g_lo, g_hi = float("inf"), float("-inf")
         for mdata in model_data.values():
             for gt in mdata["ground_truths"]:
@@ -364,14 +376,14 @@ def plot_histogram2d_comparison_grid(landscape, display_labels, model_data, n_pa
         for row_idx, (model_name, mdata) in enumerate(model_data.items()):
             reg = MODEL_REGISTRY.get(model_name, {"label": model_name, "color": "tab:orange"})
             mlabel = reg["label"]
-            samples_all = mdata["samples"]           # (n_traj, H, S)
-            ground_truths_all = mdata["ground_truths"]  # (n_traj, L+H)
+            samples_all = mdata["samples"]
+            ground_truths_all = mdata["ground_truths"]
             axes[row_idx, 0].set_ylabel(f"{mlabel}\n{_coord_label(landscape)}", fontsize=13, color='white')
             for col_idx in range(n_traj):
                 ax = axes[row_idx, col_idx]
                 real_traj = ground_truths_all[col_idx]
                 samp = samples_all[col_idx]
-                samp_for_hist = samp.T               # (S, H)
+                samp_for_hist = samp.T
                 time_rep = np.tile(future_steps, (samp_for_hist.shape[0], 1))
                 ax.hist2d(time_rep.flatten(), samp_for_hist.flatten(),
                           bins=[x_edges, y_edges], cmap="magma", density=True, norm=LogNorm(vmin=1e-6))
@@ -399,10 +411,10 @@ def plot_histogram2d_comparison_grid(landscape, display_labels, model_data, n_pa
         print(f"[B] Saved: {out_path}")
 
 # ---------------------------------------------------------------------------
-# Figure C: Error metrics grid (smaller canvas)
+# Figure C: Error metrics grid (MAE_median, ISCE*1000, CI50, CI90)
 # ---------------------------------------------------------------------------
 def plot_error_metrics_grid(land, length, model_names, all_metrics, output_dir):
-    fig, axes = plt.subplots(2, 2, figsize=(8, 5))  # reduced from (12,8)
+    fig, axes = plt.subplots(2, 2, figsize=(8, 5))
     metric_keys = [("mae_median_step", "MAE (median)"),
                    ("isce_step", "ISCE"),
                    ("ci50_step", "CI50"),
@@ -411,7 +423,7 @@ def plot_error_metrics_grid(land, length, model_names, all_metrics, output_dir):
         for mn in model_names:
             label = MODEL_REGISTRY.get(mn, {"label": mn})["label"]
             color = MODEL_REGISTRY.get(mn, {"color": "tab:gray"})["color"]
-            vals = all_metrics[mn][key]  # array of length H
+            vals = all_metrics[mn][key]
             if key == "isce_step":
                 vals = vals * 1000
                 title = "ISCE (×1000)"
@@ -432,10 +444,15 @@ def plot_error_metrics_grid(land, length, model_names, all_metrics, output_dir):
     print(f"[C] Saved: {out_path}")
 
 # ---------------------------------------------------------------------------
-# Figure D: Summary table (smaller canvas)
+# Figure D: Summary table (with best values highlighted)
 # ---------------------------------------------------------------------------
 def plot_summary_table(land, length, model_names, all_metrics, output_dir):
-    col_headers = ["Model", "MAE (med)", "MAE (mean)", "MAE (sample)", "CI50", "CI90", "ISCE (*1000)"]
+    col_headers = [
+        "Model",
+        "MAE (med)", "MAE (mean)", "MAE (sample)",
+        "CI50", "CI90", "ISCE (*1000)",
+        "CRPS", "Reliability", "Resolution", "Uncertainty"
+    ]
     rows = []
     numeric_vals = []
     for mn in model_names:
@@ -448,36 +465,43 @@ def plot_summary_table(land, length, model_names, all_metrics, output_dir):
             f"{mets['mae_sample']:.4f}",
             f"{mets['ci50']:.3f}",
             f"{mets['ci90']:.3f}",
-            f"{mets['isce_mean']*1000:.4f}"
+            f"{mets['isce_mean']*1000:.4f}",
+            f"{mets['crps']:.4f}",
+            f"{mets['reliability']:.4f}",
+            f"{mets['resolution']:.4f}",
+            f"{mets['uncertainty']:.4f}",
         ])
-        numeric_vals.append([mets['mae_median'], mets['mae_mean'], mets['mae_sample'],
-                             mets['ci50'], mets['ci90'], mets['isce_mean']*1000])
-    # Determine best indices per column
+        numeric_vals.append([
+            mets['mae_median'], mets['mae_mean'], mets['mae_sample'],
+            mets['ci50'], mets['ci90'], mets['isce_mean']*1000,
+            mets['crps'], mets['reliability'], mets['resolution'], mets['uncertainty']
+        ])
+    # Determine best indices per column (lower better for most; CI50/CI90 closest to nominal)
     best_idx = []
-    for col in range(6):
+    for col in range(len(numeric_vals[0])):
         col_vals = [row[col] for row in numeric_vals]
-        if col in [0,1,2,5]:  # MAEs, ISCE*1000 -> lower is better
+        if col in [0,1,2,6,7,8,9]:  # MAEs, CRPS, Reliability, Resolution, Uncertainty? Actually Uncertainty is not lower better; but we treat as lower? Uncertainty is fixed by data, not model performance; we might not highlight. We'll skip highlighting for Uncertainty.
             best = int(np.argmin(col_vals))
-        elif col == 3:  # CI50 -> closest to 0.5
+        elif col == 3:  # CI50
             best = int(np.argmin(np.abs(np.array(col_vals) - 0.5)))
-        elif col == 4:  # CI90 -> closest to 0.9
+        elif col == 4:  # CI90
             best = int(np.argmin(np.abs(np.array(col_vals) - 0.9)))
         else:
             best = None
         best_idx.append(best)
-    fig, ax = plt.subplots(figsize=(8, 2 + len(rows)))  # reduced from (10, ...)
+    fig, ax = plt.subplots(figsize=(12, 2 + len(rows)))  # wider for more columns
     ax.axis("off")
     table = ax.table(cellText=rows, colLabels=col_headers, loc="center", cellLoc="center")
     table.auto_set_font_size(False)
-    table.set_fontsize(8)   # slightly smaller to fit
-    table.scale(1.1, 1.5)   # adjusted scaling
+    table.set_fontsize(8)
+    table.scale(1.1, 1.5)
     for (r,c), cell in table.get_celld().items():
         if r == 0:
             cell.set_facecolor("#D0D8E8")
             cell.set_text_props(weight="bold")
         else:
             cell.set_facecolor("#F7F9FC")
-            if c >= 1 and best_idx[c-1] == r-1:
+            if c >= 1 and best_idx[c-1] is not None and best_idx[c-1] == r-1:
                 cell.set_facecolor("#90EE90")
                 cell.set_text_props(weight="bold")
     ax.set_title(f"{_land_display(land)} (L/H={length}) — Summary Metrics", fontsize=13, pad=14)
@@ -538,7 +562,8 @@ def main():
             mets = all_metrics[mn]
             print(f"  {label:12s}: MAE_med={mets['mae_median']:.4f} MAE_mean={mets['mae_mean']:.4f} "
                   f"MAE_samp={mets['mae_sample']:.4f} CI50={mets['ci50']:.3f} CI90={mets['ci90']:.3f} "
-                  f"ISCE*1000={mets['isce_mean']*1000:.4f}")
+                  f"ISCE*1000={mets['isce_mean']*1000:.4f} CRPS={mets['crps']:.4f} "
+                  f"Rel={mets['reliability']:.4f} Res={mets['resolution']:.4f} Unc={mets['uncertainty']:.4f}")
 
         # Select trajectories to display
         N_min = min(data["fullset_N"] for data in models_data.values())
@@ -555,7 +580,6 @@ def main():
                 "n_past": data["n_past"],
                 "n_future": data["n_future"],
             }
-        # Use first model for n_past/n_future
         first = next(iter(display_data.values()))
         n_past = first["n_past"]
         n_future = first["n_future"]
