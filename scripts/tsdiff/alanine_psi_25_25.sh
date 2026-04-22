@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=ApsicTSFdiff
+#SBATCH --job-name=AphicTSFdiff
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
 #SBATCH --time=20:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --partition=general
-#SBATCH --qos=grps_spresse
+#SBATCH --qos=grp_spresse
 #SBATCH --gres=gpu:1
 #SBATCH --mem=16G
 #SBATCH --output=logs/tsdiff/alanine_psi_25_25.%j.out

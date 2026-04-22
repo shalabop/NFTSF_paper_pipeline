@@ -52,7 +52,7 @@ python eval/NF/forecast_nf_ex.py \
   --input DATA/alanine_phi_test.npz \
   --ckpt checkpoints_100_100/nf/alanine_phi.pth \
   --out results/nf/alanine_phi_100_100_test.npz \
-  --device cuda:0 --test_size 3000 \
+  --device cuda --test_size 3000 \
   --prediction_length 100 --context_length 100 \
   --num_of_samples 1000 --train_test_split 900
   

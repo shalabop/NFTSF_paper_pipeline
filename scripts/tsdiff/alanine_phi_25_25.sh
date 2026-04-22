@@ -6,7 +6,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --partition=general
-#SBATCH --qos=grps_spresse
+#SBATCH --qos=grp_spresse
 #SBATCH --gres=gpu:1
 #SBATCH --mem=16G
 #SBATCH --output=logs/tsdiff/alanine_phi_25_25.%j.out
