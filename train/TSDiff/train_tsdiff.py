@@ -178,7 +178,7 @@ def main(config, log_dir, dataset_path,running_tests):
                 model=model,
                 transformation=transformation, ##tranformation to concantentae the post training data (used as context) for validation 
                 test_dataset=dataset.test, ##never actually used
-                val_dataset=val_data, ##context dataset
+                val_dataset=val_data, ## dataset
                 eval_every=config["eval_every"],
             )
         ]

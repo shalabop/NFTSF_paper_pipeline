@@ -189,9 +189,7 @@ def run_forecast_batched(
             try:
                 samp, _ = model.sample(B * n_samples, ctx_b_tiled)  # (B*S, H)
             except AssertionError as e:
-                print(f"  WARNING: batch {b} failed: {e} — filling with zeros")
-                samp = torch.zeros(B * n_samples, prediction_length, device=device)
-
+                raise RuntimeWarning()
         samp_np = samp.cpu().numpy().reshape(B, n_samples, prediction_length)
         samples_out[b_start:b_end] = samp_np.transpose(0, 2, 1)  # (B, H, S)
 
