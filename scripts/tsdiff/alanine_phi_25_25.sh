@@ -1,23 +1,27 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=AphiTSDiff
+#SBATCH --job-name=AphicTSFdiff
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
-#SBATCH --time=3-00:00:00
+#SBATCH --time=20:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --partition=public
-#SBATCH --qos=public
-#SBATCH --gres=gpu:2
-#SBATCH --mem=32G
-#SBATCH --output=logs/tsdiff/alanine_phi.%j.out
-#SBATCH --error=logs/tsdiff/alanine_phi.%j.err
+#SBATCH --partition=general
+#SBATCH --qos=grps_spresse
+#SBATCH --gres=gpu:1
+#SBATCH --mem=16G
+#SBATCH --output=logs/tsdiff/alanine_phi_25_25.%j.out
+#SBATCH --error=logs/tsdiff/alanine_phi_25_25.%j.err
 
-mkdir -p checkpoints/tsdiff/alanine_phi
-mkdir -p results/tsdiff_q/
-mkdir -p results/tsdiff_mse/
-mkdir -p logs/tsdiff
 
-source venv310/bin/activate
+
+source /packages/apps/mamba/2.0.8/etc/profile.d/conda.sh
+conda activate /home/meahmed/.conda/envs/venv310
+
+which python
+
+mkdir -p results/tsdiff
+mkdir -p checkpoints_25_25/tsdiff
+mkdir -p results/tsdiff/checkpoints_25_25
 which python
 
 PROJECT_ROOT=$(pwd) 
@@ -59,26 +63,5 @@ ls $CUDA_PATH/lib64/libnvrtc.so* || ls $CUDA_PATH/targets/x86_64-linux/lib/libnv
 
 python train/TSDiff/train_tsdiff.py \
         --dataset_path gluonts_datasets/alanine_phi \
-        --config configs/tsdiff_train/alanine_phi.yaml \
-        --out_dir checkpoints/tsdiff/alanine_phi
-
-python eval/TSDiff/forecast_tsdiff.py   \
-        --config configs/tsdiff_forecast/alanine_phi_q_4.yaml  \
-        --dataset_path gluonts_datasets/alanine_phi \
-        --out results/tsdiff_q/alanine_phi_q_4.npz
-
-python eval/TSDiff/forecast_tsdiff.py   \
-        --config configs/tsdiff_forecast/alanine_phi_q_2.yaml  \
-        --dataset_path gluonts_datasets/alanine_phi \
-        --out results/tsdiff_q/alanine_phi_q_2.npz
-
-
-python eval/TSDiff/forecast_tsdiff.py   \
-        --config configs/tsdiff_forecast/alanine_phi_mse_05.yaml  \
-        --dataset_path gluonts_datasets/alanine_phi \
-        --out results/tsdiff_mse/alanine_phi_mse_05.npz
-
-python eval/TSDiff/forecast_tsdiff.py   \
-        --config configs/tsdiff_forecast/alanine_phi_mse_2.yaml  \
-        --dataset_path gluonts_datasets/alanine_phi \
-        --out results/tsdiff_mse/alanine_phi_mse_2.npz
+        --config configs/tsdiff_train/alanine_phi_25_25.yaml \
+        --out_dir checkpoints_25_25/tsdiff/alanine_phi
