@@ -66,18 +66,6 @@ ls $CUDA_PATH/include/cuda.h || echo "WARNING: cuda.h not found"
 ls $CUDA_PATH/include/nvrtc.h || echo "WARNING: nvrtc.h not found"
 ls $CUDA_PATH/lib64/libnvrtc.so* || ls $CUDA_PATH/targets/x86_64-linux/lib/libnvrtc.so* || echo "WARNING: libnvrtc.so not found"
 
-
-python eval/TSDiff/forecast_tsdiff_cond.py   \
-        --config configs/tsdiff_forecast/alanine_phi_cond_25_25.yaml  \
-        --dataset_path gluonts_datasets/alanine_phi \
-        --out results/tsdiff_cond/alanine_phi_25_25.npz
-
-    
-python eval/TSDiff/forecast_tsdiff_cond.py   \
-        --config configs/tsdiff_forecast/alanine_phi_cond_50_50.yaml  \
-        --dataset_path gluonts_datasets/alanine_phi \
-        --out results/tsdiff_cond/alanine_phi_50_50.npz
-
     
 python eval/TSDiff/forecast_tsdiff_cond.py   \
         --config configs/tsdiff_forecast/alanine_phi_cond_100_100.yaml  \

@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 #SBATCH --job-name=evaluation
-#SBATCH --time=22:00:00
+#SBATCH --time=01:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
-#SBATCH --partition=general
-#SBATCH --qos=grp_spresse
+#SBATCH --partition=htc
+#SBATCH --qos=public
 #SBATCH --gres=gpu:a30:1
 #SBATCH --mem=32G
 #SBATCH --output=logs/nf/evaluation.%j.out
@@ -48,68 +48,13 @@ ls $CUDA_PATH/targets/x86_64-linux/lib/libnvrtc.so* || echo "libnvrtc.so not fou
 
 
 python eval/NF/forecast_nf.py \
-    --model_path   checkpoints_100_100/nf/alanine_phi.pth     \
-    --config configs/nf/alanine_phi_100_100_forecast.yaml \
-    --data_path    DATA/alanine_phi_test.npz    \
-    --out          results/nf/alanine_phi_100_100.npz \
+    --model_path   checkpoints_100_100/nf/single_well.pth     \
+    --config configs/nf/single_well_100_100_forecast.yaml \
+    --data_path    DATA/single_well_test.npz    \
+    --out          results/nf/single_well_100_100.npz \
     --context_length     100    \
     --prediction_length     100   \
     --n_samples    1000 \
     --train_test_split 900 \
     --test_size 3000
-
-python eval/NF/forecast_nf.py \
-    --model_path   checkpoints_50_50/nf/alanine_phi/model.pth     \
-    --config configs/nf/alanine_phi_50_50_forecast.yaml \
-    --data_path    DATA/alanine_phi_test.npz    \
-    --out          results/nf/alanine_phi_50_50.npz \
-    --context_length     50    \
-    --prediction_length     50   \
-    --n_samples    1000 \
-    --train_test_split 900 \
-    --test_size 3000
-
-python eval/NF/forecast_nf.py \
-    --model_path   checkpoints_25_25/nf/alanine_phi/model.pth     \
-    --config configs/nf/alanine_phi_25_25_forecast.yaml \
-    --data_path    DATA/alanine_phi_test.npz    \
-    --out          results/nf/alanine_phi_25_25.npz \
-    --context_length     25    \
-    --prediction_length     25   \
-    --n_samples    1000 \
-    --train_test_split 900 \
-    --test_size 3000
-
-
-python eval/NF/forecast_nf.py \
-    --model_path   checkpoints_25_25/nf/alanine_psi/model.pth     \
-    --config configs/nf/alanine_psi_25_25_forecast.yaml \
-    --data_path    DATA/alanine_psi_test.npz    \
-    --out          results/nf/alanine_psi_25_25.npz \
-    --context_length     25    \
-    --prediction_length     25   \
-    --n_samples    1000 \
-    --train_test_split 900 \
-    --test_size 3000
-
-python eval/NF/forecast_nf.py \
-    --model_path   checkpoints_50_50/nf/alanine_psi/model.pth     \
-    --config configs/nf/alanine_psi_50_50_forecast.yaml \
-    --data_path    DATA/alanine_psi_test.npz    \
-    --out          results/nf/alanine_psi_50_50.npz \
-    --context_length     50  \
-    --prediction_length     50   \
-    --n_samples    1000 \
-    --train_test_split 900 \
-    --test_size 3000
-
-python eval/NF/forecast_nf.py \
-    --model_path   checkpoints_100_100/nf/alanine_psi.pth     \
-    --config configs/nf/alanine_psi_100_100_forecast.yaml \
-    --data_path    DATA/alanine_psi_test.npz    \
-    --out          results/nf/alanine_psi_100_100.npz \
-    --context_length     100  \
-    --prediction_length     100   \
-    --n_samples    1000 \
-    --train_test_split 900 \
-    --test_size 3000
+=

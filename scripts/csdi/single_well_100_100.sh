@@ -3,12 +3,13 @@
 #SBATCH --time=20:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
-#SBATCH --partition=public
-#SBATCH --qos=public
-#SBATCH --gres=gpu:1
-#SBATCH --mem=16G
+#SBATCH --partition=general
+#SBATCH --qos=grp_spresse
+#SBATCH --gres=gpu:a30:1
+#SBATCH --mem=32G
 #SBATCH --output=logs/csdi/single_well_100_100.%j.out
 #SBATCH --error=logs/csdi/single_well_100_100.%j.err
 

@@ -48,12 +48,31 @@ python eval/ARIMA/run_auto_arima.py \
     --input DATA/alanine_phi_test.npz \
     --out results/arima/alanine_phi_25_25.npz \
     --num-samples 3000 \
-    -c configs/arima/alanine_phi.yaml
+    -c configs/arima/alanine_phi_25_25.yaml
 
 
 python eval/ARIMA/run_auto_arima.py \
     --input DATA/alanine_psi_test.npz \
-    --out results/arima/alanine_psi_fh.npz \
+    --out results/arima/alanine_psi_50_50.npz \
     --num-samples 3000 \
-    -c configs/arima/alanine_psi.yaml
+    -c configs/arima/alanine_psi_50_50.yaml
 
+python eval/ARIMA/run_auto_arima.py \
+    --input DATA/alanine_phi_test.npz \
+    --out results/arima/alanine_phi_100_100.npz \
+    --num-samples 3000 \
+    -c configs/arima/alanine_phi_100_100.yaml
+
+
+python eval/ARIMA/run_auto_arima.py \
+    --input DATA/alanine_phi_test.npz \
+    --out results/arima/alanine_phi_25_25.npz \
+    --num-samples 3000 \
+    -c configs/arima/alanine_phi_25_25.yaml
+
+
+python eval/ARIMA/run_auto_arima.py \
+    --input DATA/alanine_phi_test.npz \
+    --out results/arima/alanine_phi_50_50.npz \
+    --num-samples 3000 \
+    -c configs/arima/alanine_phi_50_50.yaml
