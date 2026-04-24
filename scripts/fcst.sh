@@ -47,39 +47,6 @@ ls $CUDA_PATH/lib64/libnvrtc.so* || echo "libnvrtc.so not found in lib64"
 ls $CUDA_PATH/targets/x86_64-linux/lib/libnvrtc.so* || echo "libnvrtc.so not found in targets/x86_64-linux/lib"
 
 
-python eval/NF/forecast_nf.py \
-    --model_path   checkpoints_50_50/nf/double_well.pth     \
-    --config configs/nf/double_well_50_50.yaml \
-    --data_path DATA/double_well_test.npz    \
-    --out results/nf/double_well_50_50.npz \
-    --context_length  50 \
-    --prediction_length 50  \
-    --n_samples 1000 \
-    --train_test_split 900 \
-    --test_size 3000
-
-python eval/NF/forecast_nf.py \
-    --model_path   checkpoints_25_25/nf/single_well.pth     \
-    --config configs/nf/single_well_25_25.yaml \
-    --data_path DATA/single_well_test.npz    \
-    --out results/nf/single_well_25_25.npz \
-    --context_length  25 \
-    --prediction_length 25  \
-    --n_samples 1000 \
-    --train_test_split 900 \
-    --test_size 3000
-
-python eval/NF/forecast_nf.py \
-    --model_path   checkpoints_50_50/nf/single_well.pth     \
-    --config configs/nf/single_well_50_50.yaml \
-    --data_path DATA/single_well_test.npz    \
-    --out results/nf/single_well_50_50.npz \
-    --context_length  50 \
-    --prediction_length 50  \
-    --n_samples 1000 \
-    --train_test_split 900 \
-    --test_size 3000
-
 python eval/NF/forecast_nf_ex.py \
     --model_path   checkpoints_100_100/nf/single_well.pth     \
     --config configs/nf/single_well_100_100.yaml \
@@ -90,13 +57,3 @@ python eval/NF/forecast_nf_ex.py \
     --n_samples 1000 \
     --train_test_split 900 \
     --test_size 3000
-
-python eval/TSDiff/forecast_tsdiff_cond.py   \
-        --config configs/tsdiff_forecast/single_well_cond_25_25.yaml  \
-        --dataset_path gluonts_datasets/single_well \
-        --out results/tsdiff_cond/single_well_25_25.npz
-
-python eval/TSDiff/forecast_tsdiff_cond.py   \
-        --config configs/tsdiff_forecast/single_well_cond_50_50.yaml  \
-        --dataset_path gluonts_datasets/single_well \
-        --out results/tsdiff_cond/single_well_50_50.npz

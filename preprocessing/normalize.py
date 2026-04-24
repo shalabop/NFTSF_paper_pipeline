@@ -4,14 +4,19 @@ from pathlib import Path
 
 ##for data set where training and testing are fused
 
-def normalize_all(time_steps, datatype, out, data_path, train_test_split=None, train_val_split=None, train_size=None):
+def normalize_all(datatype, out, data_path, train_test_split=None, train_val_split=None, train_size=None, time_steps=None):
     out_dir_unnorm = Path("DATA_unnorm") ##change this if you need the folder to be named something else
     out_dir_unnorm.mkdir(exist_ok=True)
 
     ##raw data would have shape (N,T)
     raw = np.load(data_path)
-    train_val_raw=raw[:train_size,:time_steps]
-    test_raw = raw[train_size:,:time_steps]
+    if time_steps is not None:
+        train_val_raw=raw[:train_size,:time_steps]
+        test_raw = raw[train_size:,:time_steps]
+    else:
+        train_val_raw=raw[:train_size,:]
+        test_raw = raw[train_size:,:]
+    
     
     if train_val_split is None:
         train_val_split = int(0.9 * train_val_raw.shape[1])
@@ -63,7 +68,7 @@ if __name__ == '__main__':
     parser.add_argument("--train_test_split", "-tts", type=int, required=False)
     parser.add_argument("--train_val_split", "-tvs", type=int, required=False)
     parser.add_argument("--train_size", type=int,required=True) ##number of trajectories allocated for train/val, the rest will be for test
-    parser.add_argument("--time_steps","-ts",type=int, required=True)
+    parser.add_argument("--time_steps","-ts",type=int, required=False)
     parser.add_argument("--data_type","-dt", type=str, required=False) ##dataset name, used for naming the output files
     args = parser.parse_args()
     normalize_all(time_steps=args.time_steps,datatype=args.data_type,out=args.out_path, data_path=args.data_path, train_test_split=args.train_test_split, train_val_split=args.train_val_split, train_size=args.train_size)
