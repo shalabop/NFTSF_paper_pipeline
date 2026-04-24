@@ -53,6 +53,14 @@ def sanity_check(datatype, data_dir="DATA", unnorm_dir="DATA_unnorm",
     time_train = train_norm["time"]
     time_test = test_norm["time"]
     
+    # Compute mean/std of the training part used for normalization
+    train_norm_part = train_pos[:, :train_split]
+    mean_norm = np.mean(train_norm_part)
+    std_norm = np.std(train_norm_part)
+    assert np.isclose(mean_norm, 0.0, atol=1e-5), f"Normalized mean = {mean_norm:.6f} != 0"
+    assert np.isclose(std_norm, 1.0, atol=1e-5), f"Normalized std = {std_norm:.6f} != 1"
+    print("✓ Normalized data has mean≈0, std≈1 (within tolerance)")
+    
     print(f"\n=== Data shapes ===")
     print(f"Train+val shape: {train_pos.shape}")
     print(f"Test shape: {test_pos.shape}")
