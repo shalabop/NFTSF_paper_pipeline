@@ -1,23 +1,27 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=condAphiTSFdiff
+#SBATCH --job-name=phi
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
-#SBATCH --time=3-00:00:00
+#SBATCH --time=10:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --partition=public
-#SBATCH --qos=public
-#SBATCH --gres=gpu:2
-#SBATCH --mem=32G
-#SBATCH --output=logs/tsdiff_cond/alanine_phi.%j.out
-#SBATCH --error=logs/tsdiff_cond/alanine_phi.%j.err
+#SBATCH --partition=general
+#SBATCH --qos=grp_spresse
+#SBATCH --gres=gpu:1
+#SBATCH --mem=16G
+#SBATCH --output=logs/tsdiff_cond/alanine_phi_trained_w_1000_samples.%j.out
+#SBATCH --error=logs/tsdiff_cond/alanine_phi_trained_w_1000_samples.%j.err
 
 
-source venv310/bin/activate
+source /packages/apps/mamba/2.0.8/etc/profile.d/conda.sh
+conda activate /home/meahmed/.conda/envs/venv310
+
 which python
 
 mkdir -p results/tsdiff_cond
-mkdir -p checkpoints_25_25/tsdiff_cond/checkpoints_25_25
+mkdir -p checkpoints_25_25/tsdiff_cond
+mkdir -p checkpoints_50_50/tsdiff_cond
+
 mkdir -p results/tsdiff_cond/checkpoints_25_25
 which python
 
@@ -63,7 +67,7 @@ python train/TSDiff/train_cond_tsdiff.py \
         --config configs/tsdiff_cond_train/alanine_phi_25_25.yaml \
         --out_dir checkpoints_25_25/tsdiff_cond/alanine_phi
 
-python eval/TSDiff/forecast_tsdiff_cond.py   \
-        --config configs/tsdiff_forecast/alanine_phi_cond.yaml  \
+python train/TSDiff/train_cond_tsdiff.py \
         --dataset_path gluonts_datasets/alanine_phi \
-        --out results/tsdiff_cond/alanine_phi
+        --config configs/tsdiff_cond_train/alanine_phi_50_50.yaml \
+        --out_dir checkpoints_50_50/tsdiff_cond/alanine_phi

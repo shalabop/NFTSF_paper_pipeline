@@ -45,14 +45,15 @@ ls $CUDA_PATH/lib64/libnvrtc.so* || echo "libnvrtc.so not found in lib64"
 ls $CUDA_PATH/targets/x86_64-linux/lib/libnvrtc.so* || echo "libnvrtc.so not found in targets/x86_64-linux/lib"
 
 
-python eval/NF/forecast_nf.py \
-    --model_path   checkpoints/nf/double_well.pth     \
-    --config configs/nf/double_well.yaml    \
-    --data_path    DATA/double_well_test.npz    \
-    --out          results/nf/double_well.npz \
+python eval/NF/forecast_nf_ex.py \
+    --model_path   checkpoints_100_100/nf/alanine_phi.pth     \
+    --config configs/nf/alanine_phi_100_100_forecast.yaml    \
+    --data_path    DATA/alanine_phi_test.npz    \
+    --out          results/nf/test_100_100.npz \
     --context_length     100    \
     --prediction_length     100   \
-    --n_samples    500 \
+    --n_samples    1000 \
     --train_test_split 900 \
-    --test_size 3000
+    --test_size 3000 \
+    --device cuda
     

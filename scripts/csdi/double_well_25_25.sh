@@ -1,21 +1,23 @@
 #!/usr/bin/env bash
 #SBATCH --job-name=DWCSDI25_25
-#SBATCH --time=20:00:00
+#SBATCH --time=16:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
-#SBATCH --partition=public
-#SBATCH --qos=public
+#SBATCH --partition=general
+#SBATCH --qos=grp_spresse
 #SBATCH --gres=gpu:1
 #SBATCH --mem=16G
-#SBATCH --output=logs/csdi/double_well_25_25.%j.out
-#SBATCH --error=logs/csdi/double_well_25_25.%j.err
+#SBATCH --output=logs/csdi/single_well_2525_5050.%j.out
+#SBATCH --error=logs/csdi/single_well_2525_5050.%j.err
 
-mkdir -p results/csdi/double_well
+mkdir -p results/csdi/single_well
 #mkdir -p logs/csdi/double_well
-mkdir -p checkpoints_25_25/csdi/double_well
-
+mkdir -p checkpoints_25_25/csdi/single_well
+mkdir -p checkpoints_50_50/csdi/single_well
+mkdir -p checkpoints_25_25/tsdiff_cond/single_well
+mkdir -p checkpoints_50_50/tsdiff_cond/single_well
 
 source /packages/apps/mamba/2.0.8/etc/profile.d/conda.sh
 conda activate /home/meahmed/.conda/envs/venv310
@@ -38,7 +40,24 @@ ls $CUDA_PATH/lib64/libnvrtc.so*  || echo "libnvrtc.so not found in lib64"
 ls $CUDA_PATH/targets/x86_64-linux/lib/libnvrtc.so* || echo "libnvrtc.so not found in targets/x86_64-linux/lib"
 
 python train/CSDI/train_csdi.py \
-    --config configs/csdi_train/double_well_25_25.yaml \
-    --input  DATA/double_well_train.npz \
-    --out    checkpoints_25_25/csdi/double_well \
+    --config configs/csdi_train/single_well_25_25.yaml \
+    --input  DATA/single_well_train.npz \
+    --out    checkpoints_25_25/csdi/single_well \
     --device cuda:0
+
+python train/CSDI/train_csdi.py \
+    --config configs/csdi_train/single_well_50_50.yaml \
+    --input  DATA/single_well_train.npz \
+    --out    checkpoints_50_50/csdi/single_well \
+    --device cuda:0
+
+python train/TSDiff/train_cond_tsdiff.py \
+        --dataset_path gluonts_datasets/single_well \
+        --config configs/tsdiff_cond_train/single_well_25_25.yaml \
+        --out_dir checkpoints_25_25/tsdiff_cond/single_well
+
+    
+python train/TSDiff/train_cond_tsdiff.py \
+        --dataset_path gluonts_datasets/single_well \
+        --config configs/tsdiff_cond_train/single_well_50_50.yaml \
+        --out_dir checkpoints_50_50/tsdiff_cond/single_well

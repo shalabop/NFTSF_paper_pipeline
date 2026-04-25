@@ -1,24 +1,29 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=ApsiTSFdiffcond
+#SBATCH --job-name=psi
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
-#SBATCH --time=04:00:00
+#SBATCH --time=10:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --partition=htc
-#SBATCH --qos=public
-#SBATCH --gres=gpu:2
-#SBATCH --mem=32G
-#SBATCH --output=logs/tsdiff_cond/alanine_psi.%j.out
-#SBATCH --error=logs/tsdiff_cond/alanine_psi.%j.err
+#SBATCH --partition=general
+#SBATCH --qos=grp_spresse
+#SBATCH --gres=gpu:1
+#SBATCH --mem=16G
+#SBATCH --output=logs/tsdiff_cond/alanine_psi_trained_w_1000_samples.%j.out
+#SBATCH --error=logs/tsdiff_cond/alanine_psi_trained_w_1000_samples.%j.err
 
 
-source venv310/bin/activate
+source /packages/apps/mamba/2.0.8/etc/profile.d/conda.sh
+conda activate /home/meahmed/.conda/envs/venv310
+
 which python
 
-mkdir -p checkpoints/tsdiff_cond/alanine_psi
-mkdir -p results/tsdiff_cond/alanine_psi
-#mkdir -p logs/tsdiff_cond/double_well
+mkdir -p results/tsdiff_cond
+mkdir -p checkpoints_25_25/tsdiff_cond
+mkdir -p checkpoints_50_50/tsdiff_cond
+
+mkdir -p results/tsdiff_cond/checkpoints_25_25
+which python
 
 PROJECT_ROOT=$(pwd) 
 export PYTHONPATH=$PROJECT_ROOT:$PYTHONPATH
@@ -59,10 +64,10 @@ ls $CUDA_PATH/lib64/libnvrtc.so* || ls $CUDA_PATH/targets/x86_64-linux/lib/libnv
 
 python train/TSDiff/train_cond_tsdiff.py \
         --dataset_path gluonts_datasets/alanine_psi \
-        --config configs/tsdiff_cond_train/alanine_psi.yaml \
-        --out_dir checkpoints/tsdiff_cond/alanine_psi
+        --config configs/tsdiff_cond_train/alanine_psi_25_25.yaml \
+        --out_dir checkpoints_25_25/tsdiff_cond/alanine_psi
 
-python eval/TSDiff/forecast_tsdiff_cond.py   \
-        --config configs/tsdiff_forecast/alanine_psi_cond.yaml  \
+python train/TSDiff/train_cond_tsdiff.py \
         --dataset_path gluonts_datasets/alanine_psi \
-        --out results/tsdiff_cond/alanine_psi
+        --config configs/tsdiff_cond_train/alanine_psi_50_50.yaml \
+        --out_dir checkpoints_50_50/tsdiff_cond/alanine_psi
