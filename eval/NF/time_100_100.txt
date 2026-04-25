@@ -1,0 +1,20 @@
+python eval/NF/forecast_nf_ex.py     --model_path   checkpoints_100_100/nf/alanine_phi.pth         --config confi
+gs/nf/alanine_phi_100_100_forecast.yaml        --data_path    DATA/alanine_phi_test.npz        --out          results/2/test.npz     --context_length     100    --prediction_leng
+th     100      --n_samples    1000     --train_test_split 900     --test_size 3000 
+Device: cuda
+Test data: (150, 1000)  (N_traj, T)
+train_test_split : 900 (CLI override)
+Architecture from config: flow_blocks=6, hidden_units=64, hidden_layers=1,2
+Loaded weights: checkpoints_100_100/nf/alanine_phi.pth
+Forecasting (batched):   0%|                                                                                                                                | 0/3 [00:00<?, ?it/s]time_elapsed_inst 673.9801151752472
+Forecasting (batched):  33%|███████████████████████████████████████▋                                                                               | 1/3 [11:14<22:28, 674.02s/it]time_elapsed_inst 673.1728074550629
+Forecasting (batched):  67%|███████████████████████████████████████████████████████████████████████████████▎                                       | 2/3 [22:27<11:13, 673.54s/it]time_elapsed_inst 232.09574604034424
+Forecasting (batched): 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 3/3 [26:19<00:00, 526.44s/it]
+Inference time : 1579.25s  (10528.3 ms/trajectory, 10.528 ms/sample)
+
+Saved: results/nf/test_100_100.npz
+  samples      : (150, 100, 1000)  (N, H, S)
+  ground_truth : (150, 100)  (N, H)
+  contexts     : (150, 100)  (N, L)
+  time_elapsed : 1579.25s
+Sanity checks passed ✓
