@@ -1,7 +1,7 @@
 model: unconditional
 freq: H
-context_length: 100
-prediction_length: 100
+context_length: 25
+prediction_length: 25
 diffusion_config: diffusion_small_config
 use_features: False
 use_lags: False
@@ -16,7 +16,7 @@ batch_size: 64
 num_batches_per_epoch: 128
 max_epochs: 1000
 dataset: double_well
-num_samples: 500
+num_samples: 1000
 sampler: ddpm
 sampler_params:
   guidance: quantile
