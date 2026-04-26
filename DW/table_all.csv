@@ -1,7 +1,0 @@
-landscape,model,mae,crps,ci50,ci90
-double_well,NFTSF,0.7944,0.5034,0.4955,0.8966
-double_well,ARIMA,0.8963,0.6800,0.4900,0.8963
-double_well,CSDI,0.7944,0.5036,0.4882,0.8729
-double_well,TSDiff-Cond,0.7975,0.5044,0.4946,0.8816
-double_well,TSDiff-Q,0.8054,0.5084,0.5207,0.8935
-double_well,TSDiff-MS,0.8056,0.5092,0.5265,0.8931
