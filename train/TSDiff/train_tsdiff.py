@@ -177,8 +177,8 @@ def main(config, log_dir, dataset_path,running_tests):
                 sampler_kwargs=config["sampler_params"],
                 num_samples=config["num_samples"],
                 model=model,
-                transformation=transformation, ##tranformation to concantentae the post training data (used as context) for validation 
-                test_dataset=dataset.test, ##never actually used
+                transformation=transformation,
+                test_dataset=dataset.test,
                 val_dataset=val_data, ## dataset
                 eval_every=config["eval_every"],
             )
@@ -212,12 +212,12 @@ def main(config, log_dir, dataset_path,running_tests):
     )
     
     '''early_stop_callback = EarlyStopping(
-        monitor="valid_loss",   
+        monitor="train_loss",   
         patience=10,            
         mode="min",             
         verbose=True            
-    )'''
-    #callbacks.append(early_stop_callback)
+    )
+    callbacks.append(early_stop_callback)'''
 
     callbacks.append(checkpoint_callback)
     #callbacks.append(RichProgressBar())
@@ -231,10 +231,12 @@ def main(config, log_dir, dataset_path,running_tests):
         callbacks=callbacks,
         default_root_dir=log_dir,
         gradient_clip_val=config.get("gradient_clip_val", None),
+        check_val_every_n_epoch=config["eval_every"],
     )
     print("-----------------------------------------------------------------------------------")
     logger.info(f"Logging to {trainer.logger.log_dir}")
     trainer.fit(model, train_dataloaders=data_loader)
+    
     logger.info("Training completed.")
 
 if __name__ == "__main__":
