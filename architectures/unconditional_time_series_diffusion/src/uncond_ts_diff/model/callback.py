@@ -209,7 +209,7 @@ class EvaluateCallback(Callback):
 
     def on_train_epoch_end(self, trainer, pl_module):
         
-        print("210 ###################################################################################")
+        #print("210 ###################################################################################")
         
         if (pl_module.current_epoch + 1) % self.eval_every == 0:
             device = next(pl_module.backbone.parameters()).device
@@ -219,7 +219,7 @@ class EvaluateCallback(Callback):
             pl_module.eval()
             assert pl_module.training is False
             
-            print("220 ###################################################################################")
+            #print("220 ###################################################################################")
             for label, state_dict in zip(
                 [""] + [str(rate) for rate in pl_module.ema_rate],
                 [pl_module.backbone.state_dict()] + pl_module.ema_state_dicts,
@@ -240,7 +240,7 @@ class EvaluateCallback(Callback):
                     ],
                 )
                                 
-                print("241 ###################################################################################")
+                #print("241 ###################################################################################")
                 og = self.Guidance(
                     self.model,
                     self.prediction_length,
@@ -256,8 +256,7 @@ class EvaluateCallback(Callback):
 
                 #print("255 only run validate performance on 20% percent of the time series")
                 ##########3
-                sampled_val = random.sample(list(self.val_data), k=min(len(self.val_data), 2000))
-                transformed_valdata = self.transformation.apply(ConcatDataset(sampled_val), is_train=False)
+                transformed_valdata = self.transformation.apply(ConcatDataset(self.val_data), is_train=False)
                 
                 '''#print(f'num of time series: self.val_data: {len(list(self.val_data))}')
                 #print(f'num of time series: transformed_valdata :{len(list(transformed_valdata))}')
