@@ -8,7 +8,7 @@ import yaml
 import torch
 from tqdm.auto import tqdm
 import pytorch_lightning as pl
-from pytorch_lightning.callbacks import ModelCheckpoint, RichProgressBar
+from pytorch_lightning.callbacks import ModelCheckpoint, RichProgressBar, EarlyStopping
 
 from gluonts.dataset.loader import TrainDataLoader, ValidationDataLoader
 from gluonts.dataset.split import OffsetSplitter
@@ -234,8 +234,6 @@ def main(config, log_dir,dataset_path):
         log_monitor = "train_loss"
 
     filename = dataset_name + "-{epoch:03d}-{train_loss:.3f}"
-    
-    print(f"Validation loader created with {len(transformed_valdata)} instances, batches = {len(val_loader)}")
 
     data_loader = TrainDataLoader(
         Cached(transformed_data),
@@ -255,6 +253,13 @@ def main(config, log_dir,dataset_path):
        # save_weights_only=False,
        )
     
+    early_stop_callback = EarlyStopping(
+        monitor="valid_loss",   
+        patience=10,            
+        mode="min",             
+        verbose=True            
+    )
+    callbacks.append(early_stop_callback)
     callbacks.append(checkpoint_callback)
     #callbacks.append(RichProgressBar())
     

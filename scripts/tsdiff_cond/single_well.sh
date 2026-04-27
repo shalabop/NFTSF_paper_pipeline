@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=DWTSFdiffcond
+#SBATCH --job-name=SWTSFdiffcond
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
 #SBATCH --time=2-15:00:00
@@ -9,16 +9,16 @@
 #SBATCH --qos=public
 #SBATCH --gres=gpu:1
 #SBATCH --mem=16G
-#SBATCH --output=logs/tsdiff_cond/DW_TSFdiff_cond.%j.out
-#SBATCH --error=logs/tsdiff_cond/DW_TSFdiff_cond.%j.err
+#SBATCH --output=logs/tsdiff_cond/SW_TSFdiff_cond.%j.out
+#SBATCH --error=logs/tsdiff_cond/SW_TSFdiff_cond.%j.err
 
 
 source venv310/bin/activate
 which python
 
-mkdir -p checkpoints/tsdiff_cond/double_well
-mkdir -p results/tsdiff_cond/double_well
-mkdir -p logs/tsdiff_cond/double_well
+mkdir -p checkpoints/tsdiff_cond/single_well
+mkdir -p results/tsdiff_cond/single_well
+mkdir -p logs/tsdiff_cond/single_well
 
 PROJECT_ROOT=$(pwd) 
 export PYTHONPATH=$PROJECT_ROOT:$PYTHONPATH
@@ -46,11 +46,11 @@ ls $CUDA_PATH/lib64/libnvrtc.so* || echo "libnvrtc.so not found in lib64"
 ls $CUDA_PATH/targets/x86_64-linux/lib/libnvrtc.so* || echo "libnvrtc.so not found in targets/x86_64-linux/lib"
 
 python train/TSDiff/train_cond_tsdiff.py \
-        --dataset_path gluonts_datasets/double_well \
-        --config configs/tsdiff_cond_train/double_well_25_25.yaml \
-        --out_dir checkpoints_25_25/tsdiff_cond/double_well
+        --dataset_path gluonts_datasets/single_well \
+        --config configs/tsdiff_cond_train/single_well_25_25_cond.yaml \
+        --out_dir checkpoints_25_25/tsdiff_cond/single_well
 
 python train/TSDiff/train_cond_tsdiff.py \
-        --dataset_path gluonts_datasets/double_well \
-        --config configs/tsdiff_cond_train/double_well_50_50.yaml \
-        --out_dir checkpoints_50_50/tsdiff_cond/double_well
+        --dataset_path gluonts_datasets/single_well \
+        --config configs/tsdiff_cond_train/single_well_50_50_cond.yaml \
+        --out_dir checkpoints_50_50/tsdiff_cond/single_well

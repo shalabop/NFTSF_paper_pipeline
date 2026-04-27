@@ -1,25 +1,25 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=DWTSFdiffcond50
+#SBATCH --job-name=SWTSFdiff
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
-#SBATCH --time=8:00:00
+#SBATCH --time=2-00:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --partition=public
 #SBATCH --qos=public
 #SBATCH --gres=gpu:1
 #SBATCH --mem=16G
-#SBATCH --output=logs/tsdiff_cond/DW_TSFdiff_cond_50_50.%j.out
-#SBATCH --error=logs/tsdiff_cond/DW_TSFdiff_cond_50_50.%j.err
-
-
-
+#SBATCH --output=logs/tsdiff/single_well_2525_5050.%j.out
+#SBATCH --error=logs/tsdiff/single_well_2525_5050.%j.err
 
 source /packages/apps/mamba/2.0.8/etc/profile.d/conda.sh
 conda activate /home/meahmed/.conda/envs/venv310
-mkdir -p checkpoints_50_50/tsdiff_cond/double_well
-mkdir -p results/tsdiff_cond/double_well
-mkdir -p logs/tsdiff_cond/double_well
+
+which python
+
+mkdir -p results/tsdiff
+mkdir -p checkpoints_25_25/tsdiff
+mkdir -p checkpoints_50_50/tsdiff
 
 which python
 
@@ -60,7 +60,7 @@ ls $CUDA_PATH/include/cuda.h || echo "WARNING: cuda.h not found"
 ls $CUDA_PATH/include/nvrtc.h || echo "WARNING: nvrtc.h not found"
 ls $CUDA_PATH/lib64/libnvrtc.so* || ls $CUDA_PATH/targets/x86_64-linux/lib/libnvrtc.so* || echo "WARNING: libnvrtc.so not found"
 
-python train/TSDiff/train_cond_tsdiff.py \
-        --dataset_path gluonts_datasets/double_well \
-        --config configs/tsdiff_cond_train/double_well_50_50.yaml \
-        --out_dir checkpoints_50_50/tsdiff_cond/double_well
+python train/TSDiff/train_tsdiff.py \
+        --dataset_path gluonts_datasets/single_well \
+        --config configs/tsdiff_train/single_well_25_25.yaml \
+        --out_dir checkpoints_25_25/tsdiff/single_well

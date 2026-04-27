@@ -1,26 +1,27 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=SW50TSFdiff
+#SBATCH --job-name=SWTSFdiffcond50
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
-#SBATCH --time=20:00:00
+#SBATCH --time=8:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --partition=public
 #SBATCH --qos=public
 #SBATCH --gres=gpu:1
 #SBATCH --mem=16G
-#SBATCH --output=logs/tsdiff_cond/single_well_50_50.%j.out
-#SBATCH --error=logs/tsdiff_cond/single_well_50_50.%j.err
+#SBATCH --output=logs/tsdiff_cond/SW_TSFdiff_cond_50_50.%j.out
+#SBATCH --error=logs/tsdiff_cond/SW_TSFdiff_cond_50_50.%j.err
+
+
 
 
 source /packages/apps/mamba/2.0.8/etc/profile.d/conda.sh
 conda activate /home/meahmed/.conda/envs/venv310
 
-which python
-
 mkdir -p results/tsdiff_cond
+mkdir -p checkpoints_25_25/tsdiff_cond
 mkdir -p checkpoints_50_50/tsdiff_cond
-mkdir -p results/tsdiff_cond/checkpoints_50_50
+
 which python
 
 PROJECT_ROOT=$(pwd) 

@@ -24,6 +24,7 @@ def evaluate_csdi(model, test_loader, n_samples, device,
     model.eval()
     all_samples = []
     all_gt      = []
+    time_elapsed = 0
 
     with torch.no_grad():
         for batch in tqdm(test_loader, desc="Forecasting"):  
@@ -34,7 +35,11 @@ def evaluate_csdi(model, test_loader, n_samples, device,
 
             cond_mask = gt_mask
             side_info = model.get_side_info(observed_tp, cond_mask)
+            
+            start_time = timelib.time()
             samples = model.impute(observed_data, cond_mask, side_info, n_samples)
+            end = timelib.time() - start_time 
+            time_elapsed  = time_elapsed + end
 
             samples = samples[:, :, 0, -prediction_length:]  
             samples = samples.permute(0, 2, 1)               
@@ -47,7 +52,7 @@ def evaluate_csdi(model, test_loader, n_samples, device,
     gt_out      = np.concatenate(all_gt,      axis=0)  
     
     
-    return samples_out, gt_out
+    return samples_out, gt_out, time_elapsed
 
 
 def main():
@@ -108,17 +113,12 @@ def main():
     model = CSDI_Forecasting(config, args.device, target_dim=1).to(args.device)
     model.load_state_dict(torch.load(args.ckpt, map_location=args.device, weights_only=False))
     print(f"Loaded: {args.ckpt}")
-
-
-    time_start = timelib.time()
     
-    samples, gt = evaluate_csdi(
+    samples, gt, time_elapsed= evaluate_csdi(
         model, test_loader, num_of_samples,
         args.device, prediction_length,
     )
-    
-    time_elapsed =  timelib.time() - time_start
-    
+
 
     
     N = len(samples)

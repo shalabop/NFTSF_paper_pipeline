@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=psi
+#SBATCH --job-name=psiTSDIff
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
-#SBATCH --time=10:00:00
+#SBATCH --time=2-15:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --partition=general
-#SBATCH --qos=grp_spresse
+#SBATCH --partition=public
+#SBATCH --qos=public
 #SBATCH --gres=gpu:1
 #SBATCH --mem=16G
-#SBATCH --output=logs/tsdiff_cond/alanine_psi_trained_w_1000_samples.%j.out
-#SBATCH --error=logs/tsdiff_cond/alanine_psi_trained_w_1000_samples.%j.err
+#SBATCH --output=logs/tsdiff_cond/alanine_psi.%j.out
+#SBATCH --error=logs/tsdiff_cond/alanine_psi.%j.err
 
 
 source /packages/apps/mamba/2.0.8/etc/profile.d/conda.sh
@@ -22,7 +22,6 @@ mkdir -p results/tsdiff_cond
 mkdir -p checkpoints_25_25/tsdiff_cond
 mkdir -p checkpoints_50_50/tsdiff_cond
 
-mkdir -p results/tsdiff_cond/checkpoints_25_25
 which python
 
 PROJECT_ROOT=$(pwd) 

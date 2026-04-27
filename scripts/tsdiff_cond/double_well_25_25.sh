@@ -1,28 +1,27 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=DW2525TSFdiff
+#SBATCH --job-name=DWTSFdiffcond25
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
-#SBATCH --time=16:00:00
+#SBATCH --time=8:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --partition=general
-#SBATCH --qos=grp_spresse
+#SBATCH --partition=public
+#SBATCH --qos=public
 #SBATCH --gres=gpu:1
 #SBATCH --mem=16G
-#SBATCH --output=logs/tsdiff_cond/double_well_2525_5050.%j.out
-#SBATCH --error=logs/tsdiff_cond/double_well_2525_5050.%j.err
+#SBATCH --output=logs/tsdiff_cond/DW_TSFdiff_cond_25_25.%j.out
+#SBATCH --error=logs/tsdiff_cond/DW_TSFdiff_cond_25_25.%j.err
+
+
 
 
 source /packages/apps/mamba/2.0.8/etc/profile.d/conda.sh
 conda activate /home/meahmed/.conda/envs/venv310
 
-which python
+mkdir -p checkpoints_25_25/tsdiff_cond/double_well
+mkdir -p results/tsdiff_cond/double_well
+mkdir -p logs/tsdiff_cond/double_well
 
-mkdir -p results/tsdiff_cond
-mkdir -p checkpoints_25_25/tsdiff_cond
-mkdir -p checkpoints_50_50/tsdiff_cond
-
-mkdir -p results/tsdiff_cond/checkpoints_25_25
 which python
 
 PROJECT_ROOT=$(pwd) 
@@ -66,9 +65,3 @@ python train/TSDiff/train_cond_tsdiff.py \
         --dataset_path gluonts_datasets/double_well \
         --config configs/tsdiff_cond_train/double_well_25_25.yaml \
         --out_dir checkpoints_25_25/tsdiff_cond/double_well
-
-    
-python train/TSDiff/train_cond_tsdiff.py \
-        --dataset_path gluonts_datasets/double_well \
-        --config configs/tsdiff_cond_train/double_well_50_50.yaml \
-        --out_dir checkpoints_50_50/tsdiff_cond/double_well

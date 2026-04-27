@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=DWTSFdiff
+#SBATCH --job-name=DW50TSFdiff
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
-#SBATCH --time=1-00:00:00
+#SBATCH --time=2-00:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --partition=public
 #SBATCH --qos=public
 #SBATCH --gres=gpu:1
 #SBATCH --mem=16G
-#SBATCH --output=logs/tsdiff/double_well_2525_5050.%j.out
-#SBATCH --error=logs/tsdiff/double_well_2525_5050.%j.err
+#SBATCH --output=logs/tsdiff/double_well_50_50.%j.out
+#SBATCH --error=logs/tsdiff/double_well_50_50.%j.err
 
 source /packages/apps/mamba/2.0.8/etc/profile.d/conda.sh
 conda activate /home/meahmed/.conda/envs/venv310
@@ -59,11 +59,6 @@ echo "Checking CUDA installation..."
 ls $CUDA_PATH/include/cuda.h || echo "WARNING: cuda.h not found"
 ls $CUDA_PATH/include/nvrtc.h || echo "WARNING: nvrtc.h not found"
 ls $CUDA_PATH/lib64/libnvrtc.so* || ls $CUDA_PATH/targets/x86_64-linux/lib/libnvrtc.so* || echo "WARNING: libnvrtc.so not found"
-
-python train/TSDiff/train_tsdiff.py \
-        --dataset_path gluonts_datasets/double_well \
-        --config configs/tsdiff_train/double_well_25_25.yaml \
-        --out_dir checkpoints_25_25/tsdiff/double_well
 
 python train/TSDiff/train_tsdiff.py \
         --dataset_path gluonts_datasets/double_well \

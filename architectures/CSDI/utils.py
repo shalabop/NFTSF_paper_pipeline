@@ -27,8 +27,6 @@ def train(
     train_loss=[]
     epochs_list=[]
     last_avg_val=None
-    patience=10
-    counter = 0
 
     best_valid_loss = 1e10
     for epoch_no in range(config["epochs"]):
@@ -89,15 +87,9 @@ def train(
                 ##saving loss    
                 last_val_loss = avg_valid
                 val_loss.append(avg_valid)
-                counter = 0
                 print(f"\n best loss updated to {avg_loss_valid:.6f} at epoch {epoch_no}")
                 torch.save(model.state_dict(), output_path)
-            else:
-                counter += 1
-                if counter >= patience:   
-                    print(f"Early stopping triggered after {epoch_no+1} epochs")
-                    break
-                val_loss.append(last_val_loss if last_val_loss is not None else np.nan)
+
         
     np.savez(
         config["training_curv"] + "/loss.npz",

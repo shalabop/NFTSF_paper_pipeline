@@ -12,7 +12,7 @@ PROJECT_ROOT = os.path.abspath(os.path.join(ROOT, "..", ".."))        # project 
 
 sys.path.insert(0, os.path.join(PROJECT_ROOT, "architectures", "CSDI"))   # for diff_models
 sys.path.insert(0, os.path.join(PROJECT_ROOT, "architectures"))           # for CSDI package
-sys.path.insert(0, PROJECT_ROOT)                                          
+sys.path.insert(0, PROJECT_ROOT)                                          # for top-level modules if any
 
 from CSDI.main_model import CSDI_Forecasting
 from CSDI.dataset_md import get_dataloader_md
