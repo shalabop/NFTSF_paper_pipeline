@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #SBATCH --job-name=evaluation
-#SBATCH --time=22:00:00
+#SBATCH --time=2:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
@@ -40,22 +40,15 @@ ls $CUDA_PATH/targets/x86_64-linux/lib/libnvrtc.so* || echo "libnvrtc.so not fou
 
 
 python eval/CSDI/forecast_csdi.py \
-    --config configs/csdi_train/single_well_25_25.yaml \
-    --input  DATA/single_well_test.npz \
-    --ckpt   checkpoints_25_25/csdi/single_well/model.pth \
-    --out    results/csdi/single_well_25_25.npz \
+    --config configs/csdi_train/alanine_phi_25_25.yaml \
+    --input  DATA/alanine_phi_test.npz \
+    --ckpt   checkpoints_25_25/csdi/alanine_phi/model.pth \
+    --out    results/csdi/alanine_phi_25_25.npz \
     --device cuda:0
 
 python eval/CSDI/forecast_csdi.py \
-    --config configs/csdi_train/single_well_50_50.yaml \
-    --input  DATA/single_well_test.npz \
-    --ckpt   checkpoints_50_50/csdi/single_well/model.pth \
-    --out    results/csdi/single_well_50_50.npz \
-    --device cuda:0
-
-python eval/CSDI/forecast_csdi.py \
-    --config configs/csdi_train/single_well_100_100.yaml \
-    --input  DATA/single_well_test.npz \
-    --ckpt   checkpoints_100_100/csdi/single_well/model.pth \
-    --out    results/csdi/single_well_100_100.npz \
+    --config configs/csdi_train/alanine_psi_25_25.yaml \
+    --input  DATA/alanine_psi_test.npz \
+    --ckpt   checkpoints_25_25/csdi/alanine_psi/model.pth \
+    --out    results/csdi/alanine_psi_25_25.npz \
     --device cuda:0

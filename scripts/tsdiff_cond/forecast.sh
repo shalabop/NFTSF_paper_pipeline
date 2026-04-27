@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #SBATCH --job-name=evaluation
-#SBATCH --time=22:00:00
+#SBATCH --time=12:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
@@ -68,14 +68,14 @@ ls $CUDA_PATH/lib64/libnvrtc.so* || ls $CUDA_PATH/targets/x86_64-linux/lib/libnv
 
     
 python eval/TSDiff/forecast_tsdiff_cond.py   \
-        --config configs/tsdiff_forecast/alanine_phi_cond_100_100.yaml  \
+        --config configs/tsdiff_forecast/alanine_phi_cond_25_25.yaml  \
         --dataset_path gluonts_datasets/alanine_phi \
-        --out results/tsdiff_cond/alanine_phi_100_100.npz
+        --out results/tsdiff_cond/alanine_phi_25_25.npz
 
 python eval/TSDiff/forecast_tsdiff_cond.py   \
-        --config configs/tsdiff_forecast/alanine_psi_cond_25_25.yaml  \
-        --dataset_path gluonts_datasets/alanine_psi \
-        --out results/tsdiff_cond/alanine_psi_25_25.npz
+        --config configs/tsdiff_forecast/alanine_phi_cond_50_50.yaml  \
+        --dataset_path gluonts_datasets/alanine_phi \
+        --out results/tsdiff_cond/alanine_phi_50_50.npz
 
     
 python eval/TSDiff/forecast_tsdiff_cond.py   \
@@ -85,6 +85,6 @@ python eval/TSDiff/forecast_tsdiff_cond.py   \
 
     
 python eval/TSDiff/forecast_tsdiff_cond.py   \
-        --config configs/tsdiff_forecast/alanine_psi_cond_100_100.yaml  \
+        --config configs/tsdiff_forecast/alanine_psi_cond_25_25.yaml  \
         --dataset_path gluonts_datasets/alanine_psi \
-        --out results/tsdiff_cond/alanine_psi_100_100.npz
+        --out results/tsdiff_cond/alanine_psi_25_25.npz

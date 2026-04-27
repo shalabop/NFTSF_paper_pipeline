@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=AphicTSFdiff
+#SBATCH --job-name=ApsicTSFdiff
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
 #SBATCH --time=20:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --partition=general
-#SBATCH --qos=grp_spresse
+#SBATCH --partition=public
+#SBATCH --qos=public
 #SBATCH --gres=gpu:1
 #SBATCH --mem=16G
 #SBATCH --output=logs/tsdiff/alanine_psi_50_50.%j.out
@@ -17,7 +17,7 @@ source venv310/bin/activate
 which python
 
 mkdir -p results/tsdiff
-mkdir -p checkpoints_50_50/tsdiff
+mkdir -p checkpoints_50_50/tsdiff/
 mkdir -p results/tsdiff/checkpoints_50_50
 which python
 

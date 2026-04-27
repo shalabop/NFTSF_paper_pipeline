@@ -8,7 +8,7 @@
 #SBATCH --partition=public
 #SBATCH --qos=public
 #SBATCH --gres=gpu:1
-#SBATCH --mem=16G
+#SBATCH --mem=32G
 #SBATCH --output=logs/tsdiff/double_well_25_25.%j.out
 #SBATCH --error=logs/tsdiff/double_well_25_25.%j.err
 

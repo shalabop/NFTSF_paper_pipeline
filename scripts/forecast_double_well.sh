@@ -100,3 +100,10 @@ python eval/TSDiff/forecast_tsdiff_cond.py   \
         --config configs/tsdiff_forecast/single_well_cond_50_50.yaml  \
         --dataset_path gluonts_datasets/single_well \
         --out results/tsdiff_cond/single_well_50_50.npz
+
+python eval/CSDI/forecast_csdi.py \
+    --config configs/csdi_train/alanine_psi_25_25.yaml \
+    --input  DATA/alanine_psi_test.npz \
+    --ckpt   checkpoints_25_25/csdi/alanine_psi/model.pth \
+    --out    results/csdi/alanine_psi_25_25.npz \
+    --device cuda:0

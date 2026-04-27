@@ -2,10 +2,10 @@
 #SBATCH --job-name=DWTSFdiffcond50
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
-#SBATCH --time=8:00:00
+#SBATCH --time=1:20:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --partition=public
+#SBATCH --partition=htc
 #SBATCH --qos=public
 #SBATCH --gres=gpu:1
 #SBATCH --mem=16G

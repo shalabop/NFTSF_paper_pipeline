@@ -2,13 +2,13 @@
 #SBATCH --job-name=SW50TSFdiff
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
-#SBATCH --time=2-00:00:00
+#SBATCH --time=1-12:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --partition=public
 #SBATCH --qos=public
 #SBATCH --gres=gpu:1
-#SBATCH --mem=16G
+#SBATCH --mem=32G
 #SBATCH --output=logs/tsdiff/single_well_50_50.%j.out
 #SBATCH --error=logs/tsdiff/single_well_50_50.%j.err
 
