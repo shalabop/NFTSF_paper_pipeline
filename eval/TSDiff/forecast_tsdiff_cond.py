@@ -160,7 +160,7 @@ def forecast(
         device     = config["device"],
     )
 
-    time_start = timelib.time()
+    
     
     
     forecast_it, ts_it = make_evaluation_predictions(
@@ -168,6 +168,8 @@ def forecast(
         predictor   = predictor,
         num_samples = num_samples,
     )
+    
+    time_start = timelib.time()
     results = list(tqdm(forecast_it, total=len(list(windowed_dataset))))
     
     time_elapsed = timelib.time() - time_start

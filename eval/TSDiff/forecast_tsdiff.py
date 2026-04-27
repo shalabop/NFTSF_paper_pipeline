@@ -9,6 +9,7 @@ import yaml
 import properscoring as ps
 import datetime
 from pathlib import Path
+import time as timlib
 
 logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -317,7 +318,10 @@ def forecast(
         num_samples = num_samples,
     )
 
-    results = list(tqdm(forecast_it, total=len(transformed_testdata)))
+    time_start = timelib.time()
+    results = list(tqdm(forecast_it, total=len(list(windowed_dataset))))
+    
+    time_elapsed = timelib.time() - time_start
     ts_list   = list(ts_it) 
     #full_trajectories = np.array([ts.values.flatten() for ts in ts_list])
     

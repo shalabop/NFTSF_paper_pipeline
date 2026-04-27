@@ -50,7 +50,7 @@ def parse_args():
     p.add_argument("--batch_size",        type=int, default=256,
                    help="Number of (traj × sample) pairs per forward pass. "
                         "Increase for speed, decrease if OOM.")
-    p.add_argument("--device",            default="cuda",
+    p.add_argument("--device",            default="auto",
                    choices=["auto", "cuda", "cpu"])
     p.add_argument("--seed",              type=int, default=42)
     p.add_argument("--train_test_split",  type=int, default=None)
@@ -173,7 +173,7 @@ def run_forecast_batched(
     # Output buffer
     samples_out = np.zeros((N, prediction_length, n_samples), dtype=np.float32)
 
-    time_elapsed= 0
+    time_start = timelib.time()
 
     n_batches = (N + batch_size - 1) // batch_size
     for b in tqdm(range(n_batches), desc="Forecasting (batched)"):
@@ -187,18 +187,13 @@ def run_forecast_batched(
 
         with torch.no_grad():
             try:
-                time_start = timelib.time()
                 samp, _ = model.sample(B * n_samples, ctx_b_tiled)  # (B*S, H)
-                time_elapsed_inst = timelib.time() - time_start
-                print(f"time_elapsed_inst {time_elapsed_inst}")
-                
-                time_elapsed += time_elapsed_inst
             except AssertionError as e:
                 raise RuntimeWarning()
         samp_np = samp.cpu().numpy().reshape(B, n_samples, prediction_length)
         samples_out[b_start:b_end] = samp_np.transpose(0, 2, 1)  # (B, H, S)
 
-    
+    time_elapsed = timelib.time() - time_start
     # --- End timed region -------------------------------------------------
 
     print(f"Inference time : {time_elapsed:.2f}s  "

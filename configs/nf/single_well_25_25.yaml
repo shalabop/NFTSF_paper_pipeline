@@ -24,8 +24,9 @@ normalize: true
 stride: 5
 batch_size: 4096
 
-output_dir: "/home/afazzam/nftsfpaper/NFTSF_ssh-main/pipeline_results/training/K6_H64_lr1e-3_ep1000_np25_nf25/sw_sle_em"
+output_dir: "/home/afazzam/nftsfpaper/NFTSF_ssh-main/pipeline_results/training/ar_K6_H64_lr1e-3_ep1000_np25_nf25_timing/sw_sle_em"
 model_name: "model"
+model_variant: "ar"
 save_interval: 100
 device: "auto"
 seed: 42
@@ -39,6 +40,11 @@ well_positions: null
 landscape: "sw_sle_em"
 plot_future_steps: null
 
-timestamp: "20260422_134059"
-final_loss: -133.73584546540914
+timestamp: "20260426_201850"
+final_loss: -49.34812525699013
 final_val_loss: null
+
+training_time_seconds: 3178.01292181015
+sampling_benchmark_n_samples: 100
+sampling_benchmark_total_seconds: 0.7904951572418213
+sampling_time_per_sample_seconds: 0.007904951572418212
