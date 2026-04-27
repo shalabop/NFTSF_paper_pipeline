@@ -2,13 +2,11 @@
 """
 plot_per_trajectory.py
 ======================
-For a single test trajectory, generate:
-  - Full trajectory (all time steps)
-  - Full trajectory up to forecast horizon
-  - Trajectory comparison with CI bands (like compare.py)
-  - Trajectory with forecast samples (individual sample paths)
-  - 2D histogram of forecast samples (like compare.py)
-All plots are saved per model and per landscape.
+For a single test trajectory, generate per model:
+  - Cropped ground truth + CI bands
+  - Cropped ground truth + forecast samples
+  - Cropped ground truth + 2D histogram
+All plots use the same cropped window (context+forecast) with a vertical line at the forecast start.
 """
 
 import argparse
@@ -21,7 +19,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 
 # ---------------------------------------------------------------------------
-# Model registry (same as compare.py)
+# Model registry
 # ---------------------------------------------------------------------------
 MODEL_REGISTRY: dict[str, dict] = {
     "nftsf":      {"label": "NFTSF",       "color": "#1F77B4"},
@@ -36,7 +34,7 @@ MODEL_REGISTRY: dict[str, dict] = {
 }
 
 # ---------------------------------------------------------------------------
-# Landscape display helpers
+# Landscape helpers
 # ---------------------------------------------------------------------------
 LANDSCAPE_DISPLAY: dict[str, str] = {
     "single_well": "Single Well",
@@ -76,7 +74,7 @@ def _denorm(x, mean, std):
     return x * (std + 1e-8) + mean
 
 # ---------------------------------------------------------------------------
-# Result loading – returns the exact same structures as compare.py
+# Result loading – returns cropped window (context+forecast) as ground_truths
 # ---------------------------------------------------------------------------
 def load_npz_result(npz_path: str, context_length_fallback: int, mean=None, std=None):
     data = np.load(npz_path, allow_pickle=True)
@@ -101,7 +99,6 @@ def load_npz_result(npz_path: str, context_length_fallback: int, mean=None, std=
         if start_idx < 0:
             L = full_trajectories.shape[1] - H
             start_idx = 0
-    # ground_truths includes both context and forecast (length L+H)
     ground_truths = full_trajectories[:, start_idx:end_idx]   # (N, L+H)
     if mean is not None and std is not None:
         ground_truths = _denorm(ground_truths, mean, std)
@@ -111,55 +108,17 @@ def load_npz_result(npz_path: str, context_length_fallback: int, mean=None, std=
         "samples": samples.astype(np.float32),
         "n_past": L,
         "n_future": H,
-        "full_trajectories": full_trajectories,
-        "train_test_split": train_test_split,
-        "context_length": L,
         "pred_len": H,
     }
 
 # ---------------------------------------------------------------------------
-# Plotting functions that mimic compare.py
+# Plotting functions (all use the cropped window)
 # ---------------------------------------------------------------------------
-def plot_full_trajectory(land, full_traj, output_dir):
-    """Plot entire full trajectory (all time steps)."""
-    fig, ax = plt.subplots(figsize=(10, 4))
-    ax.plot(full_traj, color='black', linewidth=1.5)
-    ax.set_xlabel("Time step")
-    ax.set_ylabel(_coord_label(land))
-    ax.set_title(f"{_land_display(land)} — Full trajectory")
-    ax.grid(alpha=0.3)
-    out_path = output_dir / f"full_trajectory_{land}.svg"
-    fig.savefig(out_path, format="svg", bbox_inches="tight")
-    plt.close(fig)
-    print(f"  Saved: {out_path}")
-
-def plot_full_trajectory_up_to_forecast(land, full_traj, train_test_split, pred_len, output_dir):
-    """Plot trajectory up to the end of the forecast horizon."""
-    end = train_test_split + pred_len
-    traj_part = full_traj[:end]
-    fig, ax = plt.subplots(figsize=(10, 4))
-    ax.plot(traj_part, color='black', linewidth=1.5)
-    ax.axvline(x=train_test_split, color='red', linestyle='--', alpha=0.5, label='Forecast start')
-    ax.set_xlabel("Time step")
-    ax.set_ylabel(_coord_label(land))
-    ax.set_title(f"{_land_display(land)} — Trajectory up to forecast horizon")
-    ax.legend()
-    ax.grid(alpha=0.3)
-    out_path = output_dir / f"full_trajectory_up_to_forecast_{land}.svg"
-    fig.savefig(out_path, format="svg", bbox_inches="tight")
-    plt.close(fig)
-    print(f"  Saved: {out_path}")
-
-def plot_trajectory_comparison_like_compare(land, model_name, ground_truth, samples, n_past, n_future, output_dir):
-    """
-    Plot a single trajectory with median and CI bands – exactly as in compare.py
-    but for one trajectory. ground_truth has length L+H (context+forecast).
-    """
+def plot_ci(land, model_name, ground_truth, n_past, n_future, samples, output_dir):
+    """Ground truth (cropped) + CI bands."""
     reg = MODEL_REGISTRY.get(model_name, {"label": model_name, "color": "tab:orange"})
     color = reg["color"]
     mlabel = reg["label"]
-    # ground_truth: (L+H,)
-    # samples: (H, S)
     all_steps = np.arange(0, n_past + n_future)
     future_steps = np.arange(n_past, n_past + n_future)
     median = np.median(samples, axis=1)
@@ -167,42 +126,37 @@ def plot_trajectory_comparison_like_compare(land, model_name, ground_truth, samp
     hi90 = np.percentile(samples, 95, axis=1)
     lo50 = np.percentile(samples, 25, axis=1)
     hi50 = np.percentile(samples, 75, axis=1)
-    fig, ax = plt.subplots(figsize=(8, 4))
+    fig, ax = plt.subplots(figsize=(10, 4))
     ax.plot(all_steps, ground_truth, "k-", linewidth=2.0, label="Truth")
     ax.plot(future_steps, median, color=color, linewidth=2.0, label="Median")
     ax.fill_between(future_steps, lo90, hi90, color="tab:orange", alpha=0.40, label="90% band")
     ax.fill_between(future_steps, lo50, hi50, color="tab:blue", alpha=0.40, label="50% band")
-    ax.axvline(x=n_past, color="k", linestyle="--", alpha=0.4)
+    ax.axvline(x=n_past, color="k", linestyle="--", alpha=0.4, label="Forecast start")
     ax.set_xlabel(r"Step $N$")
     ax.set_ylabel(_coord_label(land))
     ax.set_title(f"{_land_display(land)} — {mlabel} (CI bands)")
     ax.legend(loc='upper left')
     ax.grid(alpha=0.3)
-    out_path = output_dir / f"trajectory_comparison_{model_name}_{land}.svg"
+    out_path = output_dir / f"trajectory_ci_{model_name}_{land}.svg"
     fig.savefig(out_path, format="svg", bbox_inches="tight")
     plt.close(fig)
     print(f"  Saved: {out_path}")
 
-def plot_trajectory_samples_like_compare(land, model_name, ground_truth, samples, n_past, n_future, output_dir, n_samples_display=50):
-    """
-    Plot individual forecast samples (random subset) over the forecast horizon.
-    """
+def plot_samples(land, model_name, ground_truth, n_past, n_future, samples, output_dir, n_display=50):
+    """Ground truth (cropped) + random forecast samples."""
     reg = MODEL_REGISTRY.get(model_name, {"label": model_name, "color": "tab:orange"})
     color = reg["color"]
     mlabel = reg["label"]
-    # ground_truth: (L+H,)
-    # samples: (H, S)
     all_steps = np.arange(0, n_past + n_future)
     future_steps = np.arange(n_past, n_past + n_future)
     S = samples.shape[1]
-    n_disp = min(n_samples_display, S)
-    idx = np.random.choice(S, n_disp, replace=False)
-    fig, ax = plt.subplots(figsize=(8, 4))
+    n_show = min(n_display, S)
+    idx = np.random.choice(S, n_show, replace=False)
+    fig, ax = plt.subplots(figsize=(10, 4))
     ax.plot(all_steps, ground_truth, "k-", linewidth=2.0, label="Truth")
     for i in idx:
-        sample_i = samples[:, i]
-        ax.plot(future_steps, sample_i, color=color, alpha=0.2, linewidth=0.8)
-    ax.axvline(x=n_past, color="k", linestyle="--", alpha=0.4)
+        ax.plot(future_steps, samples[:, i], color=color, alpha=0.2, linewidth=0.8)
+    ax.axvline(x=n_past, color="k", linestyle="--", alpha=0.4, label="Forecast start")
     ax.set_xlabel(r"Step $N$")
     ax.set_ylabel(_coord_label(land))
     ax.set_title(f"{_land_display(land)} — {mlabel} (forecast samples)")
@@ -213,19 +167,17 @@ def plot_trajectory_samples_like_compare(land, model_name, ground_truth, samples
     plt.close(fig)
     print(f"  Saved: {out_path}")
 
-def plot_histogram2d_like_compare(land, model_name, ground_truth, samples, n_past, n_future, output_dir):
-    """
-    2D histogram of forecast samples – exactly as in compare.py (dark background).
-    """
+def plot_histogram(land, model_name, ground_truth, n_past, n_future, samples, output_dir):
+    """2D histogram (dark background) over forecast region, with ground truth line over cropped window."""
     reg = MODEL_REGISTRY.get(model_name, {"label": model_name, "color": "tab:orange"})
     mlabel = reg["label"]
     with plt.style.context('dark_background'):
-        fig, ax = plt.subplots(figsize=(8, 4))
+        fig, ax = plt.subplots(figsize=(10, 4))
         future_steps = np.arange(n_past, n_past + n_future)
         all_steps = np.arange(0, n_past + n_future)
-        # samples shape: (H, S)
-        g_lo = np.min(ground_truth)
-        g_hi = np.max(ground_truth)
+        y_vals = ground_truth
+        g_lo = np.min(y_vals)
+        g_hi = np.max(y_vals)
         margin = 0.05 * (g_hi - g_lo) if g_hi > g_lo else 0.1
         g_lo -= margin
         g_hi += margin
@@ -233,14 +185,13 @@ def plot_histogram2d_like_compare(land, model_name, ground_truth, samples, n_pas
         n_y_bins = 24
         x_edges = np.linspace(n_past, n_past + n_future, n_x_bins + 1)
         y_edges = np.linspace(g_lo, g_hi, n_y_bins + 1)
-        # samples for hist2d: (S, H)
-        samples_T = samples.T
+        samples_T = samples.T  # (S, H)
         time_rep = np.tile(future_steps, (samples_T.shape[0], 1))
         ax.hist2d(time_rep.flatten(), samples_T.flatten(),
                   bins=[x_edges, y_edges], cmap="magma", density=True,
                   norm=LogNorm(vmin=1e-6))
         ax.plot(all_steps, ground_truth, color="lime", linewidth=2.5, label="Truth")
-        ax.axvline(x=n_past, color="white", linestyle="--", alpha=0.5)
+        ax.axvline(x=n_past, color="white", linestyle="--", alpha=0.5, label="Forecast start")
         ax.set_ylim(g_lo, g_hi)
         ax.set_xlim(0, n_past + n_future)
         ax.set_xlabel(r"Step $N$")
@@ -249,7 +200,7 @@ def plot_histogram2d_like_compare(land, model_name, ground_truth, samples, n_pas
         ax.legend(loc='upper left')
         ax.set_facecolor('black')
         ax.tick_params(colors='white')
-        out_path = output_dir / f"histogram2d_{model_name}_{land}.svg"
+        out_path = output_dir / f"trajectory_hist2d_{model_name}_{land}.svg"
         fig.savefig(out_path, format="svg", bbox_inches="tight")
         plt.close(fig)
         print(f"  Saved: {out_path}")
@@ -258,16 +209,14 @@ def plot_histogram2d_like_compare(land, model_name, ground_truth, samples, n_pas
 # Main
 # ---------------------------------------------------------------------------
 def main():
-    parser = argparse.ArgumentParser(description="Generate per‑trajectory plots (like compare.py)")
+    parser = argparse.ArgumentParser()
     parser.add_argument("--results", nargs="+", required=True,
                         help="Format: LANDSCAPE:MODEL:NPZ_PATH")
     parser.add_argument("--output_dir", default="./comparison")
-    parser.add_argument("--context_length", "-cl", type=int, default=0,
-                        help="Fallback context length if not stored in .npz")
+    parser.add_argument("--context_length", "-cl", type=int, default=0)
     parser.add_argument("--data_npz", nargs="+", required=True,
                         metavar="LANDSCAPE:PATH", help="Normalization stats")
-    parser.add_argument("--traj_index", type=int, default=0,
-                        help="Index of the test trajectory to plot (default 0)")
+    parser.add_argument("--traj_index", type=int, default=0)
     args = parser.parse_args()
 
     out_dir = Path(args.output_dir)
@@ -285,7 +234,6 @@ def main():
         land, model, path = parts
         specs.append((land, model, path))
 
-    # Group by landscape
     by_land = {}
     for land, model, path in specs:
         mean, std = norm_stats.get(land, (None, None))
@@ -294,33 +242,17 @@ def main():
 
     for land, models_data in by_land.items():
         print(f"\n=== Landscape: {land} ===")
-        # Get full trajectory and split info from any model (they share the same)
         any_model = next(iter(models_data.values()))
-        full_traj = any_model["full_trajectories"][args.traj_index]  # (T,)
-        train_test_split = any_model["train_test_split"]
-        context_len = any_model["context_length"]
-        pred_len = any_model["pred_len"]
+        n_past = any_model["n_past"]
+        n_future = any_model["n_future"]
 
-        # 1) Full trajectory
-        plot_full_trajectory(land, full_traj, plot_dir)
-
-        # 2) Full trajectory up to forecast horizon
-        plot_full_trajectory_up_to_forecast(land, full_traj, train_test_split, pred_len, plot_dir)
-
-        # For each model, produce three key plots
         for model_name, data in models_data.items():
             ground_truth = data["ground_truths"][args.traj_index]  # (L+H,)
             samples = data["samples"][args.traj_index]             # (H, S)
 
-            # CI bands plot
-            plot_trajectory_comparison_like_compare(land, model_name, ground_truth, samples,
-                                                    context_len, pred_len, plot_dir)
-            # Individual forecast samples plot
-            plot_trajectory_samples_like_compare(land, model_name, ground_truth, samples,
-                                                 context_len, pred_len, plot_dir)
-            # 2D histogram
-            plot_histogram2d_like_compare(land, model_name, ground_truth, samples,
-                                          context_len, pred_len, plot_dir)
+            plot_ci(land, model_name, ground_truth, n_past, n_future, samples, plot_dir)
+            plot_samples(land, model_name, ground_truth, n_past, n_future, samples, plot_dir)
+            plot_histogram(land, model_name, ground_truth, n_past, n_future, samples, plot_dir)
 
     print("\n✓ All per‑trajectory plots saved.")
 
