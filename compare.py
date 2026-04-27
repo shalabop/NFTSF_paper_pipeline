@@ -1,7 +1,14 @@
 #!/usr/bin/env python3
 """
-compare_full.py – Generate all figures (trajectory comparison, histograms, error metrics grid)
-plus summary table (with best values highlighted). No time inference.
+compare.py – Generate all figures (SVG) and a summary table (PNG/CSV) with metrics including time.
+Assumes samples shape (N, H, S). Produces:
+  - raw_trajectories_{landscape}.svg
+  - trajectory_comparison_{landscape}.svg
+  - histogram2d_comparison_{landscape}_dark.svg
+  - histogram2d_comparison_{landscape}_light.svg
+  - error_metrics_{landscape}_len{length}.svg
+  - summary_{landscape}_len{length}.png
+  - summary_{landscape}_len{length}.csv
 """
 
 import argparse
@@ -14,7 +21,6 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 from matplotlib.lines import Line2D
 
-DPI=600
 # ---------------------------------------------------------------------------
 # Model registry
 # ---------------------------------------------------------------------------
@@ -87,7 +93,7 @@ def _denorm(x, mean, std):
     return x * (std + 1e-8) + mean
 
 # ---------------------------------------------------------------------------
-# Result loading – assumes samples shape (N, H, S)
+# Result loading – assumes samples shape (N, H, S) and reads time_elapsed
 # ---------------------------------------------------------------------------
 def load_npz_result(npz_path: str, context_length_fallback: int, mean=None, std=None):
     data = np.load(npz_path, allow_pickle=True)
@@ -116,6 +122,8 @@ def load_npz_result(npz_path: str, context_length_fallback: int, mean=None, std=
     if mean is not None and std is not None:
         ground_truths = _denorm(ground_truths, mean, std)
         samples = _denorm(samples, mean, std)
+    # Read time_elapsed if present
+    time_elapsed = float(data["time_elapsed"]) if "time_elapsed" in data else np.nan
     return {
         "ground_truths": ground_truths.astype(np.float32),
         "samples": samples.astype(np.float32),
@@ -123,38 +131,48 @@ def load_npz_result(npz_path: str, context_length_fallback: int, mean=None, std=
         "n_future": H,
         "fullset_N": N,
         "pred_len": H,
+        "time_elapsed": time_elapsed,
     }
 
 # ---------------------------------------------------------------------------
-# Metrics (all assume samples shape (N, H, S)) – return per-step arrays and scalars
+# Metrics (all assuming samples shape (N, H, S))
 # ---------------------------------------------------------------------------
-def _mae_median_per_step(gt_future, samples):
-    median = np.median(samples, axis=2)
-    return np.abs(gt_future - median).mean(axis=0)
-
-def _mae_mean_per_step(gt_future, samples):
-    mean_forecast = np.mean(samples, axis=2)
-    return np.abs(gt_future - mean_forecast).mean(axis=0)
-
 def _mae_sample_per_step(gt_future, samples):
-    return np.abs(samples - gt_future[:, :, np.newaxis]).mean(axis=(0, 1))
+
+    return np.mean(np.abs(samples - gt_future[:, :, np.newaxis]), axis=(0, 2))
+
+def _crps_ensemble_per_step(gt_future, samples):
+    """Per-step CRPS (energy score)."""
+    N, H = gt_future.shape
+    S = samples.shape[2]
+    crps_step = np.zeros(H)
+    for t in range(H):
+        fc_t = samples[:, t, :]           # (N, S)
+        obs_t = gt_future[:, t]           # (N,)
+        fc_flat = fc_t.reshape(-1, S)
+        obs_flat = obs_t.reshape(-1)
+        fc_sorted = np.sort(fc_flat, axis=1)
+        k = np.arange(1, S+1, dtype=np.float64)
+        weights = 2.0 * k - S - 1.0
+        spread = (fc_sorted * weights).sum(axis=1) / (S * (S - 1))
+        mae_term = np.abs(fc_flat - obs_flat[:, None]).mean(axis=1)
+        crps_step[t] = np.mean(mae_term - spread)
+    return crps_step
 
 def _ci_coverage_per_step(gt_future, samples, pct):
-    if pct == 0:
-        return np.zeros(gt_future.shape[1])
-    if pct == 100:
-        return np.ones(gt_future.shape[1])
+    """Per-step central coverage for a given percentage (50 or 90)."""
     lo = (100 - pct) / 2.0
     hi = 100 - lo
-    lo_q = np.percentile(samples, lo, axis=2)   # (N, H)
+    lo_q = np.percentile(samples, lo, axis=2)
     hi_q = np.percentile(samples, hi, axis=2)
     covered = (gt_future >= lo_q) & (gt_future <= hi_q)
     return np.mean(covered, axis=0)
 
 def _isce_central_per_step(gt_future, samples):
+    """Per-step ISCE (integrated squared calibration error) using 1% steps."""
     H = gt_future.shape[1]
     pcts = np.arange(0, 101, 1)
-    isce_t = np.zeros(H)
+    isce_step = np.zeros(H)
     for t in range(H):
         gt_t = gt_future[:, t]
         samp_t = samples[:, t, :]
@@ -171,30 +189,41 @@ def _isce_central_per_step(gt_future, samples):
                 hi_q = np.percentile(samp_t, hi, axis=1)
                 emp = np.mean((gt_t >= lo_q) & (gt_t <= hi_q))
             err += (emp - pct/100.0)**2
-        isce_t[t] = err / len(pcts)
-    return isce_t
+        isce_step[t] = err / len(pcts)
+    return isce_step
 
-def compute_metrics(ground_truths, samples, n_past):
+def compute_metrics(ground_truths, samples, n_past, time_elapsed):
     gt_future = ground_truths[:, n_past:]   # (N, H)
     metrics = {
-        "mae_median_step": _mae_median_per_step(gt_future, samples),
-        "mae_mean_step":   _mae_mean_per_step(gt_future, samples),
         "mae_sample_step": _mae_sample_per_step(gt_future, samples),
+        "crps_step": _crps_ensemble_per_step(gt_future, samples),
         "ci50_step": _ci_coverage_per_step(gt_future, samples, 50),
         "ci90_step": _ci_coverage_per_step(gt_future, samples, 90),
         "isce_step": _isce_central_per_step(gt_future, samples),
     }
-    # Scalar means for table
-    metrics["mae_median"] = np.mean(metrics["mae_median_step"])
-    metrics["mae_mean"]   = np.mean(metrics["mae_mean_step"])
+    # Scalar metrics for table
     metrics["mae_sample"] = np.mean(metrics["mae_sample_step"])
+    metrics["crps"] = np.mean(metrics["crps_step"])
     metrics["ci50"] = np.mean(metrics["ci50_step"])
     metrics["ci90"] = np.mean(metrics["ci90_step"])
     metrics["isce_mean"] = np.mean(metrics["isce_step"])
+    metrics["time_elapsed"] = time_elapsed
     return metrics
 
 # ---------------------------------------------------------------------------
-# Figure E: Raw ground-truth trajectories
+# Figure helpers
+# ---------------------------------------------------------------------------
+def _global_ylim(model_data: dict[str, dict]) -> tuple[float, float]:
+    g_lo, g_hi = float("inf"), float("-inf")
+    for mdata in model_data.values():
+        for gt in mdata["ground_truths"]:
+            g_lo = min(g_lo, gt.min())
+            g_hi = max(g_hi, gt.max())
+    margin = 0.05 * (g_hi - g_lo) if g_hi > g_lo else 0.1
+    return g_lo - margin, g_hi + margin
+
+# ---------------------------------------------------------------------------
+# Figure E: Raw ground-truth trajectories (SVG)
 # ---------------------------------------------------------------------------
 def plot_raw_trajectories(landscape, full_trajectories, n_past, n_future, output_dir, seed=42):
     rng = np.random.default_rng(seed)
@@ -217,7 +246,7 @@ def plot_raw_trajectories(landscape, full_trajectories, n_past, n_future, output
     y_lo -= margin
     y_hi += margin
 
-    fig, axes = plt.subplots(1, 3, figsize=(27, 6), sharey=True)
+    fig, axes = plt.subplots(1, 3, figsize=(13.5, 3), sharey=True)
     SINGLE_COLOR = "#4C72B0"
     for ax, count in zip(axes, counts):
         n = min(count, N)
@@ -246,28 +275,21 @@ def plot_raw_trajectories(landscape, full_trajectories, n_past, n_future, output
     axes[0].set_ylabel(_coord_label(landscape), fontsize=13)
     fig.suptitle(f"{_land_display(landscape)} — Ground Truth Trajectories", fontsize=15, y=1.02)
     plt.tight_layout()
-    out_path = output_dir / f"raw_trajectories_{landscape}.png"
-    fig.savefig(out_path, dpi=DPI, bbox_inches="tight")
+    out_path = output_dir / f"raw_trajectories_{landscape}.svg"
+    fig.savefig(out_path, format="svg", bbox_inches="tight")
     plt.close(fig)
     print(f"[E] Saved: {out_path}")
 
 # ---------------------------------------------------------------------------
-# Figure A: Trajectory comparison grid (CI bands + median)
+# Figure A: Trajectory comparison grid (SVG)
 # ---------------------------------------------------------------------------
 def plot_trajectory_comparison_grid(landscape, display_labels, model_data, n_past, n_future, output_dir):
     n_models = len(model_data)
     n_traj = len(display_labels)
-    fig, axes = plt.subplots(n_models, n_traj, figsize=(9*n_traj, 6*n_models), squeeze=False)
+    fig, axes = plt.subplots(n_models, n_traj, figsize=(5*n_traj, 3.5*n_models), squeeze=False)
     future_steps = np.arange(n_past, n_past + n_future)
     all_steps = np.arange(0, n_past + n_future)
-    # Compute global y-limits from all displayed trajectories
-    g_lo, g_hi = float("inf"), float("-inf")
-    for mdata in model_data.values():
-        for gt in mdata["ground_truths"]:
-            g_lo = min(g_lo, gt.min())
-            g_hi = max(g_hi, gt.max())
-    margin = 0.05 * (g_hi - g_lo) if g_hi > g_lo else 0.1
-    g_lo -= margin; g_hi += margin
+    g_lo, g_hi = _global_ylim(model_data)
 
     use_pi_format = landscape in ("alanine_phi", "alanine_psi")
     if use_pi_format:
@@ -286,8 +308,8 @@ def plot_trajectory_comparison_grid(landscape, display_labels, model_data, n_pas
         reg = MODEL_REGISTRY.get(model_name, {"label": model_name, "color": "tab:orange"})
         color = reg["color"]
         mlabel = reg["label"]
-        samples_all = mdata["samples"]           # (n_traj, H, S)
-        ground_truths_all = mdata["ground_truths"]  # (n_traj, L+H)
+        samples_all = mdata["samples"]
+        ground_truths_all = mdata["ground_truths"]
         axes[row_idx, 0].set_ylabel(f"{mlabel}\n{_coord_label(landscape)}", fontsize=13)
         for col_idx in range(n_traj):
             ax = axes[row_idx, col_idx]
@@ -317,29 +339,24 @@ def plot_trajectory_comparison_grid(landscape, display_labels, model_data, n_pas
     fig.suptitle(f"{_land_display(landscape)} — Trajectory Comparison", fontsize=15, y=1)
     plt.subplots_adjust(top=0.93)
     plt.tight_layout()
-    out_path = output_dir / f"trajectory_comparison_{landscape}.png"
-    fig.savefig(out_path, dpi=DPI, bbox_inches="tight")
+    out_path = output_dir / f"trajectory_comparison_{landscape}.svg"
+    fig.savefig(out_path, format="svg", bbox_inches="tight")
     plt.close(fig)
     print(f"[A] Saved: {out_path}")
 
 # ---------------------------------------------------------------------------
-# Figure B: 2-D histogram comparison grid
+# Figure B: 2-D histogram comparison grid (both dark and light backgrounds)
 # ---------------------------------------------------------------------------
-def plot_histogram2d_comparison_grid(landscape, display_labels, model_data, n_past, n_future, output_dir):
-    with plt.style.context('dark_background'):
+def plot_histogram2d_comparison_grid(landscape, display_labels, model_data, n_past, n_future, output_dir, dark=True):
+    """Save heatmap with either dark (True) or light (False) background."""
+    style = 'dark_background' if dark else 'default'
+    with plt.style.context(style):
         n_models = len(model_data)
         n_traj = len(display_labels)
-        fig, axes = plt.subplots(n_models, n_traj, figsize=(9*n_traj, 6*n_models), squeeze=False)
+        fig, axes = plt.subplots(n_models, n_traj, figsize=(5*n_traj, 3.5*n_models), squeeze=False)
         future_steps = np.arange(n_past, n_past + n_future)
         all_steps = np.arange(0, n_past + n_future)
-        # Global y-limits
-        g_lo, g_hi = float("inf"), float("-inf")
-        for mdata in model_data.values():
-            for gt in mdata["ground_truths"]:
-                g_lo = min(g_lo, gt.min())
-                g_hi = max(g_hi, gt.max())
-        margin = 0.05 * (g_hi - g_lo) if g_hi > g_lo else 0.1
-        g_lo -= margin; g_hi += margin
+        g_lo, g_hi = _global_ylim(model_data)
         n_x_bins = max(12, n_future // 5)
         n_y_bins = 24
         x_edges = np.linspace(n_past, n_past + n_future, n_x_bins + 1)
@@ -356,81 +373,92 @@ def plot_histogram2d_comparison_grid(landscape, display_labels, model_data, n_pa
                 elif num == 0.5: return r"$\frac{\pi}{2}$"
                 elif num == -0.5: return r"$-\frac{\pi}{2}$"
                 else: return f"${num:.0f}\\pi$"
+        label_color = 'white' if dark else 'black'
+        title_color = 'white' if dark else 'black'
+        facecolor = 'black' if dark else 'white'
         for row_idx, (model_name, mdata) in enumerate(model_data.items()):
             reg = MODEL_REGISTRY.get(model_name, {"label": model_name, "color": "tab:orange"})
             mlabel = reg["label"]
-            samples_all = mdata["samples"]           # (n_traj, H, S)
-            ground_truths_all = mdata["ground_truths"]  # (n_traj, L+H)
-            axes[row_idx, 0].set_ylabel(f"{mlabel}\n{_coord_label(landscape)}", fontsize=13, color='white')
+            samples_all = mdata["samples"]
+            ground_truths_all = mdata["ground_truths"]
+            axes[row_idx, 0].set_ylabel(f"{mlabel}\n{_coord_label(landscape)}", fontsize=13, color=label_color)
             for col_idx in range(n_traj):
                 ax = axes[row_idx, col_idx]
                 real_traj = ground_truths_all[col_idx]
                 samp = samples_all[col_idx]
-                samp_for_hist = samp.T               # (S, H)
+                samp_for_hist = samp.T
                 time_rep = np.tile(future_steps, (samp_for_hist.shape[0], 1))
                 ax.hist2d(time_rep.flatten(), samp_for_hist.flatten(),
                           bins=[x_edges, y_edges], cmap="magma", density=True, norm=LogNorm(vmin=1e-6))
                 ax.plot(all_steps, real_traj, color="lime", linewidth=2.5, label="Truth")
-                ax.axvline(x=n_past, color="white", linestyle="--", alpha=0.5)
+                ax.axvline(x=n_past, color="gray", linestyle="--", alpha=0.5)
                 ax.set_ylim(g_lo, g_hi)
                 ax.set_xlim(0, n_past + n_future)
-                ax.set_xlabel(r"Step $N$", fontsize=12, color='white')
-                ax.tick_params(labelsize=12, colors='white')
-                ax.set_facecolor('black')
+                ax.set_xlabel(r"Step $N$", fontsize=12, color=label_color)
+                ax.tick_params(labelsize=12, colors=label_color)
+                ax.set_facecolor(facecolor)
                 if use_pi_format:
                     ax.yaxis.set_major_locator(MultipleLocator(np.pi/2))
                     ax.yaxis.set_major_formatter(FuncFormatter(pi_formatter))
                 if row_idx == 0:
-                    ax.set_title(f"Trajectory {col_idx+1}", fontsize=13, color='white', pad=10)
+                    ax.set_title(f"Trajectory {col_idx+1}", fontsize=13, color=title_color, pad=10)
                 if row_idx == 0 and col_idx == 0:
-                    ax.legend(loc='upper left', fontsize=12, framealpha=0.8,
-                              facecolor='black', edgecolor='white', labelcolor='white')
-        fig.suptitle(f"{_land_display(landscape)} — Prediction Density Comparison", fontsize=15, y=1, color='white')
+                    leg = ax.legend(loc='upper left', fontsize=12, framealpha=0.8)
+                    if dark:
+                        leg.get_frame().set_facecolor('black')
+                        leg.get_frame().set_edgecolor('white')
+                        for text in leg.get_texts():
+                            text.set_color('white')
+        fig.suptitle(f"{_land_display(landscape)} — Prediction Density Comparison", fontsize=15, y=1, color=title_color)
         plt.subplots_adjust(top=0.93)
         plt.tight_layout()
-        out_path = output_dir / f"histogram2d_comparison_{landscape}.png"
-        fig.savefig(out_path, dpi=DPI, bbox_inches="tight")
+        suffix = "_dark" if dark else "_light"
+        out_path = output_dir / f"histogram2d_comparison_{landscape}{suffix}.svg"
+        fig.savefig(out_path, format="svg", bbox_inches="tight")
         plt.close(fig)
-        print(f"[B] Saved: {out_path}")
+        print(f"[B] Saved: {out_path} (background={'dark' if dark else 'light'})")
 
 # ---------------------------------------------------------------------------
-# Figure C: Error metrics grid (MAE_median, ISCE*1000, CI50, CI90) across steps
+# Figure C: Error metrics grid (horizontal, 5 columns, legend only in leftmost)
 # ---------------------------------------------------------------------------
 def plot_error_metrics_grid(land, length, model_names, all_metrics, output_dir):
-    fig, axes = plt.subplots(2, 2, figsize=(12, 8))
-    metric_keys = [("mae_median_step", "MAE (median)"),
-                   ("isce_step", "ISCE"),
-                   ("ci50_step", "CI50"),
-                   ("ci90_step", "CI90")]
-    for ax, (key, title) in zip(axes.flatten(), metric_keys):
+    fig, axes = plt.subplots(1, 5, figsize=(20, 4))
+    metric_keys = [
+        ("mae_sample_step", "MAE (sample)"),
+        ("crps_step", "CRPS"),
+        ("ci50_step", "CI50"),
+        ("ci90_step", "CI90"),
+        ("isce_step", "ISCE (×1000)")
+    ]
+    for ax, (key, title) in zip(axes, metric_keys):
         for mn in model_names:
             label = MODEL_REGISTRY.get(mn, {"label": mn})["label"]
             color = MODEL_REGISTRY.get(mn, {"color": "tab:gray"})["color"]
-            vals = all_metrics[mn][key]  # array of length H
+            vals = all_metrics[mn][key]
             if key == "isce_step":
-                vals = vals * 1000
-                title = "ISCE (×1000)"
-            steps = np.arange(1, len(vals) + 1)
+                vals = vals * 1000   # multiply by 1000
+            steps = np.arange(1, len(vals)+1)
             ax.plot(steps, vals, label=label, color=color, linewidth=2)
         if "CI" in title:
             ideal = 0.5 if "50" in title else 0.9
             ax.axhline(ideal, color="black", linestyle="--", linewidth=0.8, alpha=0.6)
-        ax.set_xlabel("Forecast step")
-        ax.set_ylabel(title)
+        ax.set_xlabel("Forecast step", fontsize=10)
+        ax.set_ylabel(title, fontsize=10)
         ax.grid(alpha=0.3)
-        ax.legend()
+        if ax == axes[0]:
+            ax.legend(loc='upper left', fontsize=8)
     fig.suptitle(f"{_land_display(land)} (L/H={length}) — Error Metrics", fontsize=14)
-    plt.tight_layout()
-    out_path = output_dir / f"error_metrics_{land}_len{length}.png"
-    fig.savefig(out_path, dpi=DPI, bbox_inches="tight")
+    plt.tight_layout(pad=2.0)
+    out_path = output_dir / f"error_metrics_{land}_len{length}.svg"
+    fig.savefig(out_path, format="svg", bbox_inches="tight")
     plt.close(fig)
     print(f"[C] Saved: {out_path}")
 
 # ---------------------------------------------------------------------------
-# Figure D: Summary table (with best values highlighted)
+# Figure D: Summary table (PNG) with Time (s) column
 # ---------------------------------------------------------------------------
 def plot_summary_table(land, length, model_names, all_metrics, output_dir):
-    col_headers = ["Model", "MAE (med)", "MAE (mean)", "MAE (sample)", "CI50", "CI90", "ISCE (*1000)"]
+    col_headers = ["Model", "MAE (sample)", "CRPS", "CI50", "CI90", "ISCE (*1000)", "Time (s)"]
     rows = []
     numeric_vals = []
     for mn in model_names:
@@ -438,24 +466,26 @@ def plot_summary_table(land, length, model_names, all_metrics, output_dir):
         mets = all_metrics[mn]
         rows.append([
             label,
-            f"{mets['mae_median']:.4f}",
-            f"{mets['mae_mean']:.4f}",
             f"{mets['mae_sample']:.4f}",
+            f"{mets['crps']:.4f}",
             f"{mets['ci50']:.3f}",
             f"{mets['ci90']:.3f}",
-            f"{mets['isce_mean']*1000:.4f}"
+            f"{mets['isce_mean']*1000:.4f}",
+            f"{mets['time_elapsed']:.2f}" if not np.isnan(mets['time_elapsed']) else "nan"
         ])
-        numeric_vals.append([mets['mae_median'], mets['mae_mean'], mets['mae_sample'],
-                             mets['ci50'], mets['ci90'], mets['isce_mean']*1000])
+        numeric_vals.append([
+            mets['mae_sample'], mets['crps'], mets['ci50'], mets['ci90'],
+            mets['isce_mean']*1000, mets['time_elapsed']
+        ])
     # Determine best indices per column
     best_idx = []
     for col in range(6):
         col_vals = [row[col] for row in numeric_vals]
-        if col in [0,1,2,5]:  # MAEs, ISCE*1000 -> lower is better
+        if col in [0,1,4,5]:   # MAE, CRPS, ISCE, Time -> lower better
             best = int(np.argmin(col_vals))
-        elif col == 3:  # CI50 -> closest to 0.5
+        elif col == 2:          # CI50 -> closest to 0.5
             best = int(np.argmin(np.abs(np.array(col_vals) - 0.5)))
-        elif col == 4:  # CI90 -> closest to 0.9
+        elif col == 3:          # CI90 -> closest to 0.9
             best = int(np.argmin(np.abs(np.array(col_vals) - 0.9)))
         else:
             best = None
@@ -477,10 +507,9 @@ def plot_summary_table(land, length, model_names, all_metrics, output_dir):
                 cell.set_text_props(weight="bold")
     ax.set_title(f"{_land_display(land)} (L/H={length}) — Summary Metrics", fontsize=13, pad=14)
     png_path = output_dir / f"summary_{land}_len{length}.png"
-    fig.savefig(png_path, dpi=DPI, bbox_inches="tight")
+    fig.savefig(png_path, dpi=150, bbox_inches="tight")
     plt.close(fig)
     print(f"[D] Saved: {png_path}")
-    # CSV
     csv_path = output_dir / f"summary_{land}_len{length}.csv"
     with open(csv_path, "w") as f:
         f.write(",".join(col_headers) + "\n")
@@ -500,48 +529,40 @@ def main():
     print("\n=== Normalization stats ===")
     norm_stats = _load_mean_std(args.data_npz)
 
-    # Parse result specs: LANDSCAPE:MODEL:NPZ_PATH
-    raw_specs = []
+    specs = []
     for spec in args.results:
         parts = spec.split(":")
         if len(parts) != 3:
             raise ValueError(f"Expected LANDSCAPE:MODEL:NPZ_PATH, got {spec}")
-        land, model, path = parts
-        raw_specs.append((land, model, path))
+        specs.append(parts)
 
-    # Load each result, group by (land, pred_len)
     by_land_len = {}
-    for land, model, path in raw_specs:
+    for land, model, path in specs:
         mean, std = norm_stats.get(land, (None, None))
         data = load_npz_result(path, args.context_length, mean, std)
-        pred_len = data["pred_len"]
-        key = (land, pred_len)
+        length = data["pred_len"]
+        key = (land, length)
         by_land_len.setdefault(key, {})[model] = data
 
-    # Process each (land, length) group
     for (land, length), models_data in by_land_len.items():
         print(f"\n=== {land}, prediction length = {length} ===")
         model_names = list(models_data.keys())
-        # Compute metrics for each model
         all_metrics = {}
         for model, data in models_data.items():
-            mets = compute_metrics(data["ground_truths"], data["samples"], data["n_past"])
+            mets = compute_metrics(data["ground_truths"], data["samples"],
+                                   data["n_past"], data["time_elapsed"])
             all_metrics[model] = mets
-        # Print summary
-        for mn in model_names:
-            label = MODEL_REGISTRY.get(mn, {"label": mn})["label"]
-            mets = all_metrics[mn]
-            print(f"  {label:12s}: MAE_med={mets['mae_median']:.4f} MAE_mean={mets['mae_mean']:.4f} "
-                  f"MAE_samp={mets['mae_sample']:.4f} CI50={mets['ci50']:.3f} CI90={mets['ci90']:.3f} "
-                  f"ISCE*1000={mets['isce_mean']*1000:.4f}")
+            label = MODEL_REGISTRY.get(model, {"label": model})["label"]
+            time_str = f"{mets['time_elapsed']:.2f}s" if not np.isnan(mets['time_elapsed']) else "nan"
+            print(f"  {label:12s}: MAE_sample={mets['mae_sample']:.4f}  CRPS={mets['crps']:.4f}  "
+                  f"CI50={mets['ci50']:.3f}  CI90={mets['ci90']:.3f}  ISCE*1000={mets['isce_mean']*1000:.4f}  "
+                  f"Time={time_str}")
 
-        # Select trajectories to display
         N_min = min(data["fullset_N"] for data in models_data.values())
         n_show = min(args.n_traj_show, N_min)
         rng = np.random.default_rng(args.seed)
         display_labels = rng.choice(N_min, size=n_show, replace=False).tolist()
 
-        # Prepare display data for figures A and B
         display_data = {}
         for model, data in models_data.items():
             display_data[model] = {
@@ -550,16 +571,18 @@ def main():
                 "n_past": data["n_past"],
                 "n_future": data["n_future"],
             }
-        # Use first model for n_past/n_future
         first = next(iter(display_data.values()))
         n_past = first["n_past"]
         n_future = first["n_future"]
 
-        # Figures
         first_model_data = next(iter(models_data.values()))
         plot_raw_trajectories(land, first_model_data["ground_truths"], n_past, n_future, out_dir, args.seed)
         plot_trajectory_comparison_grid(land, display_labels, display_data, n_past, n_future, out_dir)
-        plot_histogram2d_comparison_grid(land, display_labels, display_data, n_past, n_future, out_dir)
+
+        # Plot both dark and light heatmaps
+        plot_histogram2d_comparison_grid(land, display_labels, display_data, n_past, n_future, out_dir, dark=True)
+        plot_histogram2d_comparison_grid(land, display_labels, display_data, n_past, n_future, out_dir, dark=False)
+
         plot_error_metrics_grid(land, length, model_names, all_metrics, out_dir)
         plot_summary_table(land, length, model_names, all_metrics, out_dir)
 
