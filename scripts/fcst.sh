@@ -85,7 +85,7 @@ python eval/TSDiff/forecast_tsdiff.py   \
 python eval/TSDiff/forecast_tsdiff.py   \
         --config configs/tsdiff_forecast/alanine_phi_q_4_25_25.yaml  \
         --dataset_path gluonts_datasets/alanine_phi \
-        --out results/tsdiff_mse/alanine_phi_q_4_25_25.npz
+        --out results/tsdiff_q/alanine_phi_q_4_25_25.npz
 
 python eval/CSDI/forecast_csdi.py \
     --config configs/csdi_train/alanine_phi_25_25.yaml \
