@@ -137,9 +137,19 @@ def load_npz_result(npz_path: str, context_length_fallback: int, mean=None, std=
 # ---------------------------------------------------------------------------
 # Metrics (all assuming samples shape (N, H, S))
 # ---------------------------------------------------------------------------
-def _mae_sample_per_step(gt_future, samples):
+def _mae_median_per_step(gt_future, samples):
+    """Per-step MAE using median of samples."""
+    median = np.median(samples, axis=2)
+    return np.abs(gt_future - median).mean(axis=0)
 
-    return np.mean(np.abs(samples - gt_future[:, :, np.newaxis]), axis=(0, 2))
+def _mae_mean_per_step(gt_future, samples):
+    """Per-step MAE using mean of samples."""
+    mean_forecast = np.mean(samples, axis=2)
+    return np.abs(gt_future - mean_forecast).mean(axis=0)
+
+def _mae_sample_per_step(gt_future, samples):
+    """Per-step MAE (sample): average absolute error over samples and trajectories."""
+    return np.abs(samples - gt_future[:, :, np.newaxis]).mean(axis=(0, 2))
 
 def _crps_ensemble_per_step(gt_future, samples):
     """Per-step CRPS (energy score)."""
@@ -195,18 +205,22 @@ def _isce_central_per_step(gt_future, samples):
 def compute_metrics(ground_truths, samples, n_past, time_elapsed):
     gt_future = ground_truths[:, n_past:]   # (N, H)
     metrics = {
+        "mae_median_step": _mae_median_per_step(gt_future, samples),
+        "mae_mean_step":   _mae_mean_per_step(gt_future, samples),
         "mae_sample_step": _mae_sample_per_step(gt_future, samples),
-        "crps_step": _crps_ensemble_per_step(gt_future, samples),
-        "ci50_step": _ci_coverage_per_step(gt_future, samples, 50),
-        "ci90_step": _ci_coverage_per_step(gt_future, samples, 90),
-        "isce_step": _isce_central_per_step(gt_future, samples),
+        "crps_step":       _crps_ensemble_per_step(gt_future, samples),
+        "ci50_step":       _ci_coverage_per_step(gt_future, samples, 50),
+        "ci90_step":       _ci_coverage_per_step(gt_future, samples, 90),
+        "isce_step":       _isce_central_per_step(gt_future, samples),
     }
     # Scalar metrics for table
+    metrics["mae_median"] = np.mean(metrics["mae_median_step"])
+    metrics["mae_mean"]   = np.mean(metrics["mae_mean_step"])
     metrics["mae_sample"] = np.mean(metrics["mae_sample_step"])
-    metrics["crps"] = np.mean(metrics["crps_step"])
-    metrics["ci50"] = np.mean(metrics["ci50_step"])
-    metrics["ci90"] = np.mean(metrics["ci90_step"])
-    metrics["isce_mean"] = np.mean(metrics["isce_step"])
+    metrics["crps"]       = np.mean(metrics["crps_step"])
+    metrics["ci50"]       = np.mean(metrics["ci50_step"])
+    metrics["ci90"]       = np.mean(metrics["ci90_step"])
+    metrics["isce_mean"]  = np.mean(metrics["isce_step"])
     metrics["time_elapsed"] = time_elapsed
     return metrics
 
@@ -436,7 +450,7 @@ def plot_error_metrics_grid(land, length, model_names, all_metrics, output_dir):
             color = MODEL_REGISTRY.get(mn, {"color": "tab:gray"})["color"]
             vals = all_metrics[mn][key]
             if key == "isce_step":
-                vals = vals * 1000   # multiply by 1000
+                vals = vals * 1000
             steps = np.arange(1, len(vals)+1)
             ax.plot(steps, vals, label=label, color=color, linewidth=2)
         if "CI" in title:
@@ -455,10 +469,13 @@ def plot_error_metrics_grid(land, length, model_names, all_metrics, output_dir):
     print(f"[C] Saved: {out_path}")
 
 # ---------------------------------------------------------------------------
-# Figure D: Summary table (PNG) with Time (s) column
+# Figure D: Summary table (PNG) with all requested metrics
 # ---------------------------------------------------------------------------
 def plot_summary_table(land, length, model_names, all_metrics, output_dir):
-    col_headers = ["Model", "MAE (sample)", "CRPS", "CI50", "CI90", "ISCE (*1000)", "Time (s)"]
+    col_headers = [
+        "Model", "MAE (med)", "MAE (mean)", "MAE (sample)", "CRPS",
+        "CI50", "CI90", "ISCE (*1000)", "Time (s)"
+    ]
     rows = []
     numeric_vals = []
     for mn in model_names:
@@ -466,6 +483,8 @@ def plot_summary_table(land, length, model_names, all_metrics, output_dir):
         mets = all_metrics[mn]
         rows.append([
             label,
+            f"{mets['mae_median']:.4f}",
+            f"{mets['mae_mean']:.4f}",
             f"{mets['mae_sample']:.4f}",
             f"{mets['crps']:.4f}",
             f"{mets['ci50']:.3f}",
@@ -474,27 +493,27 @@ def plot_summary_table(land, length, model_names, all_metrics, output_dir):
             f"{mets['time_elapsed']:.2f}" if not np.isnan(mets['time_elapsed']) else "nan"
         ])
         numeric_vals.append([
-            mets['mae_sample'], mets['crps'], mets['ci50'], mets['ci90'],
-            mets['isce_mean']*1000, mets['time_elapsed']
+            mets['mae_median'], mets['mae_mean'], mets['mae_sample'], mets['crps'],
+            mets['ci50'], mets['ci90'], mets['isce_mean']*1000, mets['time_elapsed']
         ])
     # Determine best indices per column
     best_idx = []
-    for col in range(6):
+    for col in range(8):  # 8 metric columns (0-indexed)
         col_vals = [row[col] for row in numeric_vals]
-        if col in [0,1,4,5]:   # MAE, CRPS, ISCE, Time -> lower better
+        if col in [0,1,2,3,6,7]:   # MAE_median, MAE_mean, MAE_sample, CRPS, ISCE, Time -> lower better
             best = int(np.argmin(col_vals))
-        elif col == 2:          # CI50 -> closest to 0.5
+        elif col == 4:             # CI50 -> closest to 0.5
             best = int(np.argmin(np.abs(np.array(col_vals) - 0.5)))
-        elif col == 3:          # CI90 -> closest to 0.9
+        elif col == 5:             # CI90 -> closest to 0.9
             best = int(np.argmin(np.abs(np.array(col_vals) - 0.9)))
         else:
             best = None
         best_idx.append(best)
-    fig, ax = plt.subplots(figsize=(10, 2 + len(rows)))
+    fig, ax = plt.subplots(figsize=(12, 2 + len(rows)))  # wider for more columns
     ax.axis("off")
     table = ax.table(cellText=rows, colLabels=col_headers, loc="center", cellLoc="center")
     table.auto_set_font_size(False)
-    table.set_fontsize(9)
+    table.set_fontsize(8)
     table.scale(1.2, 1.6)
     for (r,c), cell in table.get_celld().items():
         if r == 0:
@@ -554,7 +573,8 @@ def main():
             all_metrics[model] = mets
             label = MODEL_REGISTRY.get(model, {"label": model})["label"]
             time_str = f"{mets['time_elapsed']:.2f}s" if not np.isnan(mets['time_elapsed']) else "nan"
-            print(f"  {label:12s}: MAE_sample={mets['mae_sample']:.4f}  CRPS={mets['crps']:.4f}  "
+            print(f"  {label:12s}: MAE_med={mets['mae_median']:.4f}  MAE_mean={mets['mae_mean']:.4f}  "
+                  f"MAE_samp={mets['mae_sample']:.4f}  CRPS={mets['crps']:.4f}  "
                   f"CI50={mets['ci50']:.3f}  CI90={mets['ci90']:.3f}  ISCE*1000={mets['isce_mean']*1000:.4f}  "
                   f"Time={time_str}")
 
@@ -578,11 +598,8 @@ def main():
         first_model_data = next(iter(models_data.values()))
         plot_raw_trajectories(land, first_model_data["ground_truths"], n_past, n_future, out_dir, args.seed)
         plot_trajectory_comparison_grid(land, display_labels, display_data, n_past, n_future, out_dir)
-
-        # Plot both dark and light heatmaps
         plot_histogram2d_comparison_grid(land, display_labels, display_data, n_past, n_future, out_dir, dark=True)
         plot_histogram2d_comparison_grid(land, display_labels, display_data, n_past, n_future, out_dir, dark=False)
-
         plot_error_metrics_grid(land, length, model_names, all_metrics, out_dir)
         plot_summary_table(land, length, model_names, all_metrics, out_dir)
 
