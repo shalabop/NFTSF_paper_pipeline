@@ -1,4 +1,4 @@
-ckpt: checkpoints_50_50/tsdiff_cond/single_well/lightning_logs/version_0/checkpoints/last.ckpt
+ckpt: checkpoints_50_50/tsdiff_cond_with_early stopping/single_well/lightning_logs/version_0/checkpoints/last.ckpt
 model: conditional
 freq: H
 context_length: 50

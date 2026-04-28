@@ -5,8 +5,8 @@ sde_data_dir: "../Data/Trajectories"
 sde_test_id: 1
 sde_skip: 10
 
-n_past: 25
-n_future: 25
+n_past: 50
+n_future: 50
 
 flow_blocks: 6
 hidden_units: 64

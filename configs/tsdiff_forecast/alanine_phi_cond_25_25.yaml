@@ -1,4 +1,4 @@
-ckpt: checkpoints_25_25/tsdiff_cond/alanine_phi/lightning_logs/version_0/checkpoints/last.ckpt
+ckpt: checkpoints_25_25/tsdiff_cond_with_early_stopping/alanine_phi/lightning_logs/version_0/checkpoints/last.ckpt
 model: conditional
 freq: H
 context_length: 25
