@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=evaphi25
-#SBATCH --time=2:00:00
+#SBATCH --job-name=tsdiffsw50
+#SBATCH --time=01:15:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
-#SBATCH --partition=htc
-#SBATCH --qos=public
+#SBATCH --partition=general
+#SBATCH --qos=grp_spresse
 #SBATCH --gres=gpu:a30:1
 #SBATCH --mem=32G
-#SBATCH --output=logs/fsct_psi_25_25.%j.out
-#SBATCH --error=logs/fsct_psi_25_25.%j.err
+#SBATCH --output=logs/tsdiffsw.%j.out
+#SBATCH --error=logs/tsdiffsw.%j.err
 
 
 source /packages/apps/mamba/2.0.8/etc/profile.d/conda.sh
@@ -60,26 +60,12 @@ ls $CUDA_PATH/include/cuda.h || echo "WARNING: cuda.h not found"
 ls $CUDA_PATH/include/nvrtc.h || echo "WARNING: nvrtc.h not found"
 ls $CUDA_PATH/lib64/libnvrtc.so* || ls $CUDA_PATH/targets/x86_64-linux/lib/libnvrtc.so* || echo "WARNING: libnvrtc.so not found"
 
-python eval/NF/forecast_nf.py \
-    --model_path   checkpoints_25_25/nf/single_well/model.pth     \
-    --config configs/nf/single_well_25_25.yaml \
-    --data_path DATA/single_well_test.npz    \
-    --out results/nf/single_well_25_25.npz \
-    --context_length  25 \
-    --prediction_length 25  \
-    --n_samples 1000 \
-    --train_test_split 900 \
-    --test_size 3000
-
-
 python eval/TSDiff/forecast_tsdiff_cond.py   \
         --config configs/tsdiff_forecast/single_well_cond_25_25.yaml  \
         --dataset_path gluonts_datasets/single_well \
-        --out results/tsdiff_cond/single_well_25_25.npz
+        --out results/tsdiff_cond_with_early_stopping/single_well_25_25.npz
 
-python eval/CSDI/forecast_csdi.py \
-    --config configs/csdi_train/single_well_25_25.yaml \
-    --input  DATA/single_well_test.npz \
-    --ckpt   checkpoints_25_25/csdi/single_well/model.pth \
-    --out    results/csdi/single_well_25_25.npz \
-    --device cuda:0
+python eval/TSDiff/forecast_tsdiff_cond.py   \
+        --config configs/tsdiff_forecast/single_well_cond_50_50.yaml  \
+        --dataset_path gluonts_datasets/single_well \
+        --out results/tsdiff_cond_with_early_stopping/single_well_50_50.npz

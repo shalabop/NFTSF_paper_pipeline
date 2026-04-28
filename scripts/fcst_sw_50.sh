@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=evaphi25
-#SBATCH --time=4:00:00
+#SBATCH --job-name=sw50
+#SBATCH --time=2:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
-#SBATCH --partition=general
-#SBATCH --qos=grp_spresse
+#SBATCH --partition=htc
+#SBATCH --qos=public
 #SBATCH --gres=gpu:a30:1
 #SBATCH --mem=32G
-#SBATCH --output=logs/fsct.%j.out
-#SBATCH --error=logs/fsct.%j.err
+#SBATCH --output=logs/fsctsw50.%j.out
+#SBATCH --error=logs/fsctsw50.%j.err
 
 
 source /packages/apps/mamba/2.0.8/etc/profile.d/conda.sh
@@ -61,35 +61,25 @@ ls $CUDA_PATH/include/nvrtc.h || echo "WARNING: nvrtc.h not found"
 ls $CUDA_PATH/lib64/libnvrtc.so* || ls $CUDA_PATH/targets/x86_64-linux/lib/libnvrtc.so* || echo "WARNING: libnvrtc.so not found"
 
 python eval/NF/forecast_nf.py \
-    --model_path   checkpoints_25_25/nf/alanine_phi/model.pth     \
-    --config configs/nf/alanine_phi_25_25_forecast.yaml \
-    --data_path DATA/alanine_phi_test.npz    \
-    --out results/nf/alanine_phi_25_25.npz \
-    --context_length  25 \
-    --prediction_length 25  \
+    --model_path   checkpoints_50_50/nf/single_well/model.pth     \
+    --config configs/nf/single_well_50_50.yaml \
+    --data_path DATA/single_well_test.npz    \
+    --out results/nf/single_well_50_50.npz \
+    --context_length  50 \
+    --prediction_length 50  \
     --n_samples 1000 \
     --train_test_split 900 \
     --test_size 3000
 
 
 python eval/TSDiff/forecast_tsdiff_cond.py   \
-        --config configs/tsdiff_forecast/alanine_phi_cond_25_25.yaml  \
-        --dataset_path gluonts_datasets/alanine_phi \
-        --out results/tsdiff_cond/alanine_phi_25_25.npz
-
-python eval/TSDiff/forecast_tsdiff.py   \
-        --config configs/tsdiff_forecast/alanine_phi_mse_05_25_25.yaml  \
-        --dataset_path gluonts_datasets/alanine_phi \
-        --out results/tsdiff_mse/alanine_phi_mse_05_25_25.npz
-
-python eval/TSDiff/forecast_tsdiff.py   \
-        --config configs/tsdiff_forecast/alanine_phi_q_4_25_25.yaml  \
-        --dataset_path gluonts_datasets/alanine_phi \
-        --out results/tsdiff_q/alanine_phi_q_4_25_25.npz
+        --config configs/tsdiff_forecast/single_well_cond_50_50.yaml  \
+        --dataset_path gluonts_datasets/single_well \
+        --out results/tsdiff_cond/single_well_50_50.npz
 
 python eval/CSDI/forecast_csdi.py \
-    --config configs/csdi_train/alanine_phi_25_25.yaml \
-    --input  DATA/alanine_phi_test.npz \
-    --ckpt   checkpoints_25_25/csdi/alanine_phi/model.pth \
-    --out    results/csdi/alanine_phi_25_25.npz \
+    --config configs/csdi_train/single_well_50_50.yaml \
+    --input  DATA/single_well_test.npz \
+    --ckpt   checkpoints_25_25/csdi/single_well/model.pth \
+    --out    results/csdi/single_well_50_50.npz \
     --device cuda:0

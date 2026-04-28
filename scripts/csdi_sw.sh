@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=evaphi25
-#SBATCH --time=3:00:00
+#SBATCH --job-name=csdi
+#SBATCH --time=00:30:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
-#SBATCH --partition=general
-#SBATCH --qos=grp_spresse
+#SBATCH --partition=htc
+#SBATCH --qos=public
 #SBATCH --gres=gpu:a30:1
 #SBATCH --mem=32G
-#SBATCH --output=logs/fsct_dw_25_25.%j.out
-#SBATCH --error=logs/fsct_dw_25_25.%j.err
+#SBATCH --output=logs/csdi.%j.out
+#SBATCH --error=logs/csdi.%j.err
 
 
 source /packages/apps/mamba/2.0.8/etc/profile.d/conda.sh
@@ -60,26 +60,11 @@ ls $CUDA_PATH/include/cuda.h || echo "WARNING: cuda.h not found"
 ls $CUDA_PATH/include/nvrtc.h || echo "WARNING: nvrtc.h not found"
 ls $CUDA_PATH/lib64/libnvrtc.so* || ls $CUDA_PATH/targets/x86_64-linux/lib/libnvrtc.so* || echo "WARNING: libnvrtc.so not found"
 
-python eval/NF/forecast_nf.py \
-    --model_path   checkpoints_25_25/nf/double_well/model.pth     \
-    --config configs/nf/double_well_25_25.yaml \
-    --data_path DATA/doublw_well_test.npz    \
-    --out results/nf/double_well_25_25.npz \
-    --context_length  25 \
-    --prediction_length 25  \
-    --n_samples 1000 \
-    --train_test_split 900 \
-    --test_size 3000
 
-
-python eval/TSDiff/forecast_tsdiff_cond.py   \
-        --config configs/tsdiff_forecast/double_well_cond_25_25.yaml  \
-        --dataset_path gluonts_datasets/double_well \
-        --out results/tsdiff_cond/double_well_25_25.npz
 
 python eval/CSDI/forecast_csdi.py \
-    --config configs/csdi_train/double_well_25_25.yaml \
-    --input  DATA/double_well_test.npz \
-    --ckpt   checkpoints_25_25/csdi/double_well/model.pth \
-    --out    results/csdi/double_well_25_25.npz \
+    --config configs/csdi_train/single_well_50_50.yaml \
+    --input  DATA/single_well_test.npz \
+    --ckpt   checkpoints_50_50/csdi_with_early_stopping/single_well/model.pth \
+    --out    results/csdi_with_early_stopping/single_well_50_50.npz \
     --device cuda:0
