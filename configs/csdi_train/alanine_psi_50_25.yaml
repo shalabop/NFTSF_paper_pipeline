@@ -8,7 +8,7 @@ train:
   num_of_samples: 500
   val_size: 9000
   test_size: 3000
-  valid_epoch_interval: 50
+  valid_epoch_interval: 10
   stride: 5
   training_curv: "checkpoints_50_25/csdi/alanine_psi"
   normalization: "none"

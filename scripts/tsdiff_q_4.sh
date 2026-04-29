@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=tsdiff_3
+#SBATCH --job-name=tsdiff_4
 #SBATCH --time=00:45:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
-#SBATCH --partition=htc
-#SBATCH --qos=public
+#SBATCH --partition=general
+#SBATCH --qos=grp_spresse
 #SBATCH --gres=gpu:a30:1
 #SBATCH --mem=32G
-#SBATCH --output=logs/dw.%j.out
-#SBATCH --error=logs/dw.%j.err
+#SBATCH --output=logs/sw.%j.out
+#SBATCH --error=logs/sw.%j.err
 
 
 
@@ -65,11 +65,11 @@ ls $CUDA_PATH/lib64/libnvrtc.so* || ls $CUDA_PATH/targets/x86_64-linux/lib/libnv
 
 
 python eval/TSDiff/forecast_tsdiff.py   \
-        --config configs/tsdiff_forecast/double_well_mse_01_25_25.yaml  \
-        --dataset_path gluonts_datasets/double_well \
-        --out results/tsdiff_mse/double_well_mse_01_25_25.npz
+        --config configs/tsdiff_forecast/single_well_q_2_25_25.yaml  \
+        --dataset_path gluonts_datasets/single_well \
+        --out results/tsdiff_q/single_well_q_2_25_25.npz
 
 python eval/TSDiff/forecast_tsdiff.py   \
-        --config configs/tsdiff_forecast/double_well_mse_01_50_50.yaml  \
-        --dataset_path gluonts_datasets/double_well \
-        --out results/tsdiff_mse/double_well_mse_01_50_50.npz
+        --config configs/tsdiff_forecast/single_well_q_2_50_50.yaml  \
+        --dataset_path gluonts_datasets/single_well \
+        --out results/tsdiff_q/single_well_q_2_50_50.npz
