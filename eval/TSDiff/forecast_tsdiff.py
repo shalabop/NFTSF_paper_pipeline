@@ -9,7 +9,7 @@ import yaml
 import properscoring as ps
 import datetime
 from pathlib import Path
-import time as timlib
+import time as timelib
 
 logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -279,6 +279,7 @@ def forecast(
 
     num_samples       = config["num_samples"]
     prediction_length = config["prediction_length"]
+    context_length = config["context_length"]
     Guidance          = guidance_map[config["sampler"]]
 
     sampler = Guidance(
@@ -387,10 +388,23 @@ def forecast(
     plt.savefig(path/filename)   
 
     item_ids = np.arange(len(results))
+    
+    ground_truth = full_trajectories[
+        :len(results),
+        train_test_split : train_test_split + prediction_length
+    ]   # (N, H)
+
+    # Context: exact context window
+    contexts = full_trajectories[
+        :len(results),
+        train_test_split - context_length : train_test_split
+    ] 
 
     return {
+        "full_trajectories" : full_trajectories[:len(results)],  #
         "samples"          : forecast_samples,   # (N, T_pred, S)
-        "ground_truth"     : full_trajectories[:,train_test_split:], #ONLY INCLUDES THE FORECAST HORIZON
+        "ground_truth"     : ground_truth, #ONLY INCLUDES THE FORECAST HORIZON
+        "contexts"          : contexts, 
         "ci90_lower"       : ci90_lower,          # (N, T_pred)
         "ci90_upper"       : ci90_upper,
         "ci50_lower"       : ci50_lower,
@@ -399,9 +413,11 @@ def forecast(
         "time_train"       : time_train,          # (T_train,)
         "time"             : time,                # (T_full,)
         "train_test_split" : train_test_split, ##ALWAYS STARTS AT THE FORECAST HORIZON
-        "prediction_length": prediction_length,
+        "prediction_length" : prediction_length,
+        "context_length"    : context_length,
         "item_ids"         : item_ids,
         "full_trajectories" : full_trajectories,
+        "time_elapsed" : time_elapsed
     }
 
 # ---------------------------------------------------------------------------
@@ -550,7 +566,7 @@ def main():
     results = forecast(
         config           = config,
         model            = model,
-        windowed_ds     = windowed_ds,
+        windowed_dataset     = windowed_ds,
         transformation   = transformation,
         time             = time,
         train_test_split = train_test_split,
@@ -584,7 +600,10 @@ def main():
         time              = results["time"],
         train_test_split  = results["train_test_split"],
         prediction_length = results["prediction_length"],
+        context_length = results["context_length"],
         item_ids          = results["item_ids"],
+        time_elapsed      = results["time_elapsed"],
+        
     )
 
     logger.info(f"Saved forecast bundle to: {out_path}")
