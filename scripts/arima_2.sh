@@ -1,20 +1,17 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=tsdiff_mse_2
-#SBATCH --time=00:45:00
+#SBATCH --job-name=arima2
+#SBATCH --time=04:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
-#SBATCH --partition=htc
-#SBATCH --qos=public
+#SBATCH --partition=general
+#SBATCH --qos=grp_spresse
 #SBATCH --gres=gpu:a30:1
 #SBATCH --mem=32G
-#SBATCH --output=logs/psi.%j.out
-#SBATCH --error=logs/psi.%j.err
-
-
-
+#SBATCH --output=logs/arima2.%j.out
+#SBATCH --error=logs/arima2.%j.err
 
 source /packages/apps/mamba/2.0.8/etc/profile.d/conda.sh
 conda activate /home/meahmed/.conda/envs/venv310
@@ -63,13 +60,9 @@ ls $CUDA_PATH/include/cuda.h || echo "WARNING: cuda.h not found"
 ls $CUDA_PATH/include/nvrtc.h || echo "WARNING: nvrtc.h not found"
 ls $CUDA_PATH/lib64/libnvrtc.so* || ls $CUDA_PATH/targets/x86_64-linux/lib/libnvrtc.so* || echo "WARNING: libnvrtc.so not found"
 
+python eval/ARIMA/run_auto_arima.py -c configs/arima/25_25.yaml --input DATA/double_well_test.npz --out results/arima/double_well_25_25.npz --n_jobs 8
+python eval/ARIMA/run_auto_arima.py -c configs/arima/25_25.yaml --input DATA/single_well_test.npz --out results/arima/single_well_25_25.npz --n_jobs 8
 
-python eval/TSDiff/forecast_tsdiff.py   \
-        --config configs/tsdiff_forecast/alanine_psi_mse_03_25_25.yaml  \
-        --dataset_path gluonts_datasets/alanine_psi \
-        --out results/tsdiff_mse/alanine_psi_mse_03_25_25.npz
 
-python eval/TSDiff/forecast_tsdiff.py   \
-        --config configs/tsdiff_forecast/alanine_psi_mse_03_50_50.yaml  \
-        --dataset_path gluonts_datasets/alanine_psi \
-        --out results/tsdiff_mse/alanine_psi_mse_03_50_50.npz
+python eval/ARIMA/run_auto_arima.py -c configs/arima/50_50.yaml --input DATA/double_well_test.npz --out results/arima/double_well_50_50.npz --n_jobs 8
+python eval/ARIMA/run_auto_arima.py -c configs/arima/50_50.yaml --input DATA/single_well_test.npz --out results/arima/single_well_50_50.npz --n_jobs 8

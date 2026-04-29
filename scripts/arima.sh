@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=tsdiff_mse_2
-#SBATCH --time=00:45:00
+#SBATCH --job-name=arima
+#SBATCH --time=02:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
@@ -10,8 +10,8 @@
 #SBATCH --qos=public
 #SBATCH --gres=gpu:a30:1
 #SBATCH --mem=32G
-#SBATCH --output=logs/psi.%j.out
-#SBATCH --error=logs/psi.%j.err
+#SBATCH --output=logs/arima.%j.out
+#SBATCH --error=logs/arima.%j.err
 
 
 
@@ -63,13 +63,9 @@ ls $CUDA_PATH/include/cuda.h || echo "WARNING: cuda.h not found"
 ls $CUDA_PATH/include/nvrtc.h || echo "WARNING: nvrtc.h not found"
 ls $CUDA_PATH/lib64/libnvrtc.so* || ls $CUDA_PATH/targets/x86_64-linux/lib/libnvrtc.so* || echo "WARNING: libnvrtc.so not found"
 
+python eval/ARIMA/run_auto_arima.py -c configs/arima/25_25.yaml --input DATA/alanine_phi_test.npz --out results/arima/alanine_phi_25_25.npz --n_jobs 8
+python eval/ARIMA/run_auto_arima.py -c configs/arima/25_25.yaml --input DATA/alanine_psi_test.npz --out results/arima/alanine_psi_25_25.npz --n_jobs 8
 
-python eval/TSDiff/forecast_tsdiff.py   \
-        --config configs/tsdiff_forecast/alanine_psi_mse_03_25_25.yaml  \
-        --dataset_path gluonts_datasets/alanine_psi \
-        --out results/tsdiff_mse/alanine_psi_mse_03_25_25.npz
 
-python eval/TSDiff/forecast_tsdiff.py   \
-        --config configs/tsdiff_forecast/alanine_psi_mse_03_50_50.yaml  \
-        --dataset_path gluonts_datasets/alanine_psi \
-        --out results/tsdiff_mse/alanine_psi_mse_03_50_50.npz
+python eval/ARIMA/run_auto_arima.py -c configs/arima/50_50.yaml --input DATA/alanine_phi_test.npz --out results/arima/alanine_phi_50_50.npz --n_jobs 8
+python eval/ARIMA/run_auto_arima.py -c configs/arima/50_50.yaml --input DATA/alanine_psi_test.npz --out results/arima/alanine_psi_50_50.npz --n_jobs 8

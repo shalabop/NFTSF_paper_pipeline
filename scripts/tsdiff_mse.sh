@@ -64,11 +64,11 @@ ls $CUDA_PATH/lib64/libnvrtc.so* || ls $CUDA_PATH/targets/x86_64-linux/lib/libnv
 
 
 python eval/TSDiff/forecast_tsdiff.py   \
-        --config configs/tsdiff_forecast/alanine_phi_mse_05_25_25.yaml  \
+        --config configs/tsdiff_forecast/alanine_phi_mse_03_25_25.yaml  \
         --dataset_path gluonts_datasets/alanine_phi \
-        --out results/tsdiff_mse/alanine_phi_mse_05_25_25.npz
+        --out results/tsdiff_mse/alanine_phi_mse_03_25_25.npz
 
 python eval/TSDiff/forecast_tsdiff.py   \
-        --config configs/tsdiff_forecast/alanine_phi_mse_05_50_50.yaml  \
+        --config configs/tsdiff_forecast/alanine_phi_mse_03_50_50.yaml  \
         --dataset_path gluonts_datasets/alanine_phi \
-        --out results/tsdiff_mse/alanine_phi_mse_05_50_50.npz
+        --out results/tsdiff_mse/alanine_phi_mse_03_50_50.npz
