@@ -285,7 +285,7 @@ def plot_raw_trajectories(landscape, full_trajectories, n_past, n_future, output
         ax.set_ylim(y_lo, y_hi)
         ax.set_xlabel("Forecast step", fontsize=16)
         ax.set_title(f"{n} Trajectories", fontsize=16)
-        ax.tick_params(labelsize=10)
+        ax.tick_params(labelsize=12)
     axes[0].set_ylabel(_coord_label(landscape), fontsize=16)
     fig.suptitle(f"{_land_display(landscape)} — Ground Truth Trajectories", fontsize=16, y=1.02)
     plt.tight_layout()
@@ -300,7 +300,7 @@ def plot_raw_trajectories(landscape, full_trajectories, n_past, n_future, output
 def plot_trajectory_comparison_grid(landscape, display_labels, model_data, n_past, n_future, output_dir):
     n_models = len(model_data)
     n_traj = len(display_labels)
-    fig, axes = plt.subplots(n_models, n_traj, figsize=(5*n_traj, 3.5*n_models), squeeze=False)
+    fig, axes = plt.subplots(n_models, n_traj, figsize=(5.5*n_traj, 3.5*n_models), squeeze=False)
     future_steps = np.arange(n_past, n_past + n_future)
     all_steps = np.arange(0, n_past + n_future)
     g_lo, g_hi = _global_ylim(model_data)
@@ -346,7 +346,7 @@ def plot_trajectory_comparison_grid(landscape, display_labels, model_data, n_pas
             ax.set_ylim(g_lo, g_hi)
             ax.set_xlim(0, n_past + n_future)
             ax.set_xlabel("Forecast step", fontsize=16)
-            ax.tick_params(labelsize=10)
+            ax.tick_params(labelsize=12)
             if use_pi_format:
                 ax.yaxis.set_major_locator(MultipleLocator(np.pi/2))
                 ax.yaxis.set_major_formatter(FuncFormatter(pi_formatter))
@@ -373,7 +373,7 @@ def plot_histogram2d_comparison_grid(landscape, display_labels, model_data, n_pa
     with plt.style.context(style):
         n_models = len(model_data)
         n_traj = len(display_labels)
-        fig, axes = plt.subplots(n_models, n_traj, figsize=(5*n_traj, 3.5*n_models), squeeze=False)
+        fig, axes = plt.subplots(n_models, n_traj, figsize=(4.5*n_traj, 3*n_models), squeeze=False)
         future_steps = np.arange(n_past, n_past + n_future)
         all_steps = np.arange(0, n_past + n_future)
         g_lo, g_hi = _global_ylim(model_data)
@@ -422,7 +422,7 @@ def plot_histogram2d_comparison_grid(landscape, display_labels, model_data, n_pa
                 ax.set_ylim(g_lo, g_hi)
                 ax.set_xlim(0, n_past + n_future)
                 ax.set_xlabel("Forecast step", fontsize=16, color=label_color)
-                ax.tick_params(labelsize=10, colors=label_color)
+                ax.tick_params(labelsize=12, colors=label_color)
                 ax.set_facecolor(facecolor)
                 if use_pi_format:
                     ax.yaxis.set_major_locator(MultipleLocator(np.pi/2))
@@ -449,7 +449,7 @@ def plot_histogram2d_comparison_grid(landscape, display_labels, model_data, n_pa
 # Figure C: Error metrics grid (horizontal, 5 columns, legend only in leftmost)
 # ---------------------------------------------------------------------------
 def plot_error_metrics_grid(land, length, model_names, all_metrics, output_dir):
-    fig, axes = plt.subplots(1, 5, figsize=(20, 4))
+    fig, axes = plt.subplots(1, 5, figsize=(22.5, 3.5))
     metric_keys = [
         ("mae_sample_step", "MAE"),
         ("crps_step", "CRPS"),
@@ -471,7 +471,7 @@ def plot_error_metrics_grid(land, length, model_names, all_metrics, output_dir):
             ax.axhline(ideal, color="black", linestyle="--", linewidth=0.8, alpha=0.6)
         ax.set_xlabel("Forecast step", fontsize=16)
         ax.set_ylabel(title, fontsize=16)
-        ax.tick_params(labelsize=10)
+        ax.tick_params(labelsize=12)
         ax.grid(alpha=0.3)
         if ax == axes[0]:
             ax.legend(loc='upper left', fontsize=12)
