@@ -1,9 +1,0 @@
-python compare_methods.py  --results alanine_phi:csdi:results/csdi/alanine_phi.npz alanine_phi:tsdiff_cond:results/tsdiff_co
-nd/alanine_phi.npz  alanine_phi:arima:results/arima/alanine_phi.npz  alanine_phi:tsdiff_q:results/tsdiff_q/alanine_phi_q_4.npz  alanine_phi:tsdiff_ms:results/tsdiff_mse/alanine_phi_mse_05.npz alan
-ine_phi:nftsf:results/nf/alanine_phi.npz   --data_npz alanine_phi:DATA/alanine_phi_test.npz   --output_dir alanine_phi
-
-
-python compare_methods.py  --results alanine_psi:csdi:results/csdi/alanine_psi.npz alanine_psi:tsdiff_cond:results/tsdiff_co
-nd/alanine_psi.npz  alanine_psi:arima:results/arima/alanine_psi.npz  alanine_psi:tsdiff_q:results/tsdiff_q/alanine_psi_q_4.npz  alanine_psi:tsdiff_ms:results/tsdiff_mse/alanine_psi_mse_05.npz alan
-ine_psi:nftsf:results/nf/alanine_psi.npz   --data_npz alanine_psi:DATA/alanine_psi_test.npz   --output_dir alanine_psi
-
