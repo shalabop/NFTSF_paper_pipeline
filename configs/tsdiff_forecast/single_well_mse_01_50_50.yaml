@@ -1,8 +1,8 @@
-ckpt: checkpoints/tsdiff/single_well/lightning_logs/version_0/best_checkpoint.ckpt
+ckpt: checkpoints_50_50/tsdiff/single_well/lightning_logs/version_0/checkpoints/last.ckpt
 model: unconditional
 freq: H
-context_length: 100
-prediction_length: 100
+context_length: 50
+prediction_length: 50
 diffusion_config: diffusion_small_config
 use_features: False
 use_lags: False
@@ -12,9 +12,9 @@ normalization: none
 device: cuda:0
 setup: forecasting
 dataset: single_well
-num_samples: 500
+num_samples: 1000
 sampler: ddpm
 sampler_params:
-  guidance: quantile
-  scale: 4
+  guidance: MSE
+  scale: 0.1
 eval_every: 50

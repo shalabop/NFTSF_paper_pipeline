@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=AphicTSFdiff
+#SBATCH --job-name=phi25TSFdif
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
-#SBATCH --time=20:00:00
+#SBATCH --time=2-00:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --partition=public
 #SBATCH --qos=public
 #SBATCH --gres=gpu:1
-#SBATCH --mem=16G
+#SBATCH --mem=32G
 #SBATCH --output=logs/tsdiff/alanine_phi_25_25.%j.out
 #SBATCH --error=logs/tsdiff/alanine_phi_25_25.%j.err
 

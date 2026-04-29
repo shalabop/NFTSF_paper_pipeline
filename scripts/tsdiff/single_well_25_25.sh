@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=SWTSFdiff
+#SBATCH --job-name=SW25TSFdiff
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
-#SBATCH --time=1-12:00:00
+#SBATCH --time=08:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --partition=public
 #SBATCH --qos=public
 #SBATCH --gres=gpu:1
-#SBATCH --mem=32G
-#SBATCH --output=logs/tsdiff/single_well_2525_5050.%j.out
-#SBATCH --error=logs/tsdiff/single_well_2525_5050.%j.err
+#SBATCH --mem=16G
+#SBATCH --output=logs/tsdiff/single_well_25_25.%j.out
+#SBATCH --error=logs/tsdiff/single_well_25_25.%j.err
 
 source /packages/apps/mamba/2.0.8/etc/profile.d/conda.sh
 conda activate /home/meahmed/.conda/envs/venv310

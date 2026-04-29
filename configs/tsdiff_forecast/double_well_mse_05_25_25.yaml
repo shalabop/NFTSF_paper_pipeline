@@ -1,4 +1,4 @@
-ckpt: checkpoints_25_25/tsdiff/double_well/lightning_logs/version_0/best_checkpoint.ckpt
+ckpt: checkpoints_25_25/tsdiff/double_well/lightning_logs/version_0/checkpoints/last.ckpt
 model: unconditional
 freq: H
 context_length: 25

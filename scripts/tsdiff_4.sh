@@ -1,25 +1,29 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=psi25TSFd
-#SBATCH --mail-user=meahmed@asu.edu
-#SBATCH --mail-type=ALL
-#SBATCH --time=2-00:00:00
+#SBATCH --job-name=tsdiff_4
+#SBATCH --time=00:45:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --partition=public
-#SBATCH --qos=public
-#SBATCH --gres=gpu:1
+#SBATCH --cpus-per-task=8
+#SBATCH --mail-user=meahmed@asu.edu
+#SBATCH --mail-type=ALL
+#SBATCH --partition=general
+#SBATCH --qos=grp_spresse
+#SBATCH --gres=gpu:a30:1
 #SBATCH --mem=32G
-#SBATCH --output=logs/tsdiff/alanine_psi_25_25.%j.out
-#SBATCH --error=logs/tsdiff/alanine_psi_25_25.%j.err
+#SBATCH --output=logs/sw.%j.out
+#SBATCH --error=logs/sw.%j.err
+
+
 
 
 source /packages/apps/mamba/2.0.8/etc/profile.d/conda.sh
 conda activate /home/meahmed/.conda/envs/venv310
 which python
 
-mkdir -p results/tsdiff
-mkdir -p checkpoints_25_25/tsdiff
-mkdir -p results/tsdiff/checkpoints_25_25
+mkdir -p results/tsdiff_q
+mkdir -p results/tsdiff_mse
+mkdir -p logs/forecast
+
 which python
 
 PROJECT_ROOT=$(pwd) 
@@ -59,7 +63,13 @@ ls $CUDA_PATH/include/cuda.h || echo "WARNING: cuda.h not found"
 ls $CUDA_PATH/include/nvrtc.h || echo "WARNING: nvrtc.h not found"
 ls $CUDA_PATH/lib64/libnvrtc.so* || ls $CUDA_PATH/targets/x86_64-linux/lib/libnvrtc.so* || echo "WARNING: libnvrtc.so not found"
 
-python train/TSDiff/train_tsdiff.py \
-        --dataset_path gluonts_datasets/alanine_psi \
-        --config configs/tsdiff_train/alanine_psi_25_25.yaml \
-        --out_dir checkpoints_25_25/tsdiff/alanine_psi
+
+python eval/TSDiff/forecast_tsdiff.py   \
+        --config configs/tsdiff_forecast/single_well_mq_4_25_25.yaml  \
+        --dataset_path gluonts_datasets/single_well \
+        --out results/tsdiff_mse/single_well_q_4_25_25.npz
+
+python eval/TSDiff/forecast_tsdiff.py   \
+        --config configs/tsdiff_forecast/single_well_q_4_50_50.yaml  \
+        --dataset_path gluonts_datasets/single_well \
+        --out results/tsdiff_mse/single_well_q_4_50_50.npz

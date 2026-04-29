@@ -1,8 +1,8 @@
-ckpt: checkpoints_25_25/tsdiff/alanine_phi/lightning_logs/version_0/checkpoints/last.ckpt
+ckpt: checkpoints_50_50/tsdiff/alanine_phi/lightning_logs/version_0/checkpoints/last.ckpt
 model: unconditional
 freq: H
-context_length: 25
-prediction_length: 25
+context_length: 50
+prediction_length: 50
 diffusion_config: diffusion_small_config
 use_features: False
 use_lags: False
@@ -15,6 +15,6 @@ dataset: alanine_phi
 num_samples: 1000
 sampler: ddpm
 sampler_params:
-  guidance: quantile
-  scale: 4
+  guidance: MSE
+  scale: 0.5
 eval_every: 50

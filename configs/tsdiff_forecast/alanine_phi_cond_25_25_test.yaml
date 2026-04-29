@@ -1,5 +1,5 @@
-ckpt: checkpoints_25_25/tsdiff/alanine_phi/lightning_logs/version_0/checkpoints/last.ckpt
-model: unconditional
+ckpt: checkpoints_25_25/tsdiff_cond/alanine_phi/lightning_logs/version_0/checkpoints/alanine_phi-epoch=799-train_loss=0.135.ckpt
+model: conditional
 freq: H
 context_length: 25
 prediction_length: 25
@@ -13,8 +13,6 @@ device: cuda:0
 setup: forecasting
 dataset: alanine_phi
 num_samples: 1000
-sampler: ddpm
-sampler_params:
-  guidance: quantile
-  scale: 4
 eval_every: 50
+do_final_eval: true
+noise_observed: true

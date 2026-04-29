@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #SBATCH --job-name=tsdiff_2
-#SBATCH --time=00:35:00
+#SBATCH --time=00:45:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
@@ -10,15 +10,18 @@
 #SBATCH --qos=public
 #SBATCH --gres=gpu:a30:1
 #SBATCH --mem=32G
-#SBATCH --output=logs/tsdiff_2.%j.out
-#SBATCH --error=logs/tsdiff_2.%j.err
+#SBATCH --output=logs/psi.%j.out
+#SBATCH --error=logs/psi.%j.err
+
+
 
 
 source /packages/apps/mamba/2.0.8/etc/profile.d/conda.sh
 conda activate /home/meahmed/.conda/envs/venv310
 which python
 
-mkdir -p results/nf
+mkdir -p results/tsdiff_q
+mkdir -p results/tsdiff_mse
 mkdir -p logs/forecast
 
 which python
@@ -60,12 +63,13 @@ ls $CUDA_PATH/include/cuda.h || echo "WARNING: cuda.h not found"
 ls $CUDA_PATH/include/nvrtc.h || echo "WARNING: nvrtc.h not found"
 ls $CUDA_PATH/lib64/libnvrtc.so* || ls $CUDA_PATH/targets/x86_64-linux/lib/libnvrtc.so* || echo "WARNING: libnvrtc.so not found"
 
-python eval/TSDiff/forecast_tsdiff_cond.py   \
-        --config configs/tsdiff_forecast/alanine_psi_cond_50_50.yaml  \
-        --dataset_path gluonts_datasets/alanine_psi \
-        --out results/tsdiff_cond_with_early_stopping/alanine_psi_50_50.npz
 
-python eval/TSDiff/forecast_tsdiff_cond.py   \
-        --config configs/tsdiff_forecast/alanine_phi_cond_50_50.yaml  \
-        --dataset_path gluonts_datasets/alanine_phi \
-        --out results/tsdiff_cond_with_early_stopping/alanine_phi_50_50.npz
+python eval/TSDiff/forecast_tsdiff.py   \
+        --config configs/tsdiff_forecast/alanine_psi_q_4_25_25.yaml  \
+        --dataset_path gluonts_datasets/alanine_psi \
+        --out results/tsdiff_mse/alanine_psi_q_4_25_25.npz
+
+python eval/TSDiff/forecast_tsdiff.py   \
+        --config configs/tsdiff_forecast/alanine_psi_q_4_50_50.yaml  \
+        --dataset_path gluonts_datasets/alanine_psi \
+        --out results/tsdiff_mse/alanine_psi_q_4_50_50.npz

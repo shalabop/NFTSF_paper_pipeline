@@ -1,4 +1,4 @@
-ckpt: checkpoints_25_25/tsdiff/alanine_phi/lightning_logs/version_0/checkpoints/last.ckpt
+ckpt: checkpoints_25_25/tsdiff/alanine_psi/lightning_logs/version_0/checkpoints/last.ckpt
 model: unconditional
 freq: H
 context_length: 25
@@ -11,7 +11,7 @@ batch_size: 64
 normalization: none
 device: cuda:0
 setup: forecasting
-dataset: alanine_phi
+dataset: alanine_psi
 num_samples: 1000
 sampler: ddpm
 sampler_params:

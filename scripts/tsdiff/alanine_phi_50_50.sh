@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=AphicTSFdiff
+#SBATCH --job-name=phi50TSFdiff
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
-#SBATCH --time=20:00:00
+#SBATCH --time=08:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --partition=public
@@ -58,7 +58,7 @@ echo "KeOps cache dir: $KEOPS_CACHE_FOLDER"
 
 echo "Checking CUDA installation..."
 ls $CUDA_PATH/include/cuda.h || echo "WARNING: cuda.h not found"
-ls $CUDA_PATH/include/nvrtc.h || echo "WARNING: nvrtc.h not found"
+ls $CUDA_PATH/include/nvrtc.h || echo "WARNING: nvrtc.h not found"x
 ls $CUDA_PATH/lib64/libnvrtc.so* || ls $CUDA_PATH/targets/x86_64-linux/lib/libnvrtc.so* || echo "WARNING: libnvrtc.so not found"
 
 python train/TSDiff/train_tsdiff.py \
