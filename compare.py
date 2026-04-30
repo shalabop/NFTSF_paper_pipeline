@@ -260,7 +260,7 @@ def plot_raw_trajectories(landscape, full_trajectories, n_past, n_future, output
     y_lo -= margin
     y_hi += margin
 
-    fig, axes = plt.subplots(1, 3, figsize=(13.5, 3), sharey=True)
+    fig, axes = plt.subplots(1, 3, figsize=(4.5, 1.125), sharey=True)
     SINGLE_COLOR = "#4C72B0"
     for ax, count in zip(axes, counts):
         n = min(count, N)
@@ -283,11 +283,11 @@ def plot_raw_trajectories(landscape, full_trajectories, n_past, n_future, output
         ax.axvline(x=n_past, color="black", linestyle="--", alpha=0.5, linewidth=1.2)
         ax.set_xlim(0, n_extrp)
         ax.set_ylim(y_lo, y_hi)
-        ax.set_xlabel("Forecast step", fontsize=16)
-        ax.set_title(f"{n} Trajectories", fontsize=16)
-        ax.tick_params(labelsize=12)
-    axes[0].set_ylabel(_coord_label(landscape), fontsize=16)
-    fig.suptitle(f"{_land_display(landscape)} — Ground Truth Trajectories", fontsize=16, y=1.02)
+        ax.set_xlabel("Forecast step", fontsize=5)
+        ax.set_title(f"{n} Trajectories", fontsize=6)
+        ax.tick_params(labelsize=4)
+    axes[0].set_ylabel(_coord_label(landscape), fontsize=5)
+    fig.suptitle(f"{_land_display(landscape)} — Ground Truth Trajectories", fontsize=6, y=1.02)
     plt.tight_layout()
     out_path = output_dir / f"raw_trajectories_{landscape}.svg"
     fig.savefig(out_path, format="svg", bbox_inches="tight")
@@ -300,7 +300,7 @@ def plot_raw_trajectories(landscape, full_trajectories, n_past, n_future, output
 def plot_trajectory_comparison_grid(landscape, display_labels, model_data, n_past, n_future, output_dir):
     n_models = len(model_data)
     n_traj = len(display_labels)
-    fig, axes = plt.subplots(n_models, n_traj, figsize=(5.5*n_traj, 3.5*n_models), squeeze=False)
+    fig, axes = plt.subplots(n_models, n_traj, figsize=(4.5, 1.125), squeeze=False)
     future_steps = np.arange(n_past, n_past + n_future)
     all_steps = np.arange(0, n_past + n_future)
     g_lo, g_hi = _global_ylim(model_data)
@@ -325,7 +325,7 @@ def plot_trajectory_comparison_grid(landscape, display_labels, model_data, n_pas
         mlabel = reg["label"]
         samples_all = mdata["samples"]
         ground_truths_all = mdata["ground_truths"]
-        axes[row_idx, 0].set_ylabel(f"{mlabel}\n{_coord_label(landscape)}", fontsize=16)
+        axes[row_idx, 0].set_ylabel(f"{mlabel}\n{_coord_label(landscape)}", fontsize=5)
         for col_idx in range(n_traj):
             ax = axes[row_idx, col_idx]
             real_traj = ground_truths_all[col_idx]
@@ -336,8 +336,8 @@ def plot_trajectory_comparison_grid(landscape, display_labels, model_data, n_pas
             lo50 = np.percentile(samp, 25, axis=1)
             hi50 = np.percentile(samp, 75, axis=1)
 
-            ax.plot(all_steps, real_traj, "k-", linewidth=2.0, label="Truth")
-            ax.plot(future_steps, median, color=MEDIAN_COLOR, linewidth=2.0, label="Median")
+            ax.plot(all_steps, real_traj, "k-", linewidth=1.0, label="Truth")
+            ax.plot(future_steps, median, color=MEDIAN_COLOR, linewidth=0.8, label="Median")
             ax.fill_between(future_steps, lo50, hi50, color="tab:blue", alpha=0.40, label="50% band")
             ax.fill_between(future_steps, lo90, lo50, color="tab:orange", alpha=0.40, label="90% band")
             ax.fill_between(future_steps, hi50, hi90, color="tab:orange", alpha=0.40)
@@ -345,16 +345,16 @@ def plot_trajectory_comparison_grid(landscape, display_labels, model_data, n_pas
             ax.axvline(x=n_past, color="k", linestyle="--", alpha=0.4)
             ax.set_ylim(g_lo, g_hi)
             ax.set_xlim(0, n_past + n_future)
-            ax.set_xlabel("Forecast step", fontsize=16)
-            ax.tick_params(labelsize=12)
+            ax.set_xlabel("Forecast step", fontsize=5)
+            ax.tick_params(labelsize=4)
             if use_pi_format:
                 ax.yaxis.set_major_locator(MultipleLocator(np.pi/2))
                 ax.yaxis.set_major_formatter(FuncFormatter(pi_formatter))
             if row_idx == 0:
-                ax.set_title(f"Trajectory {col_idx+1}", fontsize=16, pad=10)
+                ax.set_title(f"Trajectory {col_idx+1}", fontsize=6, pad=10)
             if row_idx == 0 and col_idx == 0:
-                ax.legend(loc='upper left', fontsize=12, framealpha=0.8)
-    fig.suptitle(f"{_land_display(landscape)} — Trajectory Comparison", fontsize=16, y=1)
+                ax.legend(loc='upper left', fontsize=4, framealpha=0.8)
+    fig.suptitle(f"{_land_display(landscape)} — Trajectory Comparison", fontsize=6, y=1)
     plt.subplots_adjust(top=0.93)
     plt.tight_layout()
     out_path = output_dir / f"trajectory_comparison_{landscape}.svg"
@@ -373,7 +373,7 @@ def plot_histogram2d_comparison_grid(landscape, display_labels, model_data, n_pa
     with plt.style.context(style):
         n_models = len(model_data)
         n_traj = len(display_labels)
-        fig, axes = plt.subplots(n_models, n_traj, figsize=(4.5*n_traj, 3*n_models), squeeze=False)
+        fig, axes = plt.subplots(n_models, n_traj, figsize=(4.5, 1.125), squeeze=False)
         future_steps = np.arange(n_past, n_past + n_future)
         all_steps = np.arange(0, n_past + n_future)
         g_lo, g_hi = _global_ylim(model_data)
@@ -401,7 +401,7 @@ def plot_histogram2d_comparison_grid(landscape, display_labels, model_data, n_pa
             mlabel = reg["label"]
             samples_all = mdata["samples"]
             ground_truths_all = mdata["ground_truths"]
-            axes[row_idx, 0].set_ylabel(f"{mlabel}\n{_coord_label(landscape)}", fontsize=16, color=label_color)
+            axes[row_idx, 0].set_ylabel(f"{mlabel}\n{_coord_label(landscape)}", fontsize=5, color=label_color)
             for col_idx in range(n_traj):
                 ax = axes[row_idx, col_idx]
                 real_traj = ground_truths_all[col_idx]
@@ -409,34 +409,32 @@ def plot_histogram2d_comparison_grid(landscape, display_labels, model_data, n_pa
                 samp_for_hist = samp.T
                 time_rep = np.tile(future_steps, (samp_for_hist.shape[0], 1))
                 if dark:
-                    # Dark version: no bin edges (grid removed)
                     ax.hist2d(time_rep.flatten(), samp_for_hist.flatten(),
                               bins=[x_edges, y_edges], cmap="magma", density=True, norm=LogNorm(vmin=1e-6),
                               edgecolors='none', rasterized=True)
                 else:
-                    # Light version: keep bin edges (grid)
                     ax.hist2d(time_rep.flatten(), samp_for_hist.flatten(),
                               bins=[x_edges, y_edges], cmap="magma", density=True, norm=LogNorm(vmin=1e-6))
-                ax.plot(all_steps, real_traj, color="lime", linewidth=2.5, label="Truth")
+                ax.plot(all_steps, real_traj, color="lime", linewidth=1.0, label="Truth")
                 ax.axvline(x=n_past, color="gray", linestyle="--", alpha=0.5)
                 ax.set_ylim(g_lo, g_hi)
                 ax.set_xlim(0, n_past + n_future)
-                ax.set_xlabel("Forecast step", fontsize=16, color=label_color)
-                ax.tick_params(labelsize=12, colors=label_color)
+                ax.set_xlabel("Forecast step", fontsize=5, color=label_color)
+                ax.tick_params(labelsize=4, colors=label_color)
                 ax.set_facecolor(facecolor)
                 if use_pi_format:
                     ax.yaxis.set_major_locator(MultipleLocator(np.pi/2))
                     ax.yaxis.set_major_formatter(FuncFormatter(pi_formatter))
                 if row_idx == 0:
-                    ax.set_title(f"Trajectory {col_idx+1}", fontsize=16, color=title_color, pad=10)
+                    ax.set_title(f"Trajectory {col_idx+1}", fontsize=6, color=title_color, pad=10)
                 if row_idx == 0 and col_idx == 0:
-                    leg = ax.legend(loc='upper left', fontsize=12, framealpha=0.8)
+                    leg = ax.legend(loc='upper left', fontsize=4, framealpha=0.8)
                     if dark:
                         leg.get_frame().set_facecolor('black')
                         leg.get_frame().set_edgecolor('white')
                         for text in leg.get_texts():
                             text.set_color('white')
-        fig.suptitle(f"{_land_display(landscape)} — Prediction Density Comparison", fontsize=16, y=1, color=title_color)
+        fig.suptitle(f"{_land_display(landscape)} — Prediction Density Comparison", fontsize=6, y=1, color=title_color)
         plt.subplots_adjust(top=0.93)
         plt.tight_layout()
         suffix = "_dark" if dark else "_light"
@@ -449,7 +447,7 @@ def plot_histogram2d_comparison_grid(landscape, display_labels, model_data, n_pa
 # Figure C: Error metrics grid (horizontal, 5 columns, legend only in leftmost)
 # ---------------------------------------------------------------------------
 def plot_error_metrics_grid(land, length, model_names, all_metrics, output_dir):
-    fig, axes = plt.subplots(1, 5, figsize=(22.5, 3.5))
+    fig, axes = plt.subplots(1, 5, figsize=(5.5, 1.125))
     metric_keys = [
         ("mae_sample_step", "MAE"),
         ("crps_step", "CRPS"),
@@ -465,18 +463,18 @@ def plot_error_metrics_grid(land, length, model_names, all_metrics, output_dir):
             if key == "isce_step":
                 vals = vals * 1000
             steps = np.arange(1, len(vals)+1)
-            ax.plot(steps, vals, label=label, color=color, linewidth=2)
+            ax.plot(steps, vals, label=label, color=color, linewidth=0.8)
         if "CI" in title:
             ideal = 0.5 if "50" in title else 0.9
-            ax.axhline(ideal, color="black", linestyle="--", linewidth=0.8, alpha=0.6)
-        ax.set_xlabel("Forecast step", fontsize=16)
-        ax.set_ylabel(title, fontsize=16)
-        ax.tick_params(labelsize=12)
-        ax.grid(alpha=0.3)
+            ax.axhline(ideal, color="black", linestyle="--", linewidth=0.5, alpha=0.6)
+        ax.set_xlabel("Forecast step", fontsize=5)
+        ax.set_ylabel(title, fontsize=5)
+        ax.tick_params(labelsize=4)
+        ax.grid(alpha=0.2, linewidth=0.3)
         if ax == axes[0]:
-            ax.legend(loc='upper left', fontsize=12)
-    fig.suptitle(f"{_land_display(land)} (L/H={length}) — Error Metrics", fontsize=16)
-    plt.tight_layout(pad=2.0)
+            ax.legend(loc='upper left', fontsize=4, framealpha=0.6)
+    fig.suptitle(f"{_land_display(land)} (L/H={length}) — Error Metrics", fontsize=6)
+    plt.tight_layout(pad=0.5)
     out_path = output_dir / f"error_metrics_{land}_len{length}.svg"
     fig.savefig(out_path, format="svg", bbox_inches="tight")
     plt.close(fig)
@@ -512,13 +510,13 @@ def plot_summary_table(land, length, model_names, all_metrics, output_dir):
         ])
     # Determine best indices per column
     best_idx = []
-    for col in range(8):  # 8 metric columns (0-indexed)
+    for col in range(8):
         col_vals = [row[col] for row in numeric_vals]
-        if col in [0,1,2,3,6,7]:   # MAE_median, MAE_mean, MAE_sample, CRPS, ISCE, Time -> lower better
+        if col in [0,1,2,3,6,7]:
             best = int(np.argmin(col_vals))
-        elif col == 4:             # CI50 -> closest to 0.5
+        elif col == 4:
             best = int(np.argmin(np.abs(np.array(col_vals) - 0.5)))
-        elif col == 5:             # CI90 -> closest to 0.9
+        elif col == 5:
             best = int(np.argmin(np.abs(np.array(col_vals) - 0.9)))
         else:
             best = None
