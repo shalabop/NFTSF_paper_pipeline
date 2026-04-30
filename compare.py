@@ -302,7 +302,7 @@ def plot_trajectory_comparison_grid(landscape, display_labels, model_data, n_pas
     n_traj = len(display_labels)
     
     # Dynamically size figure: width fixed, height scales with n_models
-    row_height = 1.125   # inches per row (adjust as desired)
+    row_height = 1.125   # inches per row
     fig_width = 4.5
     fig_height = row_height * n_models
     fig, axes = plt.subplots(n_models, n_traj, figsize=(fig_width, fig_height), squeeze=False)
@@ -324,15 +324,18 @@ def plot_trajectory_comparison_grid(landscape, display_labels, model_data, n_pas
             elif num == -0.5: return r"$-\frac{\pi}{2}$"
             else: return f"${num:.0f}\\pi$"
 
-    MEDIAN_COLOR = "#df1111"   
+    MEDIAN_COLOR = "#df1111"
+    
+    # Custom x‑tick positions (absolute) for the bottom row
+    x_tick_positions = [0, n_past, n_past + n_future]
+    
     for row_idx, (model_name, mdata) in enumerate(model_data.items()):
         reg = MODEL_REGISTRY.get(model_name, {"label": model_name, "color": "tab:orange"})
         mlabel = reg["label"]
         samples_all = mdata["samples"]
         ground_truths_all = mdata["ground_truths"]
-        # Y‑label only on the first column
-        #axes[row_idx, 0].set_ylabel(f"{mlabel}\n{_coord_label(landscape)}", fontsize=10)
         axes[row_idx, 0].set_ylabel(f"{mlabel}", fontsize=10)
+        
         for col_idx in range(n_traj):
             ax = axes[row_idx, col_idx]
             real_traj = ground_truths_all[col_idx]
@@ -353,10 +356,12 @@ def plot_trajectory_comparison_grid(landscape, display_labels, model_data, n_pas
             ax.set_ylim(g_lo, g_hi)
             ax.set_xlim(0, n_past + n_future)
             
-            # X‑axis ticks: only on the last row (bottom)
+            # X‑axis: ticks and label only on the last row (bottom)
             if row_idx == n_models - 1:
                 ax.set_xlabel("Forecast step", fontsize=10)
-                ax.tick_params(axis='x', labelsize=8, labelbottom=True)
+                ax.set_xticks(x_tick_positions)
+                ax.set_xticklabels(x_tick_positions, fontsize=8)
+                ax.tick_params(axis='x', labelbottom=True)
             else:
                 ax.tick_params(axis='x', labelbottom=False)
             
@@ -388,16 +393,15 @@ def plot_trajectory_comparison_grid(landscape, display_labels, model_data, n_pas
 def plot_histogram2d_comparison_grid(landscape, display_labels, model_data, n_past, n_future, output_dir, dark=True):
     """Save heatmap with either dark (True) or light (False) background.
        Dark version: no visible bin edges (grid removed). Light version: bin edges visible.
-       X‑axis ticks only on last row, Y‑axis ticks only on first column.
-       Height scales with number of model rows.
+       X‑axis ticks: only 0, n_past, and n_past+n_future (on last row).
+       Y‑axis ticks only on first column. Height scales with number of models.
     """
     style = 'dark_background' if dark else 'default'
     with plt.style.context(style):
         n_models = len(model_data)
         n_traj = len(display_labels)
         
-        # Dynamically size figure: width fixed, height scales with n_models
-        row_height = 1.125   # inches per row (adjust as desired)
+        row_height = 1.125
         fig_width = 4.5
         fig_height = row_height * n_models
         fig, axes = plt.subplots(n_models, n_traj, figsize=(fig_width, fig_height), squeeze=False)
@@ -425,6 +429,9 @@ def plot_histogram2d_comparison_grid(landscape, display_labels, model_data, n_pa
         title_color = 'white' if dark else 'black'
         facecolor = 'black' if dark else 'white'
         
+        # X‑tick positions (absolute) – for the bottom row only
+        x_tick_positions = [0, n_past, n_past + n_future]
+        
         for row_idx, (model_name, mdata) in enumerate(model_data.items()):
             reg = MODEL_REGISTRY.get(model_name, {"label": model_name, "color": "tab:orange"})
             mlabel = reg["label"]
@@ -450,14 +457,16 @@ def plot_histogram2d_comparison_grid(landscape, display_labels, model_data, n_pa
                 ax.set_xlim(0, n_past + n_future)
                 ax.set_facecolor(facecolor)
                 
-                # X‑axis: tick labels and label only on last row
+                # X‑axis: ticks and label only on last row
                 if row_idx == n_models - 1:
                     ax.set_xlabel("Forecast step", fontsize=10, color=label_color)
-                    ax.tick_params(axis='x', labelsize=8, labelbottom=True, colors=label_color)
+                    ax.set_xticks(x_tick_positions)
+                    ax.set_xticklabels(x_tick_positions, fontsize=8, color=label_color)
+                    ax.tick_params(axis='x', labelbottom=True)
                 else:
                     ax.tick_params(axis='x', labelbottom=False)
                 
-                # Y‑axis: tick labels only on first column
+                # Y‑axis: ticks only on first column
                 if col_idx == 0:
                     ax.tick_params(axis='y', labelsize=8, labelleft=True, colors=label_color)
                 else:
@@ -602,8 +611,133 @@ def plot_summary_table(land, length, model_names, all_metrics, output_dir):
         for row in rows:
             f.write(",".join(row) + "\n")
     print(f"CSV saved: {csv_path}")
-
+    
 # ---------------------------------------------------------------------------
+# Figure F: Combined metrics grid (2 rows, 4 cols)
+# ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Figure F: Combined metrics grid (2 rows, 4 cols)
+# ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Figure F: Combined metrics grid (2 rows, 4 cols)
+# ---------------------------------------------------------------------------# ---------------------------------------------------------------------------
+# Figure F: Combined metrics grid (2 rows, 4 cols)
+# ---------------------------------------------------------------------------
+def plot_combined_metrics_grid(land, length, model_names, all_metrics,
+                               display_labels, model_data, n_past, n_future,
+                               output_dir):
+    import matplotlib.pyplot as plt
+    from matplotlib.colors import LogNorm
+
+    n_models_hist = min(3, len(model_names))
+    hist_models = model_names[:n_models_hist]
+    traj_idx = 0
+
+    row_height = 1.125
+    fig_width = 5.5
+    fig_height = 2 * row_height
+    fig, axes = plt.subplots(2, 4, figsize=(fig_width, fig_height), squeeze=False)    
+    g_lo, g_hi = _global_ylim(model_data)
+    n_y_bins = 24
+    y_edges = np.linspace(g_lo, g_hi, n_y_bins + 1)
+    future_steps = np.arange(n_past, n_past + n_future)
+    all_steps = np.arange(0, n_past + n_future)
+
+    n_x_bins = max(12, n_future // 5)
+    x_edges = np.linspace(n_past, n_past + n_future, n_x_bins + 1)
+
+    hist_xticks = [0, n_past, n_past + n_future]
+
+    for col, model in enumerate(hist_models):
+        ax = axes[0, col]
+        mdata = model_data[model]
+        samples_all = mdata["samples"]
+        real_traj = mdata["ground_truths"][traj_idx]
+
+        samp = samples_all[traj_idx]
+        samp_for_hist = samp.T
+        time_rep = np.tile(future_steps, (samp_for_hist.shape[0], 1))
+
+        ax.hist2d(time_rep.flatten(), samp_for_hist.flatten(),
+                  bins=[x_edges, y_edges], cmap="magma", density=True,
+                  norm=LogNorm(vmin=1e-6), edgecolors='none', rasterized=True)
+        ax.plot(all_steps, real_traj, color="lime", linewidth=1.0, label="Truth")
+        ax.axvline(x=n_past, color="gray", linestyle="--", alpha=0.5)
+        ax.set_ylim(g_lo, g_hi)
+        ax.set_xlim(0, n_past + n_future)
+        if col == 0:
+            ax.set_ylabel("Value", fontsize=10)
+        ax.tick_params(axis='both', labelsize=8)
+        ax.set_xticks(hist_xticks)
+        ax.set_xticklabels(hist_xticks, fontsize=8)
+        # No x‑label on top row
+
+    def set_metric_ticks(ax, H):
+        if H == 25:
+            ticks = [0, 25]
+        elif H == 50:
+            ticks = [0, 25, 50]
+        else:
+            return
+        ax.set_xticks(ticks)
+        ax.set_xticklabels(ticks, fontsize=8)
+
+    ax_mae = axes[0, 3]
+    lines = []
+    labels = []
+    for mn in model_names:
+        label = MODEL_REGISTRY.get(mn, {"label": mn})["label"]
+        color = MODEL_REGISTRY.get(mn, {"color": "tab:gray"})["color"]
+        vals = all_metrics[mn]["mae_sample_step"]
+        steps = np.arange(1, len(vals) + 1)
+        line, = ax_mae.plot(steps, vals, label=label, color=color, linewidth=0.8)
+        lines.append(line)
+        labels.append(label)
+    # No x‑label on MAE subplot (top row)
+    ax_mae.set_ylabel("MAE", fontsize=10)
+    ax_mae.tick_params(labelsize=8)
+    ax_mae.grid(alpha=0.2, linewidth=0.3)
+    ax_mae.set_xlim(0, n_future)
+    set_metric_ticks(ax_mae, n_future)
+
+    metric_keys_row1 = [
+        ("crps_step", "CRPS"),
+        ("ci50_step", "CI50"),
+        ("ci90_step", "CI90"),
+        ("isce_step", r"ISCE ($\times 10^3$)")
+    ]
+
+    for col, (key, title) in enumerate(metric_keys_row1):
+        ax = axes[1, col]
+        for mn in model_names:
+            label = MODEL_REGISTRY.get(mn, {"label": mn})["label"]
+            color = MODEL_REGISTRY.get(mn, {"color": "tab:gray"})["color"]
+            vals = all_metrics[mn][key]
+            if key == "isce_step":
+                vals = vals * 1000
+            steps = np.arange(1, len(vals) + 1)
+            ax.plot(steps, vals, label=label, color=color, linewidth=0.8)
+        if "CI" in title:
+            ideal = 0.5 if "50" in title else 0.9
+            ax.axhline(ideal, color="black", linestyle="--", linewidth=0.5, alpha=0.6)
+        # Set x‑label only on bottom row subplots
+        ax.set_xlabel("Forecast step", fontsize=10)
+        ax.set_ylabel(title, fontsize=10)
+        ax.tick_params(labelsize=8)
+        ax.grid(alpha=0.2, linewidth=0.3)
+        ax.set_xlim(0, n_future)
+        set_metric_ticks(ax, n_future)
+
+    fig.legend(lines, labels, loc='upper center', bbox_to_anchor=(0.5, 1.04),
+           ncol=len(model_names), fontsize=8, framealpha=0.8)
+
+    plt.subplots_adjust(left=0.0, right=0.98, bottom=0.18, top=0.90,
+                        wspace=0.7, hspace=0.35)
+
+    out_path = output_dir / f"combined_metrics_{land}_len{length}.svg"
+    fig.savefig(out_path, format="svg", bbox_inches="tight")
+    plt.close(fig)
+    print(f"[F] Saved: {out_path}")
 # Main
 # ---------------------------------------------------------------------------
 def main():
@@ -669,6 +803,7 @@ def main():
         plot_histogram2d_comparison_grid(land, display_labels, display_data, n_past, n_future, out_dir, dark=False)
         plot_error_metrics_grid(land, length, model_names, all_metrics, out_dir)
         plot_summary_table(land, length, model_names, all_metrics, out_dir)
+        plot_combined_metrics_grid(land, length, model_names, all_metrics, display_labels, display_data, n_past, n_future,out_dir)
 
     print("\n✓ All outputs saved.")
 
