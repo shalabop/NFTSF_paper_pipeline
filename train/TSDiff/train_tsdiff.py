@@ -211,13 +211,13 @@ def main(config, log_dir, dataset_path,running_tests):
         save_weights_only=True,
     )
     
-    '''early_stop_callback = EarlyStopping(
+    early_stop_callback = EarlyStopping(
         monitor="train_loss",   
         patience=10,            
         mode="min",             
         verbose=True            
     )
-    callbacks.append(early_stop_callback)'''
+    callbacks.append(early_stop_callback)
 
     callbacks.append(checkpoint_callback)
     #callbacks.append(RichProgressBar())
