@@ -4,11 +4,11 @@ from torch.utils.data import DataLoader, Dataset
 
 class MDTrajectoryDataset(Dataset):
     def __init__(self, positions, context_length, prediction_length,normalization=None):
-        self.context_length    = context_length
+        self.context_length = context_length
         self.prediction_length = prediction_length
-        self.seq_len           = context_length + prediction_length
-        self.normalization     = normalization
-        N                      = len(positions)
+        self.seq_len = context_length + prediction_length
+        self.normalization = normalization
+        N = len(positions)
 
         pos = positions.astype(np.float32)
         self.positions = pos
@@ -27,10 +27,10 @@ class MDTrajectoryDataset(Dataset):
         return {
             "observed_data" : seq,
             "observed_mask" : self.observed_mask[index],
-            "gt_mask"       : self.gt_mask[index],
-            "timepoints"    : np.arange(self.seq_len, dtype=np.float32),
-            "feature_id"    : np.array([0], dtype=np.float32),
-            "local_scaler"  : local_scaler,  
+            "gt_mask" : self.gt_mask[index],
+            "timepoints" : np.arange(self.seq_len, dtype=np.float32),
+            "feature_id" : np.array([0], dtype=np.float32),
+            "local_scaler" : local_scaler,  
         }
 
 
@@ -43,9 +43,8 @@ def _make_train_windows(positions, context_length, prediction_length, stride):
     return np.concatenate(windows, axis=0)
 
 
-def get_dataloader_md(npz_path, context_length, prediction_length,
-                      batch_size, val_size, test_size,
-                      stride,flag="train",train_test_split=None):
+def get_dataloader_md(npz_path, context_length, prediction_length, batch_size, val_size, test_size,
+                    stride,flag="train",train_test_split=None):
     data = np.load(npz_path)
     positions = data["positions"]
 

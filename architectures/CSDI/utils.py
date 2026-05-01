@@ -27,6 +27,8 @@ def train(
     train_loss=[]
     epochs_list=[]
     last_avg_val=None
+    count = 0
+    patience = 10
 
     best_valid_loss = 1e10
     for epoch_no in range(config["epochs"]):
@@ -87,8 +89,15 @@ def train(
                 ##saving loss    
                 last_val_loss = avg_valid
                 val_loss.append(avg_valid)
+                count = 0 #reset when it improves
                 print(f"\n best loss updated to {avg_loss_valid:.6f} at epoch {epoch_no}")
                 torch.save(model.state_dict(), output_path)
+            else:
+                count = count +1
+                if count >= patience:
+                    print(f"\n Early Stopping {avg_loss_valid:.6f} invoked at epoch {epoch_no}")
+                    break
+                
 
         
     np.savez(
