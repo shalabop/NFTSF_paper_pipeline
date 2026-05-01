@@ -301,15 +301,21 @@ def plot_trajectory_comparison_grid(landscape, display_labels, model_data, n_pas
     n_models = len(model_data)
     n_traj = len(display_labels)
     
-    # Dynamically size figure: width fixed, height scales with n_models
-    row_height = 1.125   # inches per row
+    row_height = 1.125
     fig_width = 4.5
     fig_height = row_height * n_models
     fig, axes = plt.subplots(n_models, n_traj, figsize=(fig_width, fig_height), squeeze=False)
     
     future_steps = np.arange(n_past, n_past + n_future)
     all_steps = np.arange(0, n_past + n_future)
-    g_lo, g_hi = _global_ylim(model_data)
+    
+    # Global y-limits – force for wells, else compute from data
+    if landscape in ["single_well", "double_well"]:
+        g_lo, g_hi = -2.2, 2.2
+        y_ticks = [-2, -1, 0, 1, 2]
+    else:
+        g_lo, g_hi = _global_ylim(model_data)
+        y_ticks = None
 
     use_pi_format = landscape in ("alanine_phi", "alanine_psi")
     if use_pi_format:
@@ -325,9 +331,11 @@ def plot_trajectory_comparison_grid(landscape, display_labels, model_data, n_pas
             else: return f"${num:.0f}\\pi$"
 
     MEDIAN_COLOR = "#df1111"
-    
-    # Custom x‑tick positions (absolute) for the bottom row
     x_tick_positions = [0, n_past, n_past + n_future]
+    
+    # We'll collect legend handles and labels from the top‑left subplot
+    legend_handles = []
+    legend_labels = []
     
     for row_idx, (model_name, mdata) in enumerate(model_data.items()):
         reg = MODEL_REGISTRY.get(model_name, {"label": model_name, "color": "tab:orange"})
@@ -346,17 +354,28 @@ def plot_trajectory_comparison_grid(landscape, display_labels, model_data, n_pas
             lo50 = np.percentile(samp, 25, axis=1)
             hi50 = np.percentile(samp, 75, axis=1)
 
-            ax.plot(all_steps, real_traj, "k-", linewidth=1.0, label="Truth")
-            ax.plot(future_steps, median, color=MEDIAN_COLOR, linewidth=0.8, label="Median")
-            ax.fill_between(future_steps, lo50, hi50, color="tab:blue", alpha=0.40, label="50% band")
-            ax.fill_between(future_steps, lo90, lo50, color="tab:orange", alpha=0.40, label="90% band")
-            ax.fill_between(future_steps, hi50, hi90, color="tab:orange", alpha=0.40)
+            # Plot and store artists from the top‑left subplot for legend
+            line_truth, = ax.plot(all_steps, real_traj, "k-", linewidth=1.0, label="Truth")
+            line_median, = ax.plot(future_steps, median, color=MEDIAN_COLOR, linewidth=0.8, label="Median")
+            fill50 = ax.fill_between(future_steps, lo50, hi50, color="tab:blue", alpha=0.40, label="50% band")
+            fill90_low = ax.fill_between(future_steps, lo90, lo50, color="tab:orange", alpha=0.40, label="90% band")
+            fill90_high = ax.fill_between(future_steps, hi50, hi90, color="tab:orange", alpha=0.40)
+
+            if row_idx == 0 and col_idx == 0:
+                from matplotlib.patches import Patch
+                legend_handles = [
+                    line_truth,
+                    line_median,
+                    Patch(facecolor="tab:blue", alpha=0.40),
+                    Patch(facecolor="tab:orange", alpha=0.40)
+                ]
+                legend_labels = ["Truth", "Median", "50% band", "90% band"]
 
             ax.axvline(x=n_past, color="k", linestyle="--", alpha=0.4)
             ax.set_ylim(g_lo, g_hi)
             ax.set_xlim(0, n_past + n_future)
             
-            # X‑axis: ticks and label only on the last row (bottom)
+            # X-axis: only bottom row
             if row_idx == n_models - 1:
                 ax.set_xlabel("Forecast step", fontsize=10)
                 ax.set_xticks(x_tick_positions)
@@ -365,22 +384,28 @@ def plot_trajectory_comparison_grid(landscape, display_labels, model_data, n_pas
             else:
                 ax.tick_params(axis='x', labelbottom=False)
             
-            # Y‑axis ticks: only on the first column
+            # Y-axis: only first column
             if col_idx == 0:
                 ax.tick_params(axis='y', labelsize=8, labelleft=True)
+                if landscape in ["single_well", "double_well"]:
+                    ax.set_yticks(y_ticks)
+                elif use_pi_format:
+                    ax.yaxis.set_major_locator(MultipleLocator(np.pi/2))
+                    ax.yaxis.set_major_formatter(FuncFormatter(pi_formatter))
             else:
                 ax.tick_params(axis='y', labelleft=False)
-            
-            if use_pi_format:
-                ax.yaxis.set_major_locator(MultipleLocator(np.pi/2))
-                ax.yaxis.set_major_formatter(FuncFormatter(pi_formatter))
-                
-            # Legend only on top-left subplot
-            if row_idx == 0 and col_idx == 0:
-                ax.legend(loc='upper left', fontsize=8, framealpha=0.8)
     
-    fig.suptitle(f"{_land_display(landscape)} — Trajectory Comparison", fontsize=6, y=1.02)
-    plt.subplots_adjust(top=0.93)
+    # Add a single horizontal legend at the top of the figure
+    fig.legend(legend_handles, legend_labels,
+               loc='upper center',
+               bbox_to_anchor=(0.5, 1.02),
+               ncol=4,               # four items in one row
+               fontsize=8,
+               framealpha=0.8)
+    
+    fig.suptitle(f"{_land_display(landscape)} — Trajectory Comparison", fontsize=6, y=1.08)
+    # Adjust top margin to make room for the legend
+    plt.subplots_adjust(top=0.90)
     plt.tight_layout()
     out_path = output_dir / f"trajectory_comparison_{landscape}.svg"
     fig.savefig(out_path, format="svg", bbox_inches="tight")
@@ -391,11 +416,6 @@ def plot_trajectory_comparison_grid(landscape, display_labels, model_data, n_pas
 # Figure B: 2-D histogram comparison grid (both dark and light backgrounds)
 # ---------------------------------------------------------------------------
 def plot_histogram2d_comparison_grid(landscape, display_labels, model_data, n_past, n_future, output_dir, dark=True):
-    """Save heatmap with either dark (True) or light (False) background.
-       Dark version: no visible bin edges (grid removed). Light version: bin edges visible.
-       X‑axis ticks: only 0, n_past, and n_past+n_future (on last row).
-       Y‑axis ticks only on first column. Height scales with number of models.
-    """
     style = 'dark_background' if dark else 'default'
     with plt.style.context(style):
         n_models = len(model_data)
@@ -408,11 +428,20 @@ def plot_histogram2d_comparison_grid(landscape, display_labels, model_data, n_pa
         
         future_steps = np.arange(n_past, n_past + n_future)
         all_steps = np.arange(0, n_past + n_future)
-        g_lo, g_hi = _global_ylim(model_data)
+        
+        # Y-limits
+        if landscape in ["single_well", "double_well"]:
+            g_lo, g_hi = -2.2, 2.2
+            y_ticks = [-2, -1, 0, 1, 2]
+        else:
+            g_lo, g_hi = _global_ylim(model_data)
+            y_ticks = None
+        
         n_x_bins = max(12, n_future // 5)
         n_y_bins = 24
         x_edges = np.linspace(n_past, n_past + n_future, n_x_bins + 1)
         y_edges = np.linspace(g_lo, g_hi, n_y_bins + 1)
+        
         use_pi_format = landscape in ("alanine_phi", "alanine_psi")
         if use_pi_format:
             from matplotlib.ticker import MultipleLocator, FuncFormatter
@@ -425,11 +454,10 @@ def plot_histogram2d_comparison_grid(landscape, display_labels, model_data, n_pa
                 elif num == 0.5: return r"$\frac{\pi}{2}$"
                 elif num == -0.5: return r"$-\frac{\pi}{2}$"
                 else: return f"${num:.0f}\\pi$"
+        
         label_color = 'white' if dark else 'black'
         title_color = 'white' if dark else 'black'
         facecolor = 'black' if dark else 'white'
-        
-        # X‑tick positions (absolute) – for the bottom row only
         x_tick_positions = [0, n_past, n_past + n_future]
         
         for row_idx, (model_name, mdata) in enumerate(model_data.items()):
@@ -438,12 +466,14 @@ def plot_histogram2d_comparison_grid(landscape, display_labels, model_data, n_pa
             samples_all = mdata["samples"]
             ground_truths_all = mdata["ground_truths"]
             axes[row_idx, 0].set_ylabel(f"{mlabel}", fontsize=10, color=label_color)
+            
             for col_idx in range(n_traj):
                 ax = axes[row_idx, col_idx]
                 real_traj = ground_truths_all[col_idx]
                 samp = samples_all[col_idx]
                 samp_for_hist = samp.T
                 time_rep = np.tile(future_steps, (samp_for_hist.shape[0], 1))
+                
                 if dark:
                     ax.hist2d(time_rep.flatten(), samp_for_hist.flatten(),
                               bins=[x_edges, y_edges], cmap="magma", density=True, norm=LogNorm(vmin=1e-6),
@@ -457,7 +487,7 @@ def plot_histogram2d_comparison_grid(landscape, display_labels, model_data, n_pa
                 ax.set_xlim(0, n_past + n_future)
                 ax.set_facecolor(facecolor)
                 
-                # X‑axis: ticks and label only on last row
+                # X-axis: only bottom row
                 if row_idx == n_models - 1:
                     ax.set_xlabel("Forecast step", fontsize=10, color=label_color)
                     ax.set_xticks(x_tick_positions)
@@ -466,15 +496,16 @@ def plot_histogram2d_comparison_grid(landscape, display_labels, model_data, n_pa
                 else:
                     ax.tick_params(axis='x', labelbottom=False)
                 
-                # Y‑axis: ticks only on first column
+                # Y-axis: only first column
                 if col_idx == 0:
                     ax.tick_params(axis='y', labelsize=8, labelleft=True, colors=label_color)
+                    if landscape in ["single_well", "double_well"]:
+                        ax.set_yticks(y_ticks)
+                    elif use_pi_format:
+                        ax.yaxis.set_major_locator(MultipleLocator(np.pi/2))
+                        ax.yaxis.set_major_formatter(FuncFormatter(pi_formatter))
                 else:
                     ax.tick_params(axis='y', labelleft=False)
-                
-                if use_pi_format:
-                    ax.yaxis.set_major_locator(MultipleLocator(np.pi/2))
-                    ax.yaxis.set_major_formatter(FuncFormatter(pi_formatter))
                 
                 if row_idx == 0 and col_idx == 0:
                     leg = ax.legend(loc='upper left', fontsize=8, framealpha=0.8)
@@ -483,6 +514,7 @@ def plot_histogram2d_comparison_grid(landscape, display_labels, model_data, n_pa
                         leg.get_frame().set_edgecolor('white')
                         for text in leg.get_texts():
                             text.set_color('white')
+        
         fig.suptitle(f"{_land_display(landscape)} — Prediction Density Comparison", fontsize=6, y=1.02, color=title_color)
         plt.subplots_adjust(top=0.93)
         plt.tight_layout()
@@ -626,53 +658,56 @@ def plot_summary_table(land, length, model_names, all_metrics, output_dir):
 def plot_combined_metrics_grid(land, length, model_names, all_metrics,
                                display_labels, model_data, n_past, n_future,
                                output_dir):
+
     import matplotlib.pyplot as plt
     from matplotlib.colors import LogNorm
+    import matplotlib.ticker as ticker
+    import math
+    import numpy as np
+    from matplotlib.lines import Line2D
 
-    n_models_hist = min(3, len(model_names))
-    hist_models = model_names[:n_models_hist]
-    traj_idx = 0
+    # -------------------------
+    # Helpers (unchanged)
+    # -------------------------
+    def scale_values(vals):
+        vmax = np.max(np.abs(vals))
+        if vmax == 0:
+            return vals, 0
+        exp = int(math.floor(math.log10(vmax)))
+        if exp == 0 or exp == 1:
+            return vals, 0
+        scale = 10 ** (-exp)
+        return vals * scale, exp
 
-    row_height = 1.125
-    fig_width = 5.5
-    fig_height = 2 * row_height
-    fig, axes = plt.subplots(2, 4, figsize=(fig_width, fig_height), squeeze=False)    
-    g_lo, g_hi = _global_ylim(model_data)
-    n_y_bins = 24
-    y_edges = np.linspace(g_lo, g_hi, n_y_bins + 1)
-    future_steps = np.arange(n_past, n_past + n_future)
-    all_steps = np.arange(0, n_past + n_future)
+    def add_scaling_outside(ax, exponent):
+        if exponent == 0:
+            return
+        ax.annotate(f"$\\times 10^{{{exponent}}}$",
+                    xy=(0, 1.08),
+                    xycoords='axes fraction',
+                    ha='left', va='bottom',
+                    fontsize=8)
 
-    n_x_bins = max(12, n_future // 5)
-    x_edges = np.linspace(n_past, n_past + n_future, n_x_bins + 1)
+    def set_integer_ticks(ax):
+        y_min, y_max = ax.get_ylim()
+        n_ticks = 5
+        raw_step = (y_max - y_min) / n_ticks
+        if raw_step < 1:
+            step = 1
+        else:
+            step = 10 ** np.floor(np.log10(raw_step))
+            if raw_step / step < 2:
+                step = step
+            elif raw_step / step < 5:
+                step = 2 * step
+            else:
+                step = 5 * step
+            step = int(step)
+        ax.yaxis.set_major_locator(ticker.MultipleLocator(step))
+        ax.yaxis.set_major_formatter(ticker.ScalarFormatter(useOffset=False))
+        ax.ticklabel_format(axis='y', style='plain', useOffset=False)
 
-    hist_xticks = [0, n_past, n_past + n_future]
-
-    for col, model in enumerate(hist_models):
-        ax = axes[0, col]
-        mdata = model_data[model]
-        samples_all = mdata["samples"]
-        real_traj = mdata["ground_truths"][traj_idx]
-
-        samp = samples_all[traj_idx]
-        samp_for_hist = samp.T
-        time_rep = np.tile(future_steps, (samp_for_hist.shape[0], 1))
-
-        ax.hist2d(time_rep.flatten(), samp_for_hist.flatten(),
-                  bins=[x_edges, y_edges], cmap="magma", density=True,
-                  norm=LogNorm(vmin=1e-6), edgecolors='none', rasterized=True)
-        ax.plot(all_steps, real_traj, color="lime", linewidth=1.0, label="Truth")
-        ax.axvline(x=n_past, color="gray", linestyle="--", alpha=0.5)
-        ax.set_ylim(g_lo, g_hi)
-        ax.set_xlim(0, n_past + n_future)
-        if col == 0:
-            ax.set_ylabel("Value", fontsize=10)
-        ax.tick_params(axis='both', labelsize=8)
-        ax.set_xticks(hist_xticks)
-        ax.set_xticklabels(hist_xticks, fontsize=8)
-        # No x‑label on top row
-
-    def set_metric_ticks(ax, H):
+    def set_metric_xticks(ax, H):
         if H == 25:
             ticks = [0, 25]
         elif H == 50:
@@ -682,64 +717,206 @@ def plot_combined_metrics_grid(land, length, model_names, all_metrics,
         ax.set_xticks(ticks)
         ax.set_xticklabels(ticks, fontsize=8)
 
-    ax_mae = axes[0, 3]
-    lines = []
-    labels = []
-    for mn in model_names:
-        label = MODEL_REGISTRY.get(mn, {"label": mn})["label"]
-        color = MODEL_REGISTRY.get(mn, {"color": "tab:gray"})["color"]
-        vals = all_metrics[mn]["mae_sample_step"]
-        steps = np.arange(1, len(vals) + 1)
-        line, = ax_mae.plot(steps, vals, label=label, color=color, linewidth=0.8)
-        lines.append(line)
-        labels.append(label)
-    # No x‑label on MAE subplot (top row)
-    ax_mae.set_ylabel("MAE", fontsize=10)
-    ax_mae.tick_params(labelsize=8)
-    ax_mae.grid(alpha=0.2, linewidth=0.3)
-    ax_mae.set_xlim(0, n_future)
-    set_metric_ticks(ax_mae, n_future)
+    # -------------------------
+    # Figure layout
+    # -------------------------
+    first_model = model_names[0]
+    traj_indices = [0, 1, 2]
 
-    metric_keys_row1 = [
+    fig, axes = plt.subplots(2, 4, figsize=(5.5, 2.25), squeeze=False)
+
+    # -------------------------
+    # Y limits (wells & alanine)
+    # -------------------------
+    if land in ["single_well", "double_well"]:
+        g_lo, g_hi = -2.2, 2.2
+        y_ticks = [-2, -1, 0, 1, 2]
+        use_pi_format = False
+    else:
+        g_lo, g_hi = _global_ylim(model_data)
+        y_ticks = None
+        use_pi_format = land in ("alanine_phi", "alanine_psi")
+    
+    if use_pi_format:
+        from matplotlib.ticker import MultipleLocator, FuncFormatter
+        def pi_formatter(x, pos):
+            val = round(x / (np.pi/2)) * (np.pi/2)
+            if abs(val) < 1e-8: return r"$0$"
+            num = val / np.pi
+            if num == 1: return r"$\pi$"
+            elif num == -1: return r"$-\pi$"
+            elif num == 0.5: return r"$\frac{\pi}{2}$"
+            elif num == -0.5: return r"$-\frac{\pi}{2}$"
+            else: return f"${num:.0f}\\pi$"
+
+    future_steps = np.arange(n_past, n_past + n_future)
+    all_steps = np.arange(0, n_past + n_future)
+
+    n_x_bins = max(12, n_future // 5)
+    x_edges = np.linspace(n_past, n_past + n_future, n_x_bins + 1)
+
+    n_y_bins = 24
+    y_edges = np.linspace(g_lo, g_hi, n_y_bins + 1)
+
+    # -------------------------
+    # TOP ROW: Histograms
+    # -------------------------
+    for col, traj_idx in enumerate(traj_indices):
+        ax = axes[0, col]
+
+        mdata = model_data[first_model]
+        samples_all = mdata["samples"]
+        real_traj = mdata["ground_truths"][traj_idx]
+
+        samp = samples_all[traj_idx]
+        samp_for_hist = samp.T
+        time_rep = np.tile(future_steps, (samp_for_hist.shape[0], 1))
+
+        ax.hist2d(time_rep.flatten(), samp_for_hist.flatten(),
+                  bins=[x_edges, y_edges],
+                  cmap="magma",
+                  density=True,
+                  norm=LogNorm(vmin=1e-6),
+                  edgecolors='none',
+                  rasterized=True)
+
+        ax.plot(all_steps, real_traj, color="lime", linewidth=1.0)
+        ax.axvline(x=n_past, color="gray", linestyle="--", alpha=0.5)
+
+        ax.set_ylim(g_lo, g_hi)
+        ax.set_xlim(0, n_past + n_future)
+
+        if y_ticks is not None:
+            ax.set_yticks(y_ticks)
+        elif use_pi_format:
+            ax.yaxis.set_major_locator(MultipleLocator(np.pi/2))
+            ax.yaxis.set_major_formatter(FuncFormatter(pi_formatter))
+
+        # Y-label: landscape name (already using symbols)
+        if col == 0:
+            if land == "alanine_phi":
+                ax.set_ylabel(r"Alanine $\varphi$", fontsize=10)
+            elif land == "alanine_psi":
+                ax.set_ylabel(r"Alanine $\psi$", fontsize=10)
+            else:
+                ax.set_ylabel(land, fontsize=10)
+
+        ax.set_xticks([0, n_past, n_past + n_future])
+        ax.tick_params(labelsize=8)
+
+    # -------------------------
+    # TOP RIGHT: MAE (unchanged)
+    # -------------------------
+    ax_mae = axes[0, 3]
+    all_mae_vals = np.concatenate([all_metrics[m]["mae_sample_step"] for m in model_names])
+    _, exp_mae = scale_values(all_mae_vals)
+    for mn in model_names:
+        color = MODEL_REGISTRY[mn]["color"]
+        vals = all_metrics[mn]["mae_sample_step"]
+        scaled_vals, _ = scale_values(vals)
+        steps = np.arange(1, len(vals) + 1)
+        ax_mae.plot(steps, scaled_vals, color=color, linewidth=0.8)
+    ax_mae.set_ylabel("MAE", fontsize=10)
+    set_integer_ticks(ax_mae)
+    add_scaling_outside(ax_mae, exp_mae)
+    ax_mae.set_xlim(0, n_future)
+    set_metric_xticks(ax_mae, n_future)
+
+    # -------------------------
+    # BOTTOM ROW: Metrics (unchanged)
+    # -------------------------
+    metric_keys = [
         ("crps_step", "CRPS"),
-        ("ci50_step", "CI50"),
-        ("ci90_step", "CI90"),
-        ("isce_step", r"ISCE ($\times 10^3$)")
+        ("ci50_step", r"$CI_{.50}$"),
+        ("ci90_step", r"$CI_{.90}$"),
+        ("isce_step", "ISCE"),
     ]
 
-    for col, (key, title) in enumerate(metric_keys_row1):
+    for col, (key, title) in enumerate(metric_keys):
         ax = axes[1, col]
+
+        all_vals = np.concatenate([all_metrics[m][key] for m in model_names])
+        if key == "isce_step":
+            all_vals = all_vals * 1000
+        _, exp = scale_values(all_vals)
+        scale = 10 ** (-exp) if exp != 0 else 1.0
+
         for mn in model_names:
-            label = MODEL_REGISTRY.get(mn, {"label": mn})["label"]
-            color = MODEL_REGISTRY.get(mn, {"color": "tab:gray"})["color"]
+            color = MODEL_REGISTRY[mn]["color"]
             vals = all_metrics[mn][key]
             if key == "isce_step":
                 vals = vals * 1000
+            scaled_vals, _ = scale_values(vals)
             steps = np.arange(1, len(vals) + 1)
-            ax.plot(steps, vals, label=label, color=color, linewidth=0.8)
+            ax.plot(steps, scaled_vals, color=color, linewidth=0.8)
+
         if "CI" in title:
-            ideal = 0.5 if "50" in title else 0.9
-            ax.axhline(ideal, color="black", linestyle="--", linewidth=0.5, alpha=0.6)
-        # Set x‑label only on bottom row subplots
+            ideal = 0.5 if ".50" in title else 0.9
+            ax.axhline(ideal * scale, color="black", linestyle="--", linewidth=0.5)
+
         ax.set_xlabel("Forecast step", fontsize=10)
         ax.set_ylabel(title, fontsize=10)
-        ax.tick_params(labelsize=8)
-        ax.grid(alpha=0.2, linewidth=0.3)
+
+        set_integer_ticks(ax)
+        add_scaling_outside(ax, exp)
+
+        if "CI" in title:
+            if ".50" in title:
+                raw_ticks = np.array([0.4, 0.5, 0.6])
+                labels = ["4", "5", "6"]
+            else:
+                raw_ticks = np.array([0.8, 0.9, 1.0])
+                labels = ["8", "9", "10"]
+            ticks_scaled = raw_ticks * scale
+            ax.set_yticks(ticks_scaled)
+            ax.set_yticklabels(labels, fontsize=8)
+
+        if key == "isce_step":
+            y_min, y_max = ax.get_ylim()
+            y_min_int = 0 #int(np.floor(y_min))
+            y_max_int = int(np.ceil(y_max))
+            if y_max_int - y_min_int < 2:
+                mid = (y_min_int + y_max_int) // 2
+                ticks = [y_min_int, mid, y_max_int]
+            else:
+                ticks = np.linspace(y_min_int, y_max_int, 3, dtype=int)
+            ax.set_yticks(ticks)
+            ax.yaxis.set_major_formatter(ticker.ScalarFormatter(useOffset=False))
+            ax.ticklabel_format(axis='y', style='plain', useOffset=False)
+
         ax.set_xlim(0, n_future)
-        set_metric_ticks(ax, n_future)
+        set_metric_xticks(ax, n_future)
 
-    fig.legend(lines, labels, loc='upper center', bbox_to_anchor=(0.5, 1.04),
-           ncol=len(model_names), fontsize=8, framealpha=0.8)
+    # -------------------------
+    # LEGEND (unchanged)
+    # -------------------------
+    legend_handles = []
+    legend_labels = []
+    for mn in model_names:
+        legend_handles.append(Line2D([0], [0], color=MODEL_REGISTRY[mn]["color"], lw=1.5))
+        legend_labels.append(MODEL_REGISTRY[mn]["label"])
 
-    plt.subplots_adjust(left=0.0, right=0.98, bottom=0.18, top=0.90,
-                        wspace=0.7, hspace=0.35)
+    fig.legend(legend_handles, legend_labels,
+               loc='upper center', bbox_to_anchor=(0.5, 1.06),
+               ncol=len(model_names), fontsize=8, framealpha=0.8)
+
+    plt.subplots_adjust(left=0.0, right=0.98,
+                        bottom=0.18, top=0.92,
+                        wspace=0.7, hspace=0.75)
 
     out_path = output_dir / f"combined_metrics_{land}_len{length}.svg"
     fig.savefig(out_path, format="svg", bbox_inches="tight")
     plt.close(fig)
     print(f"[F] Saved: {out_path}")
-# Main
-# ---------------------------------------------------------------------------
+###########################################################################
+###########################################################################
+###########################################################################
+###########################################################################
+###########################################################################
+###########################################################################
+###########################################################################
+###########################################################################
+
 def main():
     args = parse_args()
     out_dir = Path(args.output_dir)
