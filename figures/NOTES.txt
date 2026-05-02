@@ -1,1 +1,1 @@
-all results used tsdiff_mse_05 except alanine_phi_50_50 which used tsdiff_mse_01 due to exploding MAE (and other metrics) values
+all results used tsdiff_mse_03 (scaler = 0.3) except alanine_phi_50_50 which used tsdiff_mse_01 (0.1) 
