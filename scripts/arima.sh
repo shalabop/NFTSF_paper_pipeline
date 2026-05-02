@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 #SBATCH --job-name=arima
-#SBATCH --time=02:00:00
+#SBATCH --time=08:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
 #SBATCH --mail-user=meahmed@asu.edu
 #SBATCH --mail-type=ALL
-#SBATCH --partition=htc
-#SBATCH --qos=public
+#SBATCH --partition=general
+#SBATCH --qos=grp_spresse
 #SBATCH --gres=gpu:a30:1
 #SBATCH --mem=32G
 #SBATCH --output=logs/arima.%j.out
@@ -63,9 +63,6 @@ ls $CUDA_PATH/include/cuda.h || echo "WARNING: cuda.h not found"
 ls $CUDA_PATH/include/nvrtc.h || echo "WARNING: nvrtc.h not found"
 ls $CUDA_PATH/lib64/libnvrtc.so* || ls $CUDA_PATH/targets/x86_64-linux/lib/libnvrtc.so* || echo "WARNING: libnvrtc.so not found"
 
-python eval/ARIMA/run_auto_arima.py -c configs/arima/25_25.yaml --input DATA/alanine_phi_test.npz --out results/arima/alanine_phi_25_25.npz --n_jobs 8
-python eval/ARIMA/run_auto_arima.py -c configs/arima/25_25.yaml --input DATA/alanine_psi_test.npz --out results/arima/alanine_psi_25_25.npz --n_jobs 8
 
-
-python eval/ARIMA/run_auto_arima.py -c configs/arima/50_50.yaml --input DATA/alanine_phi_test.npz --out results/arima/alanine_phi_50_50.npz --n_jobs 8
-python eval/ARIMA/run_auto_arima.py -c configs/arima/50_50.yaml --input DATA/alanine_psi_test.npz --out results/arima/alanine_psi_50_50.npz --n_jobs 8
+python eval/ARIMA/run_auto_arima.py -c configs/arima/50_50.yaml --input DATA/double_well_test.npz --out results/arima/double_well_50_50.npz --n_jobs 8
+python eval/ARIMA/run_auto_arima.py -c configs/arima/50_50.yaml --input DATA/single_well_test.npz --out results/arima/single_well_50_50.npz --n_jobs 8

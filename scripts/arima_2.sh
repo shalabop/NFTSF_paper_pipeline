@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #SBATCH --job-name=arima2
-#SBATCH --time=04:00:00
+#SBATCH --time=08:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
@@ -60,9 +60,4 @@ ls $CUDA_PATH/include/cuda.h || echo "WARNING: cuda.h not found"
 ls $CUDA_PATH/include/nvrtc.h || echo "WARNING: nvrtc.h not found"
 ls $CUDA_PATH/lib64/libnvrtc.so* || ls $CUDA_PATH/targets/x86_64-linux/lib/libnvrtc.so* || echo "WARNING: libnvrtc.so not found"
 
-python eval/ARIMA/run_auto_arima.py -c configs/arima/25_25.yaml --input DATA/double_well_test.npz --out results/arima/double_well_25_25.npz --n_jobs 8
-python eval/ARIMA/run_auto_arima.py -c configs/arima/25_25.yaml --input DATA/single_well_test.npz --out results/arima/single_well_25_25.npz --n_jobs 8
-
-
-python eval/ARIMA/run_auto_arima.py -c configs/arima/50_50.yaml --input DATA/double_well_test.npz --out results/arima/double_well_50_50.npz --n_jobs 8
-python eval/ARIMA/run_auto_arima.py -c configs/arima/50_50.yaml --input DATA/single_well_test.npz --out results/arima/single_well_50_50.npz --n_jobs 8
+python eval/ARIMA/run_auto_arima.py -c configs/arima/50_50.yaml --input DATA/single_well_test.npz --out results/arima/single_well_50_50_new.npz --n_jobs 8
