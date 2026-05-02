@@ -46,8 +46,8 @@ LANDSCAPE_DISPLAY: dict[str, str] = {
     "alanine_psi": r"Alanine $\psi$ (Psi)",
 }
 COORDINATE_LABEL: dict[str, str] = {
-    "single_well": r"Position $x$",
-    "double_well": r"Position $x$",
+    "single_well": r"Single Well",
+    "double_well": r"Double Well",
     "alanine_phi": r"Angle $\varphi$ (rad)",
     "alanine_psi": r"Angle $\psi$ (rad)",
 }
@@ -403,7 +403,7 @@ def plot_trajectory_comparison_grid(landscape, display_labels, model_data, n_pas
                fontsize=8,
                framealpha=0.8)
     
-    fig.suptitle(f"{_land_display(landscape)} — Trajectory Comparison", fontsize=6, y=1.03)
+    fig.suptitle(f"{_land_display(landscape)} — Trajectory Comparison", fontsize=10, y=1.0)
     # Adjust top margin to make room for the legend
     plt.subplots_adjust(top=0.90)
     plt.tight_layout()
@@ -515,7 +515,7 @@ def plot_histogram2d_comparison_grid(landscape, display_labels, model_data, n_pa
                         for text in leg.get_texts():
                             text.set_color('white')
         
-        fig.suptitle(f"{_land_display(landscape)} — Prediction Density Comparison", fontsize=6, y=1.02, color=title_color)
+        fig.suptitle(f"{_land_display(landscape)} — Prediction Density Comparison", fontsize=10, y=0.96, color=title_color)
         plt.subplots_adjust(top=0.93)
         plt.tight_layout()
         suffix = "_dark" if dark else "_light"
@@ -549,20 +549,18 @@ def plot_error_metrics_grid(land, length, model_names, all_metrics, output_dir):
         ax.set_xticks(ticks)
         ax.set_xticklabels(ticks, fontsize=8)
 
-    # ---------- Layout ----------
-    fig = plt.figure(figsize=(5.5, 1.125*2))
-    outer_gs = fig.add_gridspec(2, 1, hspace=1.2, height_ratios=[1, 1])
-    top_gs = outer_gs[0].subgridspec(1, 4, width_ratios=[0.5, 1, 1, 0.5], wspace=0.7)
+    fig = plt.figure(figsize=(5.5, 1.125*2+1))
+    outer_gs = fig.add_gridspec(2, 1, hspace=1.1, height_ratios=[1, 1])
+    top_gs = outer_gs[0].subgridspec(1, 4, width_ratios=[0.5, 1, 1, 0.5], wspace=0.5)
     axes = {
         "mae": fig.add_subplot(top_gs[0, 1]),
         "crps": fig.add_subplot(top_gs[0, 2]),
     }
-    bottom_gs = outer_gs[1].subgridspec(1, 3, wspace=0.7)
+    bottom_gs = outer_gs[1].subgridspec(1, 3, wspace=0.5)
     axes["ci50"] = fig.add_subplot(bottom_gs[0, 0])
     axes["ci90"] = fig.add_subplot(bottom_gs[0, 1])
     axes["isce"] = fig.add_subplot(bottom_gs[0, 2])
 
-    # Metrics configuration: (key, title, ax_key, multiplier, annotation_exponent)
     metric_configs = [
         ("mae_sample_step", "MAE", "mae", 10, -1),
         ("crps_step", "CRPS", "crps", 10, -1),
@@ -660,7 +658,7 @@ def plot_error_metrics_grid(land, length, model_names, all_metrics, output_dir):
                loc='upper center', bbox_to_anchor=(0.5, 1.14),
                ncol=len(model_names), fontsize=8, framealpha=0.8)
 
-    plt.subplots_adjust(left=0.0, right=0.98, bottom=0.18, top=0.92,
+    plt.subplots_adjust(left=0.0, right=0.98, bottom=0.18, top=0.98,
                         wspace=0.7, hspace=0.75)
     out_path = output_dir / f"error_metrics_{land}_len{length}.svg"
     fig.savefig(out_path, format="svg", bbox_inches="tight")
@@ -976,7 +974,7 @@ def plot_combined_metrics_grid(land, length, model_names, all_metrics,
             ax.set_yticks(ticks)
             ax.yaxis.set_major_formatter(ticker.ScalarFormatter(useOffset=False))
             ax.ticklabel_format(axis='y', style='plain', useOffset=False)
-            add_scaling_outside(ax,-1)
+            add_scaling_outside(ax,-3)
             
         if key == "crps_step":
             y_min, y_max = ax.get_ylim()
@@ -1004,7 +1002,7 @@ def plot_combined_metrics_grid(land, length, model_names, all_metrics,
         legend_labels.append(MODEL_REGISTRY[mn]["label"])
 
     fig.legend(legend_handles, legend_labels,
-               loc='upper center', bbox_to_anchor=(0.5, 1.14),
+               loc='upper center', bbox_to_anchor=(0.5, 1.12),
                ncol=len(model_names), fontsize=8, framealpha=0.8)
 
     plt.subplots_adjust(left=0.0, right=0.98,

@@ -1022,6 +1022,73 @@ def plot_combined_metrics_grid(land, length, model_names, all_metrics,
 ###########################################################################
 ###########################################################################
 
+def plot_individual_trajectories(landscape, full_trajectories, n_past, n_future, output_dir, n_traj=10):
+    """
+    Plot the first N ground-truth trajectories individually in a grid of subplots.
+    Each subplot shows the full window (context + prediction) for a single trajectory.
+    The trajectory index is shown as the title.
+    """
+    # Number of trajectories to plot
+    N = full_trajectories.shape[0]
+    n_traj = min(n_traj, N)
+
+    # Determine grid size (e.g., 2 rows, 5 columns for 10 trajectories)
+    n_cols = 5
+    n_rows = (n_traj + n_cols - 1) // n_cols
+
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(n_cols * 1.5, n_rows * 1.5), squeeze=False)
+    fig.suptitle(f"{_land_display(landscape)} — Individual Ground Truth Trajectories", fontsize=10, y=0.98)
+
+    # Global y‑limits (same as in raw_trajectories)
+    if landscape in ["single_well", "double_well"]:
+        y_lo, y_hi = -2.2, 2.2
+        y_ticks = [-2, -1, 0, 1, 2]
+    else:
+        # Compute from data to avoid margins
+        y_lo, y_hi = float("inf"), float("-inf")
+        for i in range(n_traj):
+            seg = full_trajectories[i, :n_past + n_future]
+            y_lo = min(y_lo, seg.min())
+            y_hi = max(y_hi, seg.max())
+        margin = 0.05 * (y_hi - y_lo) if y_hi > y_lo else 0.1
+        y_lo -= margin
+        y_hi += margin
+        y_ticks = None
+
+    x_vals = np.arange(n_past + n_future)
+
+    for idx in range(n_traj):
+        row = idx // n_cols
+        col = idx % n_cols
+        ax = axes[row, col]
+
+        traj = full_trajectories[idx, :n_past + n_future]
+        ax.plot(x_vals, traj, color="black", linewidth=1.0)
+        ax.axvline(x=n_past, color="gray", linestyle="--", alpha=0.5)
+        ax.set_ylim(y_lo, y_hi)
+        ax.set_xlim(0, n_past + n_future)
+        ax.set_title(f"Trajectory {idx}", fontsize=8)
+        ax.tick_params(labelsize=6)
+        ax.set_xlabel("Step", fontsize=6)
+
+        if landscape in ["single_well", "double_well"] and y_ticks is not None:
+            ax.set_yticks(y_ticks)
+
+        # Remove empty subplots
+        if idx == n_traj - 1:
+            for extra in range(idx + 1, n_rows * n_cols):
+                fig.delaxes(axes[extra // n_cols, extra % n_cols])
+
+    # Common y‑label only for leftmost column
+    for col in range(n_cols):
+        axes[0, col].set_ylabel(_coord_label(landscape), fontsize=6)
+
+    plt.tight_layout()
+    out_path = output_dir / f"individual_trajectories_{landscape}.svg"
+    fig.savefig(out_path, format="svg", bbox_inches="tight")
+    plt.close(fig)
+    print(f"[I] Saved: {out_path}")
+
 def main():
     args = parse_args()
     out_dir = Path(args.output_dir)
@@ -1087,6 +1154,9 @@ def main():
         plot_error_metrics_grid(land, length, model_names, all_metrics, out_dir)
         plot_summary_table(land, length, model_names, all_metrics, out_dir)
         plot_combined_metrics_grid(land, length, model_names, all_metrics, display_labels, display_data, n_past, n_future,out_dir)
+
+        # New line: plot individual ground truth trajectories
+        plot_individual_trajectories(land, first_model_data["ground_truths"], n_past, n_future, out_dir, n_traj=10)
 
     print("\n✓ All outputs saved.")
 
