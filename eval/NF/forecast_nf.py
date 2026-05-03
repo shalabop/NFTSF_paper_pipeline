@@ -212,30 +212,30 @@ def main():
     os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
 
     save_dict = dict(
-        samples           = samples,                      
-        ground_truth      = ground_truth,                
-        contexts          = contexts,                    
-        ci90_lower        = ci90_lower,
-        ci90_upper        = ci90_upper,
-        ci50_lower        = ci50_lower,
-        ci50_upper        = ci50_upper,
+        samples = samples,                      
+        ground_truth = ground_truth,                
+        contexts = contexts,                    
+        ci90_lower = ci90_lower,
+        ci90_upper = ci90_upper,
+        ci50_lower = ci50_lower,
+        ci50_upper = ci50_upper,
         full_trajectories = positions[:N_out],         
-        train_test_split  = train_test_split,
+        train_test_split = train_test_split,
         prediction_length = prediction_length,
-        context_length    = context_length,
-        num_of_samples    = args.n_samples,
-        time_elapsed      = time_elapsed,
+        context_length = context_length,
+        num_of_samples = args.n_samples,
+        time_elapsed = time_elapsed,
     )
     if time is not None:
-        save_dict["time"]       = time
+        save_dict["time"] = time
         save_dict["time_train"] = time[:train_test_split]
-        save_dict["time_test"]  = time[train_test_split : train_test_split + prediction_length]
+        save_dict["time_test"] = time[train_test_split : train_test_split + prediction_length]
 
     np.savez_compressed(out_path, **save_dict)
     print(f"\nSaved: {out_path}")
-    print(f"samples : {samples.shape}  (N, H, S)")
+    print(f"samples : {samples.shape} (N, H, S)")
     print(f"ground_truth : {ground_truth.shape}  (N, H)")
-    print(f"contexts  : {contexts.shape}  (N, L)")
+    print(f"contexts: {contexts.shape}  (N, L)")
     print(f"time_elapsed : {time_elapsed:.2f}s")
 
     assert not np.isnan(samples).any(), "NaN in samples"
