@@ -1,20 +1,3 @@
-#!/usr/bin/env python3
-"""
-forecast_nf.py
-==============
-NF-TSF forecast script with batched inference and timing that matches
-CSDI and TSDiff-Cond measurement conventions.
-
-Timing measured:
-  - CSDI   : evaluate_csdi() = pure batched inference loop
-  - TSDiff : make_evaluation_predictions() + list(forecast_it) = batched inference
-  - NFTSF  : pure batched inference loop (this script) — no data loading, no pre/post
-
-Key change vs original: instead of a per-trajectory Python for-loop,
-we batch all N trajectories × S samples together in chunks of batch_size,
-matching the batched pattern of CSDI and TSDiff.
-"""
-
 import os
 import sys
 import json
@@ -25,7 +8,7 @@ import torch
 from tqdm import tqdm
 import time as timelib
 
-ROOT         = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.abspath(os.path.join(ROOT, "..", ".."))
 
 sys.path.insert(0, os.path.join(PROJECT_ROOT, "architectures", "NF"))
@@ -35,9 +18,6 @@ sys.path.insert(0, PROJECT_ROOT)
 from architecture import create_nfm
 
 
-# ---------------------------------------------------------------------------
-# Argument parsing
-# ---------------------------------------------------------------------------
 def parse_args():
     p = argparse.ArgumentParser(description="NF-TSF forecast script")
     p.add_argument("--model_path",        required=True)
@@ -58,9 +38,6 @@ def parse_args():
     return p.parse_args()
 
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
 def setup_device(device_arg: str) -> torch.device:
     if device_arg == "auto":
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -78,8 +55,8 @@ def set_seed(seed: int):
 
 
 def load_model(model_path, config_path, context_length, prediction_length, device):
-    flow_blocks   = 6
-    hidden_units  = 64
+    flow_blocks = 6
+    hidden_units = 64
     hidden_layers = "1,2"
 
     import yaml
@@ -99,10 +76,10 @@ def load_model(model_path, config_path, context_length, prediction_length, devic
 
     model = create_nfm(
         device,
-        latent_size   = prediction_length,
-        context_size  = context_length,
-        K             = flow_blocks,
-        hidden_units  = hidden_units,
+        latent_size = prediction_length,
+        context_size = context_length,
+        K = flow_blocks,
+        hidden_units = hidden_units,
         hidden_layers_list = hidden_layers_list,
     )
     state = torch.load(model_path, map_location=device, weights_only=False)
@@ -114,63 +91,35 @@ def load_model(model_path, config_path, context_length, prediction_length, devic
 
 
 def load_test_data(data_path):
-    data      = np.load(data_path, allow_pickle=True)
+    data = np.load(data_path, allow_pickle=True)
     positions = data["positions"].astype(np.float32)   # (N, T)
-    time      = data["time"] if "time" in data else None
-    tts       = int(data["train_test_split"]) if "train_test_split" in data else None
+    time = data["time"] if "time" in data else None
+    tts = int(data["train_test_split"]) if "train_test_split" in data else None
     print(f"Test data: {positions.shape}  (N_traj, T)")
     return positions, time, tts
 
 
-# ---------------------------------------------------------------------------
-# Batched inference — timing matches CSDI / TSDiff conventions
-# ---------------------------------------------------------------------------
 def run_forecast_batched(
     model,
-    positions       : np.ndarray,    # (N, T)
-    context_length  : int,
+    positions : np.ndarray,  
+    context_length: int,
     prediction_length: int,
-    n_samples       : int,
+    n_samples : int,
     train_test_split: int,
-    test_size       : int,
-    batch_size      : int,
-    device          : torch.device,
+    test_size : int,
+    batch_size : int,
+    device : torch.device,
 ):
-    """
-    Batched NF inference.
-
-    Strategy
-    --------
-    For each trajectory i we need S samples. Instead of a Python for-loop
-    over trajectories (as in the original), we:
-      1. Extract all N context windows → ctx_tensor (N, L)
-      2. For each batch of B trajectories, tile each context S times
-         → ctx_batch (B*S, L), run model.sample once → (B*S, H)
-      3. Reshape to (B, S, H)
-
-    This exactly mirrors how CSDI processes batches from a DataLoader and
-    how TSDiff tiles inputs in make_evaluation_predictions.
-
-    Timing
-    ------
-    We time ONLY the inference loop (steps 2–3), matching:
-      CSDI   : evaluate_csdi() which wraps only the for-batch loop
-      TSDiff : forecast_it consumption in list(tqdm(forecast_it))
-    Data preparation (step 1) is outside the timed region.
-    """
-    # --- Data preparation (NOT timed) ------------------------------------
-    test_size  = min(test_size, positions.shape[0])
-    positions  = positions[:test_size]
-    N          = positions.shape[0]
+    test_size = min(test_size, positions.shape[0])
+    positions = positions[:test_size]
+    N = positions.shape[0]
 
     tts = train_test_split
-    # Context windows: (N, L) — anchored to physical split
-    ctx_np  = positions[:, tts - context_length : tts]          # (N, L)
-    gt_np   = positions[:, tts : tts + prediction_length]       # (N, H)
+    ctx_np = positions[:, tts - context_length : tts]          
+    gt_np = positions[:, tts : tts + prediction_length]       
 
     ctx_tensor = torch.tensor(ctx_np, dtype=torch.float32, device=device)  # (N, L)
 
-    # Output buffer
     samples_out = np.zeros((N, prediction_length, n_samples), dtype=np.float32)
 
     time_elapsed= 0
@@ -178,12 +127,11 @@ def run_forecast_batched(
     n_batches = (N + batch_size - 1) // batch_size
     for b in tqdm(range(n_batches), desc="Forecasting (batched)"):
         b_start = b * batch_size
-        b_end   = min(b_start + batch_size, N)
-        B       = b_end - b_start
+        b_end = min(b_start + batch_size, N)
+        B  = b_end - b_start
 
-        # Tile each context S times: (B, L) → (B*S, L)
-        ctx_b = ctx_tensor[b_start:b_end]              # (B, L)
-        ctx_b_tiled = ctx_b.repeat_interleave(n_samples, dim=0)  # (B*S, L)
+        ctx_b = ctx_tensor[b_start:b_end]         
+        ctx_b_tiled = ctx_b.repeat_interleave(n_samples, dim=0)  
 
         with torch.no_grad():
             try:
@@ -198,26 +146,16 @@ def run_forecast_batched(
         samp_np = samp.cpu().numpy().reshape(B, n_samples, prediction_length)
         samples_out[b_start:b_end] = samp_np.transpose(0, 2, 1)  # (B, H, S)
 
-    
-    # --- End timed region -------------------------------------------------
-
     print(f"Inference time : {time_elapsed:.2f}s  "
           f"({time_elapsed / N * 1000:.1f} ms/trajectory, "
           f"{time_elapsed / (N * n_samples) * 1000:.3f} ms/sample)")
 
     return samples_out, gt_np, ctx_np, time_elapsed
 
-
-# ---------------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------------
 def main():
     args   = parse_args()
     set_seed(args.seed)
 
-    # NOTE: do NOT call torch.set_default_device() — it causes issues when
-    # data is constructed on CPU and then moved, and it makes timing unfair
-    # by hiding implicit device transfers inside model.sample().
     device = setup_device(args.device)
 
     positions, time, tts_npz = load_test_data(args.data_path)
@@ -256,15 +194,14 @@ def main():
         n_samples        = args.n_samples,
         train_test_split = train_test_split,
         test_size        = test_size,
-        #batch_size       = args.batch_size,
-        batch_size = 64,
+        batch_size       = args.batch_size,
+        #batch_size = 64,
         device           = device,
     )
 
     N_out = len(samples)
 
-    # CI bands
-    ci90_lower = np.percentile(samples,  5, axis=2)   # (N, H)
+    ci90_lower = np.percentile(samples,  5, axis=2)  
     ci90_upper = np.percentile(samples, 95, axis=2)
     ci50_lower = np.percentile(samples, 25, axis=2)
     ci50_upper = np.percentile(samples, 75, axis=2)
@@ -275,14 +212,14 @@ def main():
     os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
 
     save_dict = dict(
-        samples           = samples,                      # (N, H, S)
-        ground_truth      = ground_truth,                 # (N, H)
-        contexts          = contexts,                     # (N, L)
+        samples           = samples,                      
+        ground_truth      = ground_truth,                
+        contexts          = contexts,                    
         ci90_lower        = ci90_lower,
         ci90_upper        = ci90_upper,
         ci50_lower        = ci50_lower,
         ci50_upper        = ci50_upper,
-        full_trajectories = positions[:N_out],            # (N, T)
+        full_trajectories = positions[:N_out],         
         train_test_split  = train_test_split,
         prediction_length = prediction_length,
         context_length    = context_length,
@@ -296,16 +233,15 @@ def main():
 
     np.savez_compressed(out_path, **save_dict)
     print(f"\nSaved: {out_path}")
-    print(f"  samples      : {samples.shape}  (N, H, S)")
-    print(f"  ground_truth : {ground_truth.shape}  (N, H)")
-    print(f"  contexts     : {contexts.shape}  (N, L)")
-    print(f"  time_elapsed : {time_elapsed:.2f}s")
+    print(f"samples : {samples.shape}  (N, H, S)")
+    print(f"ground_truth : {ground_truth.shape}  (N, H)")
+    print(f"contexts  : {contexts.shape}  (N, L)")
+    print(f"time_elapsed : {time_elapsed:.2f}s")
 
-    # Sanity checks
-    assert not np.isnan(samples).any(),      "NaN in samples"
-    assert not np.isinf(samples).any(),      "Inf in samples"
+    assert not np.isnan(samples).any(), "NaN in samples"
+    assert not np.isinf(samples).any(), "Inf in samples"
     assert np.all(ci90_lower <= ci90_upper), "CI90 ordering violated"
-    print("Sanity checks passed ✓")
+    print("sanity checks passed")
 
 
 if __name__ == "__main__":
