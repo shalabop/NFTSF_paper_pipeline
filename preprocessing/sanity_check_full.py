@@ -11,6 +11,7 @@ def load_gluonts_series(folder: Path):
     series = []
     data_file = folder / "data.json"
     if data_file.exists():
+        
         with open(data_file, "r") as f:
             for line in f:
                 line = line.strip()
