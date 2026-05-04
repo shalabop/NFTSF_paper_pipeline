@@ -39,9 +39,10 @@ conda install --file requirements.txt
 
 ### 1. NFTSF
 
+```bash
 python eval/NF/forecast_nf.py \
-    --model_path   checkpoints_100_100/nf/single_well.pth     \
-    --config configs/nf/single_well_100_100_forecast.yaml \
+    --model_path   checkpoints_25_25/nf/single_well.pth     \
+    --config configs/nf/alanine_phi_25_25_forecast.yaml \
     --data_path    DATA/single_well_test.npz    \
     --out          results/nf/single_well_100_100.npz \
     --context_length     100    \
@@ -49,8 +50,7 @@ python eval/NF/forecast_nf.py \
     --n_samples    1000 \
     --train_test_split 900 \
     --test_size 3000
-=
-
+```
 ### 2. CSDI
 
 **Train CSDI:**
