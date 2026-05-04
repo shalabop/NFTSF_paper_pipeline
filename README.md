@@ -14,7 +14,7 @@ NFTSF is a framework for training and evaluating advanced time series forecastin
 - Supports GPU acceleration
 - Flexible configuration system using YAML files
 
----
+---```
 
 ## Installation
 
