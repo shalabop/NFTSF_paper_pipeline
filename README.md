@@ -54,6 +54,8 @@ python NFTSF/train_model.py \
     --model_name nftsf_alanine_phi
 ```
 
+**Evaluate NFTSF:**
+
 ```bash
 python eval/NF/forecast_nf.py \
     --model_path   checkpoints_25_25/nf/alanine_phi_25_25.pth     \
