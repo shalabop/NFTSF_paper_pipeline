@@ -5,7 +5,7 @@ from pathlib import Path
 ##for data set where training and testing are fused
 
 def normalize_all(datatype, out, data_path, train_test_split=None, train_val_split=None, train_size=None, time_steps=None):
-    out_dir_unnorm = Path("DATA_unnorm") ##change this if you need the folder to be named something else
+    out_dir_unnorm = Path("data_unnorm") ##change this if you need the folder to be named something else
     out_dir_unnorm.mkdir(exist_ok=True)
 
     ##raw data would have shape (N,T)
