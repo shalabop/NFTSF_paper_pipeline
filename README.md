@@ -113,14 +113,17 @@ python train/TSDiff/train_tsdiff.py \
     --out_dir checkpoints_25_25_dummy/tsdiff/alanine_phi
 ```
 
-**Evaluate TSDiff:**
+**Evaluate TSDiff-MS:**
 
 ```bash
 python eval/TSDiff/forecast_tsdiff.py \
     --config configs/tsdiff_forecast/alanine_phi_mse_03_25_25.yaml \
     --dataset_path gluonts_datasets/alanine_phi \
     --out results/tsdiff_mse/alanine_phi_mse_03_25_25.npz
+```
 
+**Evaluate TSDiff-Q:**
+```bash
 python eval/TSDiff/forecast_tsdiff.py \
     --config configs/tsdiff_forecast/alanine_phi_q_4_25_25.yaml \
     --dataset_path gluonts_datasets/alanine_phi \
