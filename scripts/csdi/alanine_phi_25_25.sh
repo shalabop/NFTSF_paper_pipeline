@@ -42,7 +42,7 @@ python train/CSDI/train_csdi.py \
 
 python eval/CSDI/forecast_csdi.py \
     --config configs/csdi_train/alanine_phi_25_25.yaml \
-    --input  data/alanine_phi_test.npz \
+    --input  DATA/alanine_phi_test.npz \
     --ckpt   checkpoints_25_25_dummy/csdi_with_early_stopping/alanine_phi/model.pth \
     --out    results/csdi_with_early_stopping/alanine_phi_25_25.npz \
     --device cuda:0

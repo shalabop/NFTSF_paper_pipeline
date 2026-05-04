@@ -37,13 +37,13 @@ ls $CUDA_PATH/targets/x86_64-linux/lib/libnvrtc.so* || echo "libnvrtc.so not fou
 
 python train/CSDI/train_csdi.py \
     --config configs/csdi_train/alanine_psi_25_25.yaml \
-    --input  DATA/alanine_psi_train.npz \
+    --input  data/alanine_psi_train.npz \
     --out    checkpoints_25_25_dummy/csdi/alanine_psi \
     --device cuda:0
 
 python eval/CSDI/forecast_csdi.py \
     --config configs/csdi_train/alanine_psi_25_25.yaml \
-    --input  DATA/alanine_psi_test.npz \
+    --input  data/alanine_psi_test.npz \
     --ckpt   checkpoints_25_25_dummy/csdi_with_early_stopping/alanine_psi/model.pth \
     --out    results/csdi_with_early_stopping/alanine_psi_25_25.npz \
     --device cuda:0
