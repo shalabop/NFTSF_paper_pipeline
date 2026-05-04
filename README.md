@@ -41,12 +41,12 @@ conda install --file requirements.txt
 
 ```bash
 python eval/NF/forecast_nf.py \
-    --model_path   checkpoints_25_25/nf/single_well.pth     \
+    --model_path   checkpoints_25_25/nf/alanine_phi_25_25.pth     \
     --config configs/nf/alanine_phi_25_25_forecast.yaml \
-    --data_path    DATA/single_well_test.npz    \
-    --out          results/nf/single_well_100_100.npz \
-    --context_length     100    \
-    --prediction_length     100   \
+    --data_path    data/alanine_phi_test.npz    \
+    --out          results/nf/alanine_phi_25_25.npz \
+    --context_length     25    \
+    --prediction_length     25   \
     --n_samples    1000 \
     --train_test_split 900 \
     --test_size 3000
