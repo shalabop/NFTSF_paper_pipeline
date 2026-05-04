@@ -195,7 +195,6 @@ tueplots==0.2.3
 typer==0.24.1
 typing_extensions==4.15.0
 tzdata==2025.3
--e git+https://github.com/shalabop/NFTSF_paper_pipeline@aa99d4630c05e0d3d34ac7135d9759fc1c665dd5#egg=uncond_ts_diff&subdirectory=architectures/unconditional_time_series_diffusion
 uri-template==1.3.0
 urllib3==2.6.3
 wcwidth==0.6.0
