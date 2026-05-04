@@ -1,0 +1,57 @@
+{
+  "dataset_path": "./sw_sle_em_x_test.npy",
+  "result_npz": "./test_results/test_trajectories_20240101_120000.npz",
+  "norm_stats_path": null,
+  "landscape": "single_well",
+  "model": "nftsf",
+  "data_format": "multi_sim",
+  "traj_index": 0,
+  "random_seed": 42,
+  "n_samples": 200,
+  "display": {
+    "n_display_samples": 10
+  },
+  "sine": {
+    "length": 200,
+    "amplitude": 1.0,
+    "frequency": 0.02,
+    "phase": 0.0,
+    "noise_mean": 0.0,
+    "noise_std": 0.15,
+    "seed": 42,
+    "clean_color": "tab:blue",
+    "noisy_color": "tab:orange",
+    "noisy_alpha": 0.8
+  },
+  "style": {
+    "past_color": "black",
+    "gt_future_color": "gray",
+    "sample_color": "tab:blue",
+    "sample_alpha": 0.6,
+    "sample_line_width": 1.1,
+    "line_width": 1.8,
+    "outer_lower_color": "#9ecae1",
+    "inner_color": "#3182bd",
+    "outer_upper_color": "#6baed6",
+    "outer_alpha": 0.6,
+    "inner_alpha": 0.45,
+    "median_color": "tab:orange",
+    "gt_color": "black"
+  },
+  "histogram": {
+    "bins_time": 100,
+    "bins_value": 100,
+    "cmap": "magma",
+    "log": false
+  },
+  "figure": {
+    "width": 16.0,
+    "height": 9.0,
+    "panel_width": 5.2,
+    "panel_height": 3.6,
+    "dpi": 300
+  },
+  "output_dir": "./paper_figures",
+  "output_name": "single_well_trajectory_summary",
+  "formats": ["png", "svg", "pdf"]
+}
