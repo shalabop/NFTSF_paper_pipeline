@@ -40,7 +40,6 @@ def _fit_one_trajectory(
         random_state=42 + i
     )
     sims = np.asarray(sims).squeeze()
-    # Ensure shape (prediction_length, num_of_samples)
     if sims.shape[0] == num_of_samples and sims.shape[1] == prediction_length:
         sims = sims.T
 
@@ -52,9 +51,6 @@ def _fit_one_trajectory(
     return i, sims, ci90_lower, ci90_upper, ci50_lower, ci50_upper
 
 
-# ---------------------------------------------------------------------------
-# Main forecasting function (parallelized)
-# ---------------------------------------------------------------------------
 def fit_and_forecast(
     positions: np.ndarray,
     train_test_split: int,
