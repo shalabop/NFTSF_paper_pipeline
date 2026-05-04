@@ -9,6 +9,8 @@ run NFTSF
 run CSDI
 
 run TSDiff-Cond
+cd archtiectures/unconditional_time_series_diffusion
+pip install -e . #python project installation
 
 run TSDiff-Q/MSE
 
