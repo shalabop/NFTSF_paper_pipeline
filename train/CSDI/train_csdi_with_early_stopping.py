@@ -7,12 +7,12 @@ import yaml
 import torch
 import numpy as np
 
-ROOT = os.path.dirname(os.path.abspath(__file__))                     # train/CSDI
-PROJECT_ROOT = os.path.abspath(os.path.join(ROOT, "..", ".."))        # project root
+ROOT = os.path.dirname(os.path.abspath(__file__))                   
+PROJECT_ROOT = os.path.abspath(os.path.join(ROOT, "..", ".."))        
 
-sys.path.insert(0, os.path.join(PROJECT_ROOT, "architectures", "CSDI"))   # for diff_models
-sys.path.insert(0, os.path.join(PROJECT_ROOT, "architectures"))           # for CSDI package
-sys.path.insert(0, PROJECT_ROOT)                                          # for top-level modules if any
+sys.path.insert(0, os.path.join(PROJECT_ROOT, "architectures", "CSDI"))   
+sys.path.insert(0, os.path.join(PROJECT_ROOT, "architectures"))           
+sys.path.insert(0, PROJECT_ROOT)                                          
 
 from CSDI.main_model import CSDI_Forecasting
 from CSDI.dataset_md import get_dataloader_md
@@ -68,14 +68,7 @@ def main():
     model = CSDI_Forecasting(config, args.device, target_dim=1).to(args.device)
     print(f"Parameters: {sum(p.numel() for p in model.parameters()):,}")
 
-    train(
-        model,
-        config["train"],
-        train_loader,
-        valid_loader         = val_loader,
-        valid_epoch_interval = valid_epoch_interval,
-        foldername           = args.out,
-    )
+    train(model, config["train"], train_loader, valid_loader = val_loader, valid_epoch_interval = valid_epoch_interval, foldername = args.out)
     print(f"Saved to: {args.out}/model.pth")
 
 
