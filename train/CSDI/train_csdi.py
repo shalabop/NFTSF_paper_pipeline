@@ -68,16 +68,8 @@ def main():
     model = CSDI_Forecasting(config, args.device, target_dim=1).to(args.device)
     print(f"Parameters: {sum(p.numel() for p in model.parameters()):,}")
 
-    train(
-        model,
-        config["train"],
-        train_loader,
-        valid_loader = val_loader,
-        valid_epoch_interval = valid_epoch_interval,
-        foldername = args.out,
-    )
+    train(model, config["train"], train_loader, valid_loader = val_loader, valid_epoch_interval = valid_epoch_interval, foldername = args.out)
     print(f"Saved to: {args.out}/model.pth")
-
 
 if __name__ == "__main__":
     main()

@@ -71,6 +71,5 @@ def main():
     train(model, config["train"], train_loader, valid_loader = val_loader, valid_epoch_interval = valid_epoch_interval, foldername = args.out)
     print(f"Saved to: {args.out}/model.pth")
 
-
 if __name__ == "__main__":
     main()
