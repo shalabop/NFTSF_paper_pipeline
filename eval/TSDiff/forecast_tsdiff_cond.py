@@ -117,6 +117,12 @@ def make_windowed_dataset(
     return ListDataset(entries, freq=freq)
 
 
+def set_seed(seed: int = 42):
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)
+
 def forecast(
     config            : dict,
     model             : TSDiffCond,

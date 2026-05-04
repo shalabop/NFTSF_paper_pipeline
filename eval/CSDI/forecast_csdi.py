@@ -54,6 +54,11 @@ def evaluate_csdi(model, test_loader, n_samples, device,
     
     return samples_out, gt_out, time_elapsed
 
+def set_seed(seed: int = 42):
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)
 
 def main():
     parser = argparse.ArgumentParser(description="Forecast with CSDI")
