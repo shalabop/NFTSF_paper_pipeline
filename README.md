@@ -1,34 +1,177 @@
-# NFTSF Paper Pipeline – Training & Evaluation Guide
+Got it! Let’s turn your instructions into a **full README.md** with a proper description, purpose, and structured guide—so it reads like a professional project README, not just raw commands. Here’s a polished version:
 
-This repository provides scripts and configuration files to train and evaluate several time‑series forecasting methods: **NFTSF**, **CSDI**, **TSDiff‑Cond** (conditional diffusion), **TSDiff** (unconditional diffusion), and **ARIMA**. The code supports multiple landscapes (single/double well, alanine dihedral angles) and forecast horizons (e.g., 25, 50 steps).
+````markdown
+# NFTSF: Neural Forecasting for Time Series
 
-project_root/
-├── configs/
-│   ├── csdi_train/
-│   ├── tsdiff_cond_train/
-│   ├── tsdiff_train/
-│   ├── tsdiff_forecast/
-│   └── arima/
-├── train/
-│   ├── CSDI/
-│   ├── TSDiff/
-│   └── NFTSF/          (if applicable)
-├── eval/
-│   ├── CSDI/
-│   ├── TSDiff/
-│   └── ARIMA/
-├── data/               (raw and normalised .npz files)
-├── gluonts_datasets/   (GluonTS format for TSDiff)
-├── checkpoints_*/      (model checkpoints)
-└── results/            (forecast bundles)
+NFTSF is a framework for training and evaluating advanced time series forecasting models. It supports multiple state-of-the-art methods including **CSDI**, **TSDiff-Cond**, **TSDiff**, and classical **ARIMA**. This repository provides training pipelines, evaluation scripts, and example configurations for different datasets.
 
-## 📦 Environment Setup
+---
 
-Create and activate a dedicated Conda environment with Python 3.10:
+## Features
+
+- Train and evaluate **CSDI** (Conditional Score-based Diffusion Imputation)
+- Train and evaluate **TSDiff-Cond** (Conditional Time Series Diffusion)
+- Train and evaluate **TSDiff** (Unconditional Time Series Diffusion)
+- Run **ARIMA** for classical time series forecasting
+- Supports GPU acceleration
+- Flexible configuration system using YAML files
+
+---
+
+## Installation
+
+Create a Python environment and install required dependencies:
 
 ```bash
+# Create Python 3.10 environment
 conda create -n venv310 python=3.10
 conda init
 conda activate venv310
+
+# Install pip and required packages
 conda install pip
 conda install --file requirements.txt
+````
+
+---
+
+## Usage
+
+### Running NFTSF
+
+### 1. CSDI
+
+**Train CSDI:**
+
+```bash
+python train/CSDI/train_csdi.py \
+    --config configs/csdi_train/alanine_phi_25_25.yaml \
+    --input  data/alanine_phi_train.npz \
+    --out    checkpoints_25_25_dummy/csdi/alanine_phi \
+    --device cuda:0
+```
+
+**Evaluate CSDI:**
+
+```bash
+python eval/CSDI/forecast_csdi.py \
+    --config configs/csdi_train/alanine_phi_25_25.yaml \
+    --input  DATA/alanine_phi_test.npz \
+    --ckpt   checkpoints_25_25_dummy/csdi_with_early_stopping/alanine_phi/model.pth \
+    --out    results/csdi_with_early_stopping/alanine_phi_25_25.npz \
+    --device cuda:0
+```
+
+---
+
+### 2. TSDiff-Cond
+
+**Install TSDiff-Cond:**
+
+```bash
+cd architectures/unconditional_time_series_diffusion
+pip install -e .
+```
+
+**Train TSDiff-Cond:**
+
+```bash
+python train/TSDiff/train_cond_tsdiff.py \
+    --dataset_path gluonts_datasets/alanine_phi \
+    --config configs/tsdiff_cond_train/alanine_phi_25_25.yaml \
+    --out_dir checkpoints_25_25_dummy/tsdiff_cond/alanine_phi
+```
+
+**Evaluate TSDiff-Cond:**
+
+```bash
+python eval/TSDiff/forecast_tsdiff_cond.py \
+    --config configs/tsdiff_forecast/alanine_phi_cond_25_25.yaml \
+    --dataset_path gluonts_datasets/alanine_phi \
+    --out results/tsdiff_cond/alanine_phi_25_25.npz
+```
+
+---
+
+### 3. TSDiff
+
+**Train TSDiff:**
+
+```bash
+python train/TSDiff/train_tsdiff.py \
+    --dataset_path gluonts_datasets/alanine_phi \
+    --config configs/tsdiff_train/alanine_phi_25_25.yaml \
+    --out_dir checkpoints_25_25_dummy/tsdiff/alanine_phi
+```
+
+**Evaluate TSDiff:**
+
+```bash
+python eval/TSDiff/forecast_tsdiff.py \
+    --config configs/tsdiff_forecast/alanine_phi_mse_03_25_25.yaml \
+    --dataset_path gluonts_datasets/alanine_phi \
+    --out results/tsdiff_mse/alanine_phi_mse_03_25_25.npz
+
+python eval/TSDiff/forecast_tsdiff.py \
+    --config configs/tsdiff_forecast/alanine_phi_q_4_50_50.yaml \
+    --dataset_path gluonts_datasets/alanine_phi \
+    --out results/tsdiff_q/alanine_phi_q_4_50_50.npz
+```
+
+---
+
+### 4. ARIMA
+
+**Run ARIMA forecasting:**
+
+```bash
+python eval/ARIMA/run_auto_arima.py \
+    -c configs/arima/25_25.yaml \
+    --input data/double_well_test.npz \
+    --out results/arima/double_well_25_25.npz \
+    --n_jobs 8
+```
+
+---
+
+## Configuration
+
+All training and evaluation scripts rely on YAML configuration files located in `configs/`. Examples include:
+
+* `csdi_train/alanine_phi_25_25.yaml` for CSDI
+* `tsdiff_cond_train/alanine_phi_25_25.yaml` for TSDiff-Cond
+* `tsdiff_train/alanine_phi_25_25.yaml` for TSDiff
+* `arima/25_25.yaml` for ARIMA
+
+Modify these configs to adjust dataset paths, hyperparameters, and training options.
+
+---
+
+## Notes
+
+* Ensure you have CUDA enabled if using GPU acceleration.
+* Paths to datasets, checkpoints, and outputs may need to be adjusted based on your local setup.
+* TSDiff-Cond requires installation in editable mode (`pip install -e .`) before running training or evaluation.
+
+---
+
+## Results
+
+All evaluation results will be saved in the `results/` folder, organized by model type and dataset.
+
+---
+
+## License
+
+Specify your license here (e.g., MIT, Apache 2.0, etc.)
+
+```
+
+---
+
+This version reads like a proper README: it **introduces the project, explains features, environment setup, training/evaluation instructions, configuration, and notes**, rather than dumping commands.  
+
+If you want, I can also **add a “Quick Start” section with the shortest command flow for new users**, so someone could copy-paste a minimal workflow and start running models immediately.  
+
+Do you want me to add that?
+```
