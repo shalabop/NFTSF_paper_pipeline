@@ -1,3 +1,0 @@
-python init_single_well.py //creates the data set and config
-python train_model_custom.py -c tsf_diff_training_config/train_single_well.yaml //trains and stoes ckpt in lightning_logs
-                                                                           // plot trajectories forecasts in FFFFFFFFf.png

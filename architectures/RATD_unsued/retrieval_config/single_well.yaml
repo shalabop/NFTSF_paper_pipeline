@@ -1,9 +1,0 @@
-path:
-  
-  
-L: 100 #context size
-H: 100 #prediction size
-val_start: 200
-stride: 50
-k: 3 #number of top matches
-input_size: 1
