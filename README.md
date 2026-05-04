@@ -25,8 +25,10 @@ Create a Python environment and install required dependencies:
 conda create -n venv310 python=3.10
 conda init
 conda activate venv310
+```
 
 # Install pip and required packages
+```
 conda install pip
 conda install --file requirements.txt
 ````
