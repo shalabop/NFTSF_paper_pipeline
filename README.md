@@ -158,20 +158,3 @@ Modify these configs to adjust dataset paths, hyperparameters, and training opti
 ## Results
 
 All evaluation results will be saved in the `results/` folder, organized by model type and dataset.
-
----
-
-## License
-
-Specify your license here (e.g., MIT, Apache 2.0, etc.)
-
-```
-
----
-
-This version reads like a proper README: it **introduces the project, explains features, environment setup, training/evaluation instructions, configuration, and notes**, rather than dumping commands.  
-
-If you want, I can also **add a “Quick Start” section with the shortest command flow for new users**, so someone could copy-paste a minimal workflow and start running models immediately.  
-
-Do you want me to add that?
-```
