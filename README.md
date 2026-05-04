@@ -141,20 +141,6 @@ python eval/ARIMA/run_auto_arima.py \
     --n_jobs 8
 ```
 
----
-
-## Configuration
-
-All training and evaluation scripts rely on YAML configuration files located in `configs/`. Examples include:
-
-* `csdi_train/alanine_phi_25_25.yaml` for CSDI
-* `tsdiff_cond_train/alanine_phi_25_25.yaml` for TSDiff-Cond
-* `tsdiff_train/alanine_phi_25_25.yaml` for TSDiff
-* `arima/25_25.yaml` for ARIMA
-
-Modify these configs to adjust dataset paths, hyperparameters, and training options.
-
----
 
 ## Notes
 
