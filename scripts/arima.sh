@@ -13,7 +13,7 @@
 #SBATCH --error=logs/arima2.%j.err
 
 source /packages/apps/mamba/2.0.8/etc/profile.d/conda.sh
-conda activate /home/meahmed/.conda/envs/venv310
+conda activate /home/.conda/envs/venv310
 which python
 
 mkdir -p results/arima
