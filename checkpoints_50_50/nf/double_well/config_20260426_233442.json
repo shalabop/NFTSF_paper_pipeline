@@ -1,5 +1,5 @@
 {
-  "data_path": "/home/afazzam/nftsfpaper/NFTSF_ssh-main/pipeline_results/data/dw_sle_em_x_train.npy",
+  "data_path": "/home/data/dw_sle_em_x_train.npy",
   "data_format": "sde_presplit",
   "sde_model_key": null,
   "sde_data_dir": "../Data/Trajectories",
@@ -19,7 +19,7 @@
   "normalize": true,
   "stride": 5,
   "batch_size": 4096,
-  "output_dir": "/home/afazzam/nftsfpaper/NFTSF_ssh-main/pipeline_results/training/ar_K6_H64_lr1e-3_ep1000_np50_nf50_timing/dw_sle_em",
+  "output_dir": "/home/ckpt/dw_sle_em",
   "model_name": "model",
   "save_interval": 100,
   "device": "auto",
