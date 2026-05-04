@@ -57,14 +57,14 @@ ls $CUDA_PATH/include/cuda.h || echo "WARNING: cuda.h not found"
 ls $CUDA_PATH/include/nvrtc.h || echo "WARNING: nvrtc.h not found"
 ls $CUDA_PATH/lib64/libnvrtc.so* || ls $CUDA_PATH/targets/x86_64-linux/lib/libnvrtc.so* || echo "WARNING: libnvrtc.so not found"
 
-python eval/ARIMA/run_auto_arima.py -c configs/arima/25_25.yaml --input DATA/double_well_test.npz --out results/arima/double_well_25_25.npz --n_jobs 8
-python eval/ARIMA/run_auto_arima.py -c configs/arima/25_25.yaml --input DATA/single_well_test.npz --out results/arima/single_well_25_25.npz --n_jobs 8
+python eval/ARIMA/run_auto_arima.py -c configs/arima/25_25.yaml --input data/double_well_test.npz --out results/arima/double_well_25_25.npz --n_jobs 8
+python eval/ARIMA/run_auto_arima.py -c configs/arima/25_25.yaml --input data/single_well_test.npz --out results/arima/single_well_25_25.npz --n_jobs 8
 
-python eval/ARIMA/run_auto_arima.py -c configs/arima/50_50.yaml --input DATA/double_well_test.npz --out results/arima/double_well_50_50.npz --n_jobs 8
-python eval/ARIMA/run_auto_arima.py -c configs/arima/50_50.yaml --input DATA/single_well_test.npz --out results/arima/single_well_50_50.npz --n_jobs 8
+python eval/ARIMA/run_auto_arima.py -c configs/arima/50_50.yaml --input data/double_well_test.npz --out results/arima/double_well_50_50.npz --n_jobs 8
+python eval/ARIMA/run_auto_arima.py -c configs/arima/50_50.yaml --input data/single_well_test.npz --out results/arima/single_well_50_50.npz --n_jobs 8
 
-python eval/ARIMA/run_auto_arima.py -c configs/arima/25_25.yaml --input DATA/alanine_phi_test.npz --out results/arima/alanine_phi_25_25.npz --n_jobs 8
-python eval/ARIMA/run_auto_arima.py -c configs/arima/25_25.yaml --input DATA/alanine_psi_test.npz --out results/arima/alanine_psi_25_25.npz --n_jobs 8
+python eval/ARIMA/run_auto_arima.py -c configs/arima/25_25.yaml --input data/alanine_phi_test.npz --out results/arima/alanine_phi_25_25.npz --n_jobs 8
+python eval/ARIMA/run_auto_arima.py -c configs/arima/25_25.yaml --input data/alanine_psi_test.npz --out results/arima/alanine_psi_25_25.npz --n_jobs 8
 
-python eval/ARIMA/run_auto_arima.py -c configs/arima/50_50.yaml --input DATA/alanine_phi_test.npz --out results/arima/alanine_phi_50_50.npz --n_jobs 8
-python eval/ARIMA/run_auto_arima.py -c configs/arima/50_50.yaml --input DATA/alanine_psi_test.npz --out results/arima/alanine_psi_50_50.npz --n_jobs 8
+python eval/ARIMA/run_auto_arima.py -c configs/arima/50_50.yaml --input data/alanine_phi_test.npz --out results/arima/alanine_phi_50_50.npz --n_jobs 8
+python eval/ARIMA/run_auto_arima.py -c configs/arima/50_50.yaml --input data/alanine_psi_test.npz --out results/arima/alanine_psi_50_50.npz --n_jobs 8
