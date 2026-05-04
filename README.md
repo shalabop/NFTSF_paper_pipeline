@@ -1,5 +1,3 @@
-Got it! Let’s turn your instructions into a **full README.md** with a proper description, purpose, and structured guide—so it reads like a professional project README, not just raw commands. Here’s a polished version:
-
 ````markdown
 # NFTSF: Neural Forecasting for Time Series
 
@@ -8,7 +6,7 @@ NFTSF is a framework for training and evaluating advanced time series forecastin
 ---
 
 ## Features
-
+- Train and evaluate **NFTSF** (Normalizing-Flow Time Series Forecasting)
 - Train and evaluate **CSDI** (Conditional Score-based Diffusion Imputation)
 - Train and evaluate **TSDiff-Cond** (Conditional Time Series Diffusion)
 - Train and evaluate **TSDiff** (Unconditional Time Series Diffusion)
