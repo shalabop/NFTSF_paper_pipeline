@@ -241,6 +241,7 @@ def main():
                         default="cuda" if torch.cuda.is_available() else "cpu")
     parser.add_argument("--train_test_split" , "-tts", type=int,default=None)
     args = parser.parse_args()
+    set_seed()
 
     with open(args.config, "r") as f:
         config = yaml.safe_load(f)

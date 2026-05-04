@@ -481,6 +481,8 @@ def main():
     logger.info("RUNNING TEST2")
     logger.info(f"{config['ckpt']}")
     logger.info(f"{config['prediction_length']}")
+    
+    set_seed()
 
     if not args.out:
         args.out=f"results/uncond_tsfdiff/{config['dataset']}"
