@@ -14,9 +14,6 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 def plot_forecast(time, full_trajectory, split, forecasts,results_dw,**kwargs):
-    '''
-    filename: path to the png file
-    '''
     ci90_lower=kwargs.get("ci90_lower")
     ci90_upper=kwargs.get("ci90_upper")
     ci50_upper=kwargs.get("ci50_upper")
@@ -54,23 +51,7 @@ def plot_forecast(time, full_trajectory, split, forecasts,results_dw,**kwargs):
     plt.savefig(filename)
     plt.tight_layout()
 
-def read_data(
-    input_path: Path,
-    split_override: int | None,
-    predection_length_override: int | None,
-) -> dict:
-    """
-    Loads a .npz data file produced by generator.py and returns a config dict.
-    CLI overrides take priority over values stored in the .npz.
-
-    Returns
-    -------
-    dict with keys:
-        positions         (N, T) numpy array
-        time              (T,)   numpy array
-        train_test_split  int
-        prediction_length int
-    """
+def read_data(input_path: Path, split_override: int | None, predection_length_override: int | None,) -> dict:
     if not input_path.exists():
         raise FileNotFoundError(f"Input file not found: {input_path}")
     if input_path.suffix != ".npz":
@@ -87,7 +68,7 @@ def read_data(
         raise KeyError(f"'time' array not found in {input_path}")
 
     positions = data["positions"]   
-    time      = data["time"]  
+    time = data["time"]  
     train_test_split = data.get("train_test_split")
     prediction_length = data.get("prediction_length")      
 
@@ -101,10 +82,10 @@ def read_data(
 
     if predection_length_override is not None:
         prediction_length = int(predection_length_override)
-        logger.info(f"  prediction_length : {prediction_length} (CLI override)")
+        logger.info(f"prediction_length : {prediction_length} (CLI override)")
     elif "prediction_length" in data:
         prediction_length = int(data["prediction_length"])
-        logger.info(f"  prediction_length : {prediction_length} (from .npz)")
+        logger.info(f"prediction_length : {prediction_length} (from .npz)")
     else:
         raise ValueError(
             "prediction_length not found in .npz and --prediction-length not provided."
@@ -124,8 +105,8 @@ def read_data(
         )
 
     return {
-        "positions"        : positions,
-        "time"             : time,
+        "positions" : positions,
+        "time" : time,
         "train_test_split" : train_test_split,
         "prediction_length": prediction_length,
     }
@@ -144,32 +125,6 @@ def fit_and_forecast(
     path_to_save_figures: str = "./plots/ARIMA",
     context_length: int = None
 ) -> dict:
-    """
-    Fits one auto_arima model per trajectory, generates forecast samples
-    and confidence intervals.
-
-    Parameters
-    ----------
-    positions         : (N, T) numpy array of trajectories
-    train_test_split  : index separating train / test
-    prediction_length : number of steps to forecast
-    num_simulations   : number simulations per model
-    use_validation_set: bool, 
-    validation_metric: str = "mse",
-    save_figures: bool = True, saves the forecasts, and the data trajectories
-    number_of_forecasts_to_plot: number of trajectories to plot (entire path and forecasts with 90CI band)
-    path_to_save_figures: str = "./plots/ARIMA"
-
-    Returns
-    -------
-    dict with keys:
-        samples       (N, T_pred, num_simulations) — forecast simulations
-        ground_truth  (N, T_pred)                  — true future values
-        ci90_lower    (N, T_pred)
-        ci90_upper    (N, T_pred)
-        ci50_lower    (N, T_pred)
-        ci50_upper    (N, T_pred)
-    """
     N = positions.shape[0]
 
     if not prediction_length:
@@ -180,13 +135,13 @@ def fit_and_forecast(
     print(train_test_split)
 
     full_trajectories = positions
-    samples      = np.zeros((N, prediction_length, num_of_samples))
+    samples = np.zeros((N, prediction_length, num_of_samples))
     ground_truth = positions[:, train_test_split : train_test_split + prediction_length]
 
-    ci90_lower_est   = np.zeros((N, prediction_length)) 
-    ci90_upper_est   = np.zeros((N, prediction_length)) #for each model, we will have a confidence interval for each time step in the prediction horizon
-    ci50_lower_est   = np.zeros((N, prediction_length))
-    ci50_upper_est   = np.zeros((N, prediction_length))
+    ci90_lower_est = np.zeros((N, prediction_length)) 
+    ci90_upper_est = np.zeros((N, prediction_length)) #for each model, we will have a confidence interval for each time step in the prediction horizon
+    ci50_lower_est = np.zeros((N, prediction_length))
+    ci50_upper_est = np.zeros((N, prediction_length))
 
     fig,axes=plt.subplots(nrows=4,ncols=2,figsize=(12,12))
 
@@ -200,18 +155,19 @@ def fit_and_forecast(
         #np.random.seed(42)
         if context_length is not None:
             train_series = pd.Series(positions[i, train_test_split-context_length:train_test_split])
-            model  = pm.auto_arima(train_series, metric=validation_metric,random_state=42+i)
+            #model  = pm.auto_arima(train_series, metric=validation_metric,random_state=42+i)
+            model  = pm.auto_arima(train_series, random_state=42+i)
             print(f"Only using the past{context_length} for forecasting")
         else:
             train_series = pd.Series(positions[i, :train_test_split])
             print(f"Using the entire history of {positions.shape[1]-prediction_length} steps for forecasting")
             model  = pm.auto_arima(train_series, out_of_sample_size=prediction_length, metric=validation_metric,random_state=42+i)
         '''if use_validation_set:
-            model        = pm.auto_arima(train_series, out_of_sample_size=prediction_length, metric=validation_metric)
+            model  = pm.auto_arima(train_series, out_of_sample_size=prediction_length, metric=validation_metric)
         else:
-            model        = pm.auto_arima(train_series)'''
+            mode= pm.auto_arima(train_series)'''
        
-        result       = model.arima_res_
+        result = model.arima_res_
         #np.random.seed(42)
         #forecast    = result.get_forecast(steps=prediction_length)
         sims = result.simulate(nsimulations=prediction_length,repetitions=num_of_samples,anchor="end",random_state=42+i)
@@ -279,7 +235,7 @@ def main():
         "--num-samples",
         type=int,
         required=False,
-        default=100,
+        default=1000,
         help="Number of Monte Carlo simulations per ARIMA model (default: 100)",
     )
     parser.add_argument(
@@ -387,24 +343,24 @@ def main():
     
     np.savez(
         out_path,
-        samples      = results["samples"],        
+        samples = results["samples"],        
         ground_truth = results["ground_truth"],    
-        ci90_lower   = results["ci90_lower"],      
-        ci90_upper   = results["ci90_upper"],      
-        ci50_lower   = results["ci50_lower"],     
-        ci50_upper   = results["ci50_upper"],     
+        ci90_lower = results["ci90_lower"],      
+        ci90_upper = results["ci90_upper"],      
+        ci50_lower = results["ci50_lower"],     
+        ci50_upper = results["ci50_upper"],     
         full_trajectories = results["full_trajectories"],
-        time_test    = time[train_test_split:train_test_split + prediction_length],
-        time_train   = time[:train_test_split],
+        time_test = time[train_test_split:train_test_split + prediction_length],
+        time_train = time[:train_test_split],
         time = time,
-        train_test_split  = train_test_split,
+        train_test_split = train_test_split,
         prediction_length = prediction_length,
-        num_of_samples   = num_of_samples,
+        num_of_samples = num_of_samples,
     )
 
     logger.info(f"Saved forecast bundle to: {out_path}")
-    logger.info(f"  samples shape      : {results['samples'].shape}")
-    logger.info(f"  ground_truth shape : {results['ground_truth'].shape}")
+    logger.info(f"samples shape : {results['samples'].shape}")
+    logger.info(f"ground_truth shape : {results['ground_truth'].shape}")
 
 if __name__ == "__main__":
     main()
