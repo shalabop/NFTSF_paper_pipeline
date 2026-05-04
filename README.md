@@ -143,7 +143,7 @@ python eval/ARIMA/run_auto_arima.py \
 
 
 ## Notes
-
+* See ```scripts``` folder for ready-to-use bash scripts 
 * Ensure you have CUDA enabled if using GPU acceleration.
 * Paths to datasets, checkpoints, and outputs may need to be adjusted based on your local setup.
 * TSDiff-Cond requires installation in editable mode (`pip install -e .`) before running training or evaluation.
