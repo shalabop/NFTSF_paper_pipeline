@@ -37,9 +37,21 @@ conda install --file requirements.txt
 
 ## Usage
 
-### Running NFTSF
+### 1. NFTSF
 
-### 1. CSDI
+python eval/NF/forecast_nf.py \
+    --model_path   checkpoints_100_100/nf/single_well.pth     \
+    --config configs/nf/single_well_100_100_forecast.yaml \
+    --data_path    DATA/single_well_test.npz    \
+    --out          results/nf/single_well_100_100.npz \
+    --context_length     100    \
+    --prediction_length     100   \
+    --n_samples    1000 \
+    --train_test_split 900 \
+    --test_size 3000
+=
+
+### 2. CSDI
 
 **Train CSDI:**
 
@@ -64,7 +76,7 @@ python eval/CSDI/forecast_csdi.py \
 
 ---
 
-### 2. TSDiff-Cond
+### 3. TSDiff-Cond
 
 **Install TSDiff-Cond:**
 
@@ -93,7 +105,7 @@ python eval/TSDiff/forecast_tsdiff_cond.py \
 
 ---
 
-### 3. TSDiff
+### 4. TSDiff
 
 **Train TSDiff:**
 
