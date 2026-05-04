@@ -31,9 +31,6 @@ MODEL_REGISTRY: dict[str, dict] = {
     "tsdiff_ms":  {"label": "TSDiff-MS",    "color": "#A09E2C"},
     "tsdiff_q":   {"label": "TSDiff-Q",     "color": "#B41F1F"},
     "csdi":       {"label": "CSDI",         "color": "#0AF1F1"},
-    "ratd":       {"label": "RATD",         "color": "#FF7F0E"},
-    "nsdiff":     {"label": "NsDiff",       "color": "#9467BD"},
-    "ccdm":       {"label": "CCDM",         "color": "#8C564B"},
 }
 
 # ---------------------------------------------------------------------------
