@@ -36,6 +36,24 @@ conda install --file requirements.txt
 
 ### 1. NFTSF
 
+**NFTSF** (Normalizing-Flow Time Series Forecasting) has its own dedicated folder: `./NFTSF`.  
+To fully train and evaluate NFTSF models, navigate to this folder.
+
+```bash
+python NFTSF/train_model.py \
+    --data_path alanine_phi_train.npy \
+    --data_format multi_sim \
+    --n_past 25 --n_future 25 \
+    --flow_blocks 6 --hidden_units 64 --hidden_layers 1,2 \
+    --tail_bound 30 \
+    --epochs 1000 --learning_rate 1e-3 \
+    --batch_size 4096 --stride 5 \
+    --weight_decay 1e-5 --seed 42 \
+    --normalize --use_scheduler \
+    --output_dir results/alanine_phi \
+    --model_name nftsf_alanine_phi
+```
+
 ```bash
 python eval/NF/forecast_nf.py \
     --model_path   checkpoints_25_25/nf/alanine_phi_25_25.pth     \
