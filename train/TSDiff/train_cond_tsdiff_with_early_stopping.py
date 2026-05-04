@@ -64,7 +64,7 @@ def evaluate_conditional(
     model: TSDiffCond,
     test_dataset,
     transformation,
-    num_samples=100,
+    num_samples=1000,
 ):
     logger.info(f"Evaluating with {num_samples} samples.")
     logger.info(
