@@ -15,10 +15,6 @@ logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-
-# ---------------------------------------------------------------------------
-# Worker function for parallel execution (must be at top level for pickling)
-# ---------------------------------------------------------------------------
 def _fit_one_trajectory(
     i: int,
     train_array: np.ndarray,
