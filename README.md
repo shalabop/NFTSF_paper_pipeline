@@ -10,9 +10,7 @@ NFTSF is a framework for training and evaluating advanced time series forecastin
 - Train and evaluate **CSDI** (Conditional Score-based Diffusion Imputation)
 - Train and evaluate **TSDiff-Cond** (Conditional Time Series Diffusion)
 - Train and evaluate **TSDiff** (Unconditional Time Series Diffusion)
-- Run **ARIMA** for classical time series forecasting
-- Supports GPU acceleration
-- Flexible configuration system using YAML files
+- Run **ARIMA** for time series forecasting
 
 
 ## Installation
