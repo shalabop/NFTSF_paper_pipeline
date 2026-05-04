@@ -1,0 +1,47 @@
+python time_stats.py --results \
+    results_1/tsdiff_mse/alanine_psi_mse_03_50_50.npz \
+    results_2/tsdiff_mse/alanine_psi_mse_03_50_50.npz \
+    results_3/tsdiff_mse/alanine_psi_mse_03_50_50.npz \
+    --out_dir tsdiff_mse/alanine_psi_mse_03_50_50
+
+python time_stats.py --results \
+    results_1/tsdiff_mse/alanine_psi_mse_03_25_25.npz \
+    results_2/tsdiff_mse/alanine_psi_mse_03_25_25.npz \
+    results_3/tsdiff_mse/alanine_psi_mse_03_25_25.npz \
+    --out_dir tsdiff_mse/alanine_psi_mse_03_25_25
+
+python time_stats.py --results \
+    results_1/tsdiff_mse/alanine_phi_mse_01_50_50.npz \
+    results_2/tsdiff_mse/alanine_phi_mse_01_50_50.npz \
+    results_3/tsdiff_mse/alanine_phi_mse_01_50_50.npz \
+    --out_dir tsdiff_mse/alanine_phi_mse_01_50_50
+
+python time_stats.py --results \
+    results_1/tsdiff_mse/alanine_phi_mse_03_25_25.npz \
+    results_2/tsdiff_mse/alanine_phi_mse_03_25_25.npz \
+    results_3/tsdiff_mse/alanine_phi_mse_03_25_25.npz \
+    --out_dir tsdiff_mse/alanine_phi_mse_03_25_25
+
+python time_stats.py --results \
+    results_1/tsdiff_mse/double_well_mse_03_50_50.npz \
+    results_2/tsdiff_mse/double_well_mse_03_50_50.npz \
+    results_3/tsdiff_mse/double_well_mse_03_50_50.npz \
+    --out_dir tsdiff_mse/double_well_mse_03_50_50
+
+python time_stats.py --results \
+    results_1/tsdiff_mse/double_well_mse_03_25_25.npz \
+    results_2/tsdiff_mse/double_well_mse_03_25_25.npz \
+    results_3/tsdiff_mse/double_well_mse_03_25_25.npz \
+    --out_dir tsdiff_mse/double_well_mse_03_25_25
+
+python time_stats.py --results \
+    results_1/tsdiff_mse/single_well_mse_03_50_50.npz \
+    results_2/tsdiff_mse/single_well_mse_03_50_50.npz \
+    results_3/tsdiff_mse/single_well_mse_03_50_50.npz \
+    --out_dir tsdiff_mse/single_well_mse_03_50_50
+
+python time_stats.py --results \
+    results_1/tsdiff_mse/single_well_mse_03_25_25.npz \
+    results_2/tsdiff_mse/single_well_mse_03_25_25.npz \
+    results_3/tsdiff_mse/single_well_mse_03_25_25.npz \
+    --out_dir tsdiff_mse/single_well_mse_03_25_25

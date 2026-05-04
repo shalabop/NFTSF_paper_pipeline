@@ -1,0 +1,47 @@
+python time_stats.py --results \
+    results_1/csdi_with_early_stopping/alanine_psi_50_50.npz \
+    results_2/csdi_with_early_stopping/alanine_psi_50_50.npz \
+    results_3/csdi_with_early_stopping/alanine_psi_50_50.npz \
+    --out_dir csdi/alanine_psi_50_50
+
+python time_stats.py --results \
+    results_1/csdi_with_early_stopping/alanine_psi_25_25.npz \
+    results_2/csdi_with_early_stopping/alanine_psi_25_25.npz \
+    results_3/csdi_with_early_stopping/alanine_psi_25_25.npz \
+    --out_dir csdi/alanine_psi_25_25
+
+python time_stats.py --results \
+    results_1/csdi_with_early_stopping/alanine_phi_50_50.npz \
+    results_2/csdi_with_early_stopping/alanine_phi_50_50.npz \
+    results_3/csdi_with_early_stopping/alanine_phi_50_50.npz \
+    --out_dir csdi/alanine_phi_50_50
+
+python time_stats.py --results \
+    results_1/csdi_with_early_stopping/alanine_phi_25_25.npz \
+    results_2/csdi_with_early_stopping/alanine_phi_25_25.npz \
+    results_3/csdi_with_early_stopping/alanine_phi_25_25.npz \
+    --out_dir csdi/alanine_phi_25_25
+
+python time_stats.py --results \
+    results_1/csdi_with_early_stopping/double_well_50_50.npz \
+    results_2/csdi_with_early_stopping/double_well_50_50.npz \
+    results_3/csdi_with_early_stopping/double_well_50_50.npz \
+    --out_dir csdi/double_well_50_50
+
+python time_stats.py --results \
+    results_1/csdi_with_early_stopping/double_well_25_25.npz \
+    results_2/csdi_with_early_stopping/double_well_25_25.npz \
+    results_3/csdi_with_early_stopping/double_well_25_25.npz \
+    --out_dir csdi/double_well_25_25
+
+python time_stats.py --results \
+    results_1/csdi_with_early_stopping/single_well_50_50.npz \
+    results_2/csdi_with_early_stopping/single_well_50_50.npz \
+    results_3/csdi_with_early_stopping/single_well_50_50.npz \
+    --out_dir csdi/single_well_50_50
+
+python time_stats.py --results \
+    results_1/csdi_with_early_stopping/single_well_25_25.npz \
+    results_2/csdi_with_early_stopping/single_well_25_25.npz \
+    results_3/csdi_with_early_stopping/single_well_25_25.npz \
+    --out_dir csdi/single_well_25_25

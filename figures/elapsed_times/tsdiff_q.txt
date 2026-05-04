@@ -1,0 +1,48 @@
+python time_stats.py --results \
+    results_1/tsdiff_q/alanine_psi_q_4_50_50.npz \
+    results_2/tsdiff_q/alanine_psi_q_4_50_50.npz \
+    results_3/tsdiff_q/alanine_psi_q_4_50_50.npz \
+    --out_dir tsdiff_q/alanine_psi_25_25
+
+python time_stats.py --results \
+    results_1/tsdiff_q/alanine_psi_q_4_25_25.npz \
+    results_2/tsdiff_q/alanine_psi_q_4_25_25.npz \
+    results_3/tsdiff_q/alanine_psi_q_4_25_25.npz \
+    --out_dir tsdiff_q/alanine_psi_50_50
+
+python time_stats.py --results \
+    results_1/tsdiff_q/alanine_phi_q_4_50_50.npz \
+    results_2/tsdiff_q/alanine_phi_q_4_50_50.npz \
+    results_3/tsdiff_q/alanine_phi_q_4_50_50.npz \
+    --out_dir tsdiff_q/alanine_phi_50_50
+
+python time_stats.py --results \
+    results_1/tsdiff_q/alanine_phi_q_4_25_25.npz \
+    results_2/tsdiff_q/alanine_phi_q_4_25_25.npz \
+    results_3/tsdiff_q/alanine_phi_q_4_25_25.npz \
+    --out_dir tsdiff_q/alanine__phi_25_25
+
+python time_stats.py --results \
+    results_1/tsdiff_q/double_well_q_4_50_50.npz \
+    results_2/tsdiff_q/double_well_q_4_50_50.npz \
+    results_3/tsdiff_q/double_well_q_4_50_50.npz \
+    --out_dir tsdiff_q/double_well_50_50
+
+python time_stats.py --results \
+    results_1/tsdiff_q/double_well_q_4_25_25.npz \
+    results_2/tsdiff_q/double_well_q_4_25_25.npz \
+    results_3/tsdiff_q/double_well_q_4_25_25.npz \
+    --out_dir tsdiff_q/double_well_25_25
+
+
+python time_stats.py --results \
+    results_1/tsdiff_q/single_well_q_4_50_50.npz \
+    results_2/tsdiff_q/single_well_q_4_50_50.npz \
+    results_3/tsdiff_q/single_well_q_4_50_50.npz \
+    --out_dir tsdiff_q/single_well_50_50
+
+python time_stats.py --results \
+    results_1/tsdiff_q/single_well_q_4_25_25.npz \
+    results_2/tsdiff_q/single_well_q_4_25_25.npz \
+    results_3/tsdiff_q/single_well_q_4_25_25.npz \
+    --out_dir tsdiff_q/single_well_25_25
