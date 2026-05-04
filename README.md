@@ -1,7 +1,7 @@
 markdown
 # NFTSF: Neural Forecasting for Time Series
 
-NFTSF is a framework for training and evaluating advanced time series forecasting models. It supports multiple state-of-the-art methods including **CSDI**, **TSDiff-Cond**, **TSDiff**, and classical **ARIMA**. This repository provides training pipelines, evaluation scripts, and example configurations for different datasets.
+NFTSF is a framework for training and evaluating advanced time series forecasting models. It supports multiple state-of-the-art methods including **CSDI**, **TSDiff-Cond**, **TSDiff**, and **ARIMA**. This repository provides training pipelines, evaluation scripts, and example configurations for different datasets.
 
 ---
 
