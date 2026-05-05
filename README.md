@@ -27,7 +27,7 @@ conda activate venv310
 # Install pip and required packages
 ```
 conda install pip
-conda install --file requirements.txt
+pip install -r requirements.txt
 ````
 
 ---
