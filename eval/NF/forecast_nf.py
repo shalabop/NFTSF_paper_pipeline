@@ -177,7 +177,7 @@ def main():
         f"train_test_split + prediction_length "
         f"({train_test_split + args.prediction_length}) > T ({T})")
     
-    set_seed()
+    set_seed(args.seed)
 
     context_length    = args.context_length
     prediction_length = args.prediction_length
