@@ -12,8 +12,8 @@
 
 
 
-# TODO: activate your conda/mamba environment (e.g.: source /path/to/mamba/etc/profile.d/conda.sh)
-# TODO: conda activate <your-env-name>  (e.g.: conda activate venv310)
+source /packages/apps/mamba/2.0.8/etc/profile.d/conda.sh
+conda activate /home/.conda/envs/venv310
 
 mkdir -p checkpoints_25_25_dummy/tsdiff_cond/double_well
 mkdir -p results/tsdiff_cond/double_well

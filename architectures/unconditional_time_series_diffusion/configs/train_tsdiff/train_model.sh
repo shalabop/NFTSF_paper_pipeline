@@ -13,7 +13,7 @@
  13 module purge
  14 module load cuda-12.8.1-gcc-12.1.0             # Load correct CUDA version
  15 
- 16 export CUDA_HOME=<path-to-cuda>  # TODO: set CUDA_HOME for your system
+ 16 export CUDA_HOME=/packages/apps/cuda/12.8.1
  17 export PATH=$CUDA_HOME/bin:$PATH
  18 export LD_LIBRARY_PATH=$CUDA_HOME/lib64:$LD_LIBRARY_PATH
  19 export CUDA_VISIBLE_DEVICES=$SLURM_GPUS_ON_NODE

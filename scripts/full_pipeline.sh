@@ -13,8 +13,8 @@ python eval/ARIMA/run_auto_arima.py -c configs/arima/25_25.yaml --input data/dou
 #SBATCH --output=logs/arima2.%j.out
 #SBATCH --error=logs/arima2.%j.err
 
-# TODO: activate your conda/mamba environment (e.g.: source /path/to/mamba/etc/profile.d/conda.sh)
-# TODO: conda activate <your-env-name>  (e.g.: conda activate venv310)
+source /packages/apps/mamba/2.0.8/etc/profile.d/conda.sh
+conda activate /home/.conda/envs/venv310
 which python
 
 mkdir -p results/arima
