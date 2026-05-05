@@ -219,7 +219,8 @@ python eval/NF/forecast_nf.py \
     --data_path    data/alanine_phi_test.npz \
     --out          results/nf/alanine_phi_25_25.npz \
     --context_length 25 --prediction_length 25 \
-    --n_samples 1000 --train_test_split 900 --test_size 3000
+    --n_samples 1000 --train_test_split 900 --test_size 3000 \
+    --seed 42
 ```
 
 ### CSDI
@@ -334,9 +335,9 @@ Plots produced per landscape × split:
 
 | Dataset | Split | Model | Metric | Value | Eval command |
 |---|---|---|---|---|---|
-| double\_well | 25/25 | NFTSF | TODO | TODO | `python eval/NF/forecast_nf.py --model_path checkpoints_25_25/nf/double_well/... --data_path data/double_well_test.npz --out results/nf/double_well_25_25.npz --context_length 25 --prediction_length 25` |
+| double\_well | 25/25 | NFTSF | TODO | TODO | `python eval/NF/forecast_nf.py --model_path checkpoints_25_25/nf/double_well/... --data_path data/double_well_test.npz --out results/nf/double_well_25_25.npz --context_length 25 --prediction_length 25 --seed 42` |
 | double\_well | 50/50 | NFTSF | TODO | TODO | Same with `checkpoints_50_50/nf/double_well/...` and `--context_length 50 --prediction_length 50` |
-| alanine\_phi | 25/25 | NFTSF | TODO | TODO | `python eval/NF/forecast_nf.py --model_path checkpoints_25_25/nf/alanine_phi/... --data_path data/alanine_phi_test.npz --out results/nf/alanine_phi_25_25.npz --context_length 25 --prediction_length 25` |
+| alanine\_phi | 25/25 | NFTSF | TODO | TODO | `python eval/NF/forecast_nf.py --model_path checkpoints_25_25/nf/alanine_phi/... --data_path data/alanine_phi_test.npz --out results/nf/alanine_phi_25_25.npz --context_length 25 --prediction_length 25 --seed 42` |
 | alanine\_phi | 50/50 | NFTSF | TODO | TODO | Same with `checkpoints_50_50/nf/alanine_phi/...` |
 
 ---
