@@ -3,8 +3,8 @@
   3 #SBATCH --time=3-00:00:00          # 3 days max
   4 #SBATCH --nodes=1
   5 #SBATCH --ntasks=1
-  6 #SBATCH --partition=public
-  7 #SBATCH --qos=public
+  6 #SBATCH --partition=<your-partition>  # TODO: set to your cluster partition
+  7 #SBATCH --qos=<your-qos>  # TODO: set to your cluster QOS
   8 #SBATCH --gres=gpu:2               # Request 1 GPU
   9 #SBATCH --mem=32G                   # Adjust memory as needed
  10 #SBATCH --output=slurm.%j.out      # STDOUT log
@@ -13,7 +13,7 @@
  13 module purge
  14 module load cuda-12.8.1-gcc-12.1.0             # Load correct CUDA version
  15 
- 16 export CUDA_HOME=/packages/apps/cuda/12.8.1
+ 16 export CUDA_HOME=<path-to-cuda>  # TODO: set CUDA_HOME for your system
  17 export PATH=$CUDA_HOME/bin:$PATH
  18 export LD_LIBRARY_PATH=$CUDA_HOME/lib64:$LD_LIBRARY_PATH
  19 export CUDA_VISIBLE_DEVICES=$SLURM_GPUS_ON_NODE

@@ -1,4 +1,4 @@
-source /packages/apps/mamba/2.0.8/etc/profile.d/conda.sh
+# TODO: activate your conda/mamba environment (e.g.: source /path/to/mamba/etc/profile.d/conda.sh)
 
 which python
 

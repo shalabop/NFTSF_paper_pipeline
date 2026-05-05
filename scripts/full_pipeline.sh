@@ -6,15 +6,15 @@ python eval/ARIMA/run_auto_arima.py -c configs/arima/25_25.yaml --input data/dou
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
 #SBATCH --mail-type=ALL
-#SBATCH --partition=public
-#SBATCH --qos=public
-#SBATCH --gres=gpu:a30:1
+#SBATCH --partition=<your-partition>  # TODO: set to your cluster partition
+#SBATCH --qos=<your-qos>  # TODO: set to your cluster QOS
+#SBATCH --gres=gpu:<type>:1  # TODO: set to your GPU type (e.g. gpu:a30:1, gpu:a100:1)
 #SBATCH --mem=32G
 #SBATCH --output=logs/arima2.%j.out
 #SBATCH --error=logs/arima2.%j.err
 
-source /packages/apps/mamba/2.0.8/etc/profile.d/conda.sh
-conda activate /home/.conda/envs/venv310
+# TODO: activate your conda/mamba environment (e.g.: source /path/to/mamba/etc/profile.d/conda.sh)
+# TODO: conda activate <your-env-name>  (e.g.: conda activate venv310)
 which python
 
 mkdir -p results/arima

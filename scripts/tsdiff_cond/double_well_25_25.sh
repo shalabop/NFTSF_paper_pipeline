@@ -4,16 +4,16 @@
 #SBATCH --time=1-04:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=8
-#SBATCH --partition=public
-#SBATCH --qos=public
-#SBATCH --gres=gpu:a30:1
+#SBATCH --partition=<your-partition>  # TODO: set to your cluster partition
+#SBATCH --qos=<your-qos>  # TODO: set to your cluster QOS
+#SBATCH --gres=gpu:<type>:1  # TODO: set to your GPU type (e.g. gpu:a30:1, gpu:a100:1)
 #SBATCH --mem=32G
 
 
 
 
-source /packages/apps/mamba/2.0.8/etc/profile.d/conda.sh
-conda activate /home/.conda/envs/venv310
+# TODO: activate your conda/mamba environment (e.g.: source /path/to/mamba/etc/profile.d/conda.sh)
+# TODO: conda activate <your-env-name>  (e.g.: conda activate venv310)
 
 mkdir -p checkpoints_25_25_dummy/tsdiff_cond/double_well
 mkdir -p results/tsdiff_cond/double_well

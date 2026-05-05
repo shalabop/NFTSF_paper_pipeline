@@ -3,8 +3,8 @@
 #SBATCH --time=3-00:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --partition=public
-#SBATCH --qos=public
+#SBATCH --partition=<your-partition>  # TODO: set to your cluster partition
+#SBATCH --qos=<your-qos>  # TODO: set to your cluster QOS
 #SBATCH --gres=gpu:2
 #SBATCH --mem=32G
 #SBATCH --output=electricity_nips_train_cond.%j.out

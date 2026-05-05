@@ -4,9 +4,9 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --mail-type=ALL
-#SBATCH --partition=public
-#SBATCH --qos=public
-#SBATCH --gres=gpu:a30:1
+#SBATCH --partition=<your-partition>  # TODO: set to your cluster partition
+#SBATCH --qos=<your-qos>  # TODO: set to your cluster QOS
+#SBATCH --gres=gpu:<type>:1  # TODO: set to your GPU type (e.g. gpu:a30:1, gpu:a100:1)
 #SBATCH --mem=32G
 #SBATCH --output=logs/csdi/alanine_phi_25-25.%j.out
 #SBATCH --error=logs/csdi/alanine_phi_25_25.%j.err
