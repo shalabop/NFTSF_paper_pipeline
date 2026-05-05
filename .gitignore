@@ -14,9 +14,12 @@ build/
 .venv/
 venv/
 env/
+venv310/
+venvRATD/
 
 # Jupyter
 .ipynb_checkpoints/
+test.ipynb
 
 # IDE
 .idea/
@@ -27,24 +30,45 @@ env/
 
 # Logs and outputs (generated at runtime)
 logs/
-#results/
 *.out
 *.err
 
-##virtual environment
- 
-##venv for csdi, nsdiff, ccdm, tsdiff, ratd, arima
-venv310/
-venvRATD/
-template.sh
-#checkpoints/
-test.ipynb
-#scripts/archive
-archive/
-architectures/RATD/results/
+# ── Zenodo-hosted folders (download from Zenodo; see README) ──────────────────
+# These folders are NOT tracked in git. Download them from the Zenodo record
+# and place them at the repository root before running any scripts.
+checkpoints_25_25/
+checkpoints_50_50/
+data/
+data_raw/
+data_unnorm/
+gluonts_datasets/
+results/
 
+# Model weights / checkpoints (general)
+*.ckpt
+*.pt
+*.pth
+*.bin
+*.safetensors
+
+# Secrets / environment
+.env
+.env.*
+
+# Experiment tracking
+wandb/
+runs/
+outputs/
+mlruns/
+lightning_logs/
+tb_logs/
+
+# Misc
+archive/
 viz/
 models/
 metrics/
 scripts_private/
 configs_private/
+architectures/RATD/results/
+template.sh
